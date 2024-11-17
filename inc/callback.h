@@ -4,8 +4,7 @@
 #include <pspkernel.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 int isRunning();

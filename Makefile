@@ -1,6 +1,6 @@
 TARGET = Vibe
 
-INCDIR = inc lib
+INCDIR = inc lib gu2gl
 SRCDIR = src
 
 SOURCE_FILES_FOR_COMPILING = $(call recursiveWildCard,$(SRCDIR),*.c)
@@ -9,8 +9,11 @@ OBJS = \
 		src/audio.o \
 		src/callback.o \
 		src/gfx.o \
+		src/input.o \
 		src/logging.o \
 		src/main.o \
+		src/mainMenu.o \
+		src/time.o \
 		lib/stb_vorbis.o
 
 CFLAGS =

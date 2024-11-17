@@ -1,4 +1,5 @@
 #include <pspkernel.h>
+#include <pspctrl.h>
 #include <malloc.h>
 #include <math.h>
 
@@ -8,27 +9,30 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 #include <callback.h>
+#include <mainMenu.h>
 #include <logging.h>
 #include <audio.h>
+#include <input.h>
+#include <time.h>
 #include <gfx.h>
+#include <app.h>
 
-audio_stream* music[3];
-int musicIndex = 0;
+appUpdateCallback_t mUpdate = NULL;
+appRenderCallback_t mRender = NULL;
 
-void musicEnded()
-{
-    audioStreamSeekStart(music[musicIndex]);
-    setAudioStream(music[musicIndex]);
-    LOGINFO(stringf("switched to track no.%d", musicIndex));
-    musicIndex++;
-    musicIndex %= 3;
-}
+void setAppUpdateCallback(appUpdateCallback_t update) { mUpdate = update; }
+appUpdateCallback_t getAppUpdateCallback() { return mUpdate; }
+
+void setAppRenderCallback(appRenderCallback_t render) { mRender = render; }
+appRenderCallback_t getAppRenderCallback() { return mRender; }
 
 int main()
 {
     setupCallback();
 
     initGraphics();
+    inputEnable(PSP_CTRL_MODE_ANALOG);
+    timeInit();
 
     remove("game.log");
     FILE* logFile = fopen("game.log", "wb+");
@@ -37,27 +41,27 @@ int main()
 
     initAudio();
 
-    music[0] = loadAudioStream("Assets/tn-shi - Mood Swing.ogg");
-    music[1] = loadAudioStream("Assets/tn-shi - lol who cares.ogg");
-    music[2] = loadAudioStream("Assets/tn-shi - Contradiction.ogg");
+    mainMenuInit();
 
-    setEndAudioCallback(musicEnded);
-    musicEnded();
-
-    uint64_t frame = 0;
+    setAppRenderCallback(mainMenuRender);
+    setAppUpdateCallback(mainMenuUpdate);
 
     while (isRunning())
     {
+        if (mUpdate)
+            mUpdate(timeDelta());
+
         startFrame();
 
-        sceGuClearColor(0xFF221111);
-        sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+        if (mRender)
+            mRender();
 
         endFrame();
+
+        timeTick();
     }
 
-    for (int i = 0; i < 3; i++)
-        closeAudioStream(music[i]);
+    mainMenuDispose();
 
     disposeGraphics();
     disposeAudio();

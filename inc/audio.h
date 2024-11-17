@@ -1,6 +1,10 @@
 #ifndef __AUDIO_H_
 #define __AUDIO_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 
@@ -24,5 +28,9 @@ void setAudioVolume(float volume);
 void setAudioStream(audio_stream* astream);
 void setEndAudioCallback(endAudioCallback_t callback);
 void disposeAudio();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
