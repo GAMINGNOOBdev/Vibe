@@ -6,12 +6,12 @@
 #include <logging.h>
 #include <malloc.h>
 
-audio_stream* loadAudioStream(const char* path)
+audio_stream_t* loadAudioStream(const char* path)
 {
     if (!path)
         return NULL;
     
-    audio_stream* astream = malloc(sizeof(audio_stream));
+    audio_stream_t* astream = malloc(sizeof(audio_stream_t));
     if (!astream)
         return NULL;
 
@@ -25,7 +25,7 @@ audio_stream* loadAudioStream(const char* path)
     return astream;
 }
 
-void audioStreamSeekStart(audio_stream* astream)
+void audioStreamSeekStart(audio_stream_t* astream)
 {
     if (!astream)
         return;
@@ -33,7 +33,7 @@ void audioStreamSeekStart(audio_stream* astream)
     stb_vorbis_seek_start(astream->stream);
 }
 
-void closeAudioStream(audio_stream* astream)
+void closeAudioStream(audio_stream_t* astream)
 {
     if (!astream)
         return;
@@ -43,11 +43,11 @@ void closeAudioStream(audio_stream* astream)
 }
 
 endAudioCallback_t audioEndCallback = NULL;
-audio_stream* global_audio_stream = NULL;
+audio_stream_t* global_audio_stream = NULL;
 
 void audioCallback(void* buffer, unsigned int length, void* userdata)
 {
-    audio_stream* astream = global_audio_stream;
+    audio_stream_t* astream = global_audio_stream;
     if (!astream)
         return;
 
@@ -71,7 +71,7 @@ void setAudioVolume(float volume)
     pspAudioSetVolume(0, vol, vol);
 }
 
-void setAudioStream(audio_stream* astream)
+void setAudioStream(audio_stream_t* astream)
 {
     global_audio_stream = astream;
 }

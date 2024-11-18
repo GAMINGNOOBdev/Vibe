@@ -13,7 +13,11 @@ OBJS = \
 		src/logging.o \
 		src/main.o \
 		src/mainMenu.o \
+		src/mesh.o \
+		src/sprite.o \
+		src/texture.o \
 		src/time.o \
+		src/vertex.o \
 		lib/stb_vorbis.o
 
 CFLAGS =
@@ -25,10 +29,10 @@ LIBS +=
 include make.config
 
 BUILD_PRX = 1
-PSP_FW_VERSION = 371
+#PSP_FW_VERSION = 371
 #PSP_FW_VERSION = 500
-#PSP_FW_VERSION = 660
-PSP_LARGE_MEMORY = 1
+PSP_FW_VERSION = 660
+#PSP_LARGE_MEMORY = 1
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = $(TARGET)
