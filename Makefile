@@ -8,6 +8,7 @@ SOURCE_FILES_FOR_COMPILING = $(call recursiveWildCard,$(SRCDIR),*.c)
 OBJS = \
 		src/audio.o \
 		src/callback.o \
+		src/fileutil.o \
 		src/gfx.o \
 		src/input.o \
 		src/logging.o \
@@ -16,6 +17,7 @@ OBJS = \
 		src/mesh.o \
 		src/sprite.o \
 		src/texture.o \
+		src/tilemap.o \
 		src/time.o \
 		src/vertex.o \
 		lib/stb_vorbis.o

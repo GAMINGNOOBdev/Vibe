@@ -25,6 +25,7 @@ typedef void(*endAudioCallback_t)();
 
 void initAudio();
 void setAudioVolume(float volume);
+float getAudioVolume();
 void setAudioStream(audio_stream_t* astream);
 void setEndAudioCallback(endAudioCallback_t callback);
 void disposeAudio();

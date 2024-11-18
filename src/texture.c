@@ -147,8 +147,8 @@ void getAtlasUvIndex(textureAtlas_t* atlas, float* buffer, int index)
     float sizeX = 1.f / ((float)atlas->width);
     float sizeY = 1.f / ((float)atlas->height);
 
-    float x = (float)row * sizeY;
-    float y = (float)column * sizeX;
+    float y = (float)row * sizeY;
+    float x = (float)column * sizeX;
 
     float h = y + sizeY;
     float w = x + sizeX;

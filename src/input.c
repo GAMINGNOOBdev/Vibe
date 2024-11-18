@@ -26,7 +26,7 @@ uint8_t analogY()
     return mInputData.Ly;
 }
 
-uint8_t buttonPrssed(unsigned int button)
+uint8_t buttonPressed(unsigned int button)
 {
     return mInputData.Buttons & button;
 }
@@ -34,4 +34,9 @@ uint8_t buttonPrssed(unsigned int button)
 uint8_t buttonHeld(unsigned int button)
 {
     return (mInputData.Buttons & button) && (mInputLastData.Buttons & button);
+}
+
+uint8_t buttonReleased(unsigned int button)
+{
+    return !(mInputData.Buttons & button) && (mInputLastData.Buttons & button);
 }

@@ -42,6 +42,7 @@ void closeAudioStream(audio_stream_t* astream)
     free(astream);
 }
 
+float audioVolume = 1.0f;
 endAudioCallback_t audioEndCallback = NULL;
 audio_stream_t* global_audio_stream = NULL;
 
@@ -63,12 +64,25 @@ void initAudio()
 {
     pspAudioInit();
     pspAudioSetChannelCallback(0, audioCallback, NULL);
+    setAudioVolume(1.0f);
 }
 
 void setAudioVolume(float volume)
 {
+    if (volume < 0)
+        volume = 0;
+    
+    if (volume > 1)
+        volume = 1;
+
     int vol = (int)(volume * (float)PSP_VOLUME_MAX);
     pspAudioSetVolume(0, vol, vol);
+    audioVolume = volume;
+}
+
+float getAudioVolume()
+{
+    return audioVolume;
 }
 
 void setAudioStream(audio_stream_t* astream)

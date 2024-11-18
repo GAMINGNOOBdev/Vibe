@@ -11,6 +11,7 @@ mesh_t* createMesh(uint32_t vertexCount, uint32_t indexCount)
         return NULL;
     
     mesh->data = memalign(16, sizeof(vertex_t) * vertexCount);
+    memset(mesh->data, 0, sizeof(vertex_t) * vertexCount);
     if (mesh->data == NULL)
     {
         free(mesh);
@@ -18,6 +19,7 @@ mesh_t* createMesh(uint32_t vertexCount, uint32_t indexCount)
     }
 
     mesh->indices = (uint16_t*)memalign(16, sizeof(uint16_t) * indexCount);
+    memset(mesh->indices, 0, sizeof(uint16_t) * indexCount);
     if (mesh->indices == NULL)
     {
         free(mesh->data);

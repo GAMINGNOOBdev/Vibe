@@ -48,6 +48,8 @@ int main()
 
     while (isRunning())
     {
+        inputRead();
+
         if (mUpdate)
             mUpdate(timeDelta());
 

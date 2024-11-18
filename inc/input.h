@@ -31,6 +31,11 @@ uint8_t buttonPressed(unsigned int button);
  */
 uint8_t buttonHeld(unsigned int button);
 
+/**
+ * @brief Check if a button is released
+ */
+uint8_t buttonReleased(unsigned int button);
+
 #ifdef __cplusplus
 }
 #endif
