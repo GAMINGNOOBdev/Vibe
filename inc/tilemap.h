@@ -2,6 +2,7 @@
 #define __TILEMAP_H_ 1
 
 #include <texture.h>
+#include <stdint.h>
 #include <mesh.h>
 
 #ifdef __cplusplus
@@ -11,6 +12,7 @@ extern "C" {
 typedef struct
 {
     int x, y, idx;
+    uint32_t color;
 } tile_t;
 
 typedef struct

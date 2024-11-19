@@ -57,10 +57,10 @@ void buildTilemap(tilemap_t* tilemap)
         float tw = tx + 1.0f;
         float th = ty + 1.0f;
 
-        ((vertex_t*)tilemap->mesh->data)[i * 4 + 0] = createVertex(buffer[0], buffer[1], 0xFFFFFFFF, tx, ty, 0.0f);
-        ((vertex_t*)tilemap->mesh->data)[i * 4 + 1] = createVertex(buffer[2], buffer[3], 0xFFFFFFFF, tx, th, 0.0f);
-        ((vertex_t*)tilemap->mesh->data)[i * 4 + 2] = createVertex(buffer[4], buffer[5], 0xFFFFFFFF, tw, th, 0.0f);
-        ((vertex_t*)tilemap->mesh->data)[i * 4 + 3] = createVertex(buffer[6], buffer[7], 0xFFFFFFFF, tw, ty, 0.0f);
+        ((vertex_t*)tilemap->mesh->data)[i * 4 + 0] = createVertex(buffer[0], buffer[1], tilemap->tiles[i].color, tx, ty, 0.0f);
+        ((vertex_t*)tilemap->mesh->data)[i * 4 + 1] = createVertex(buffer[2], buffer[3], tilemap->tiles[i].color, tx, th, 0.0f);
+        ((vertex_t*)tilemap->mesh->data)[i * 4 + 2] = createVertex(buffer[4], buffer[5], tilemap->tiles[i].color, tw, th, 0.0f);
+        ((vertex_t*)tilemap->mesh->data)[i * 4 + 3] = createVertex(buffer[6], buffer[7], tilemap->tiles[i].color, tw, ty, 0.0f);
 
         tilemap->mesh->indices[i * 6 + 0] = (i * 4) + 0;
         tilemap->mesh->indices[i * 6 + 1] = (i * 4) + 1;

@@ -9,6 +9,7 @@
 #include <logging.h>
 #include <pspctrl.h>
 #include <fileutil.h>
+#include <fontRenderer.h>
 
 audio_stream_t* music[3];
 int musicIndex = 0;
@@ -22,6 +23,7 @@ void musicEnded()
     musicIndex %= 3;
 }
 
+fontRenderer_t* mFontRenderer;
 texture_t* mTexture0;
 texture_t* mTexture1;
 tilemap_t* mFont;
@@ -31,7 +33,7 @@ textureAtlas_t mAtlas = {
     .height = 16
 };
 
-void drawText(tilemap_t* tilemap, const char* str)
+void drawText(tilemap_t* tilemap, const char* str, uint32_t color)
 {
     int len = strlen(str);
     LOGDEBUG(stringf("string len: '%d'", len));
@@ -46,6 +48,7 @@ void drawText(tilemap_t* tilemap, const char* str)
             .x = i % tilemap->width,
             .y = i / tilemap->height,
             .idx = c,
+            .color = color,
         };
 
         tilemap->tiles[i] = tile;
@@ -74,10 +77,13 @@ void mainMenuInit()
     mTexture0 = loadTexture("Assets/LOGO.png", GL_TRUE, GL_TRUE);
     mTexture1 = loadTexture("Assets/default.png", GL_FALSE, GL_TRUE);
 
+    mFontRenderer = createFontRenderer("Assets", "dos.fnt", 8.f, 0);
+    fontRendererBuildText(mFontRenderer, "Hi", 50, 50, 0xFFFFFFFF);
+
     mFont = createTilemap(&mAtlas, mTexture1, 16, 16);
     mFont->x = 144;
     mFont->y = 16;
-    drawText(mFont, " Hello World!");
+    drawText(mFont, " Hello World!", 0xFFFF0000);
     buildTilemap(mFont);
 
     mSprite = createSprite(0, 0, 1, 1, mTexture0);
@@ -99,6 +105,7 @@ void mainMenuDispose()
     disposeTexture(mTexture1);
     disposeTilemap(mFont);
     disposeSprite(mSprite);
+    disposeFontRenderer(mFontRenderer);
 }
 
 void mainMenuInputHandle(float delta)
@@ -121,6 +128,9 @@ void mainMenuUpdate(float delta)
 void mainMenuRender()
 {
     glDisable(GL_DEPTH_TEST);
+
+    glBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+    glEnable(GL_BLEND);
 
     glClearColor(0xFF221111);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -151,4 +161,5 @@ void mainMenuRender()
     glLoadIdentity();
 
     drawTilemap(mFont);
+    fontRendererDraw(mFontRenderer);
 }

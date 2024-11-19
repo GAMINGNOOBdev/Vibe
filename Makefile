@@ -9,6 +9,8 @@ OBJS = \
 		src/audio.o \
 		src/callback.o \
 		src/fileutil.o \
+		src/fontFile.o \
+		src/fontRenderer.o \
 		src/gfx.o \
 		src/input.o \
 		src/logging.o \
