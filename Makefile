@@ -17,7 +17,10 @@ OBJS = \
 		src/main.o \
 		src/mainMenu.o \
 		src/mesh.o \
+		src/songlist.o \
+		src/songSelect.o \
 		src/sprite.o \
+		src/strutil.o \
 		src/texture.o \
 		src/tilemap.o \
 		src/time.o \

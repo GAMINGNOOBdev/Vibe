@@ -141,6 +141,17 @@ float fontWhitespaceAdvance(uint32_t c, float mScale, float mPixelScale, fontFil
     return 0;
 }
 
+void printVertex(vertex_t* vert)
+{
+    if (vert == NULL)
+        return;
+
+    LOGERROR(stringf("pos{%f|%f|%f} uv{%f|%f} col{0x%8.8x}",
+                     vert->x, vert->y, vert->z,
+                     vert->u, vert->v,
+                     vert->color));
+}
+
 void fontRendererBuildText(fontRenderer_t* renderer, const char* text, uint16_t x, uint16_t y, uint32_t color)
 {
     if (renderer == NULL || text == NULL)
@@ -185,13 +196,18 @@ void fontRendererBuildText(fontRenderer_t* renderer, const char* text, uint16_t 
         ((vertex_t*)renderer->mesh->data)[(i * 4) + 2] = createVertex(bakedChr.u1, bakedChr.v1, color, bakedChr.x1, bakedChr.y1, 0);
         ((vertex_t*)renderer->mesh->data)[(i * 4) + 3] = createVertex(bakedChr.u1, bakedChr.v0, color, bakedChr.x1, bakedChr.y0, 0);
 
-        renderer->mesh->indices[(i * 6) + 0] = 0;
-        renderer->mesh->indices[(i * 6) + 1] = 1;
-        renderer->mesh->indices[(i * 6) + 2] = 2;
+        printVertex(&((vertex_t*)renderer->mesh->data)[(i * 4) + 0]);
+        printVertex(&((vertex_t*)renderer->mesh->data)[(i * 4) + 1]);
+        printVertex(&((vertex_t*)renderer->mesh->data)[(i * 4) + 2]);
+        printVertex(&((vertex_t*)renderer->mesh->data)[(i * 4) + 3]);
 
-        renderer->mesh->indices[(i * 6) + 3] = 2;
-        renderer->mesh->indices[(i * 6) + 4] = 3;
-        renderer->mesh->indices[(i * 6) + 5] = 0;
+        renderer->mesh->indices[(i * 6) + 0] = (i * 4) + 0;
+        renderer->mesh->indices[(i * 6) + 1] = (i * 4) + 1;
+        renderer->mesh->indices[(i * 6) + 2] = (i * 4) + 2;
+
+        renderer->mesh->indices[(i * 6) + 3] = (i * 4) + 2;
+        renderer->mesh->indices[(i * 6) + 4] = (i * 4) + 3;
+        renderer->mesh->indices[(i * 6) + 5] = (i * 4) + 0;
 
         X += bakedChr.advanceX;
     }

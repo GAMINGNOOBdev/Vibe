@@ -1,5 +1,6 @@
 #include <fileutil.h>
 #include <logging.h>
+#include <strutil.h>
 #include <dirent.h>
 #include <memory.h>
 #include <string.h>
@@ -7,36 +8,6 @@
 #include <stdio.h>
 
 #define MAX_OF(a, b) a > b ? a : b
-
-int strpos(const char* str, char c)
-{
-    char* s = (char*)str;
-    int idx = 0;
-    while (*s != 0)
-    {
-        if (*s == c)
-            return idx;
-        s++;
-        idx++;
-    }
-    return -1;
-}
-
-int strlpos(const char* str, char c)
-{
-    char* s = (char*)str;
-    int idx = 0;
-    int resIdx = -1;
-    while (*s != 0)
-    {
-        if (*s == c)
-            resIdx = idx;
-
-        s++;
-        idx++;
-    }
-    return resIdx;
-}
 
 stringvec_t* createStringVec()
 {
@@ -71,10 +42,10 @@ void pushBackStringVec(stringvec_t* vec, const char* value)
     if (entry == NULL)
         return;
 
-    size_t contentsSize = strlen(value)+1;
-    entry->contents = malloc(contentsSize);
-    memset(entry->contents, 0, contentsSize);
-    memcpy(entry->contents, value, contentsSize-1);
+    size_t contentsSize = strlen(value);
+    entry->contents = malloc(contentsSize+1);
+    memset(entry->contents, 0, contentsSize+1);
+    memcpy(entry->contents, value, contentsSize);
 
     if (vec->start == NULL)
     {

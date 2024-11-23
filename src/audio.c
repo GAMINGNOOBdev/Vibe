@@ -5,6 +5,7 @@
 #include <pspaudio.h>
 #include <logging.h>
 #include <malloc.h>
+#include <memory.h>
 
 audio_stream_t* loadAudioStream(const char* path)
 {
@@ -50,7 +51,10 @@ void audioCallback(void* buffer, unsigned int length, void* userdata)
 {
     audio_stream_t* astream = global_audio_stream;
     if (!astream)
+    {
+        memset(buffer, 0, sizeof(short) * length * 2);
         return;
+    }
 
     short* buf = (short*)buffer;
     int numFrames = length*astream->info.channels;

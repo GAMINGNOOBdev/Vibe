@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+void switchToMainMenu();
+
 void mainMenuInit();
 void mainMenuDispose();
 void mainMenuUpdate(float delta);

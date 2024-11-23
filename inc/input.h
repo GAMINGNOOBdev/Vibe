@@ -1,6 +1,7 @@
 #ifndef __INPUT_H_
 #define __INPUT_H_ 1
 
+#include <pspctrl.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -18,23 +19,25 @@ void inputEnable(int mode);
  */
 void inputRead();
 
+SceCtrlData getInputData();
+
 uint8_t analogX();
 uint8_t analogY();
 
 /**
  * @brief Check if a button is pressed
  */
-uint8_t buttonPressed(unsigned int button);
+uint8_t buttonPressed(uint32_t button);
 
 /**
  * @brief Check if a button is held
  */
-uint8_t buttonHeld(unsigned int button);
+uint8_t buttonHeld(uint32_t button);
 
 /**
  * @brief Check if a button is released
  */
-uint8_t buttonReleased(unsigned int button);
+uint8_t buttonReleased(uint32_t button);
 
 #ifdef __cplusplus
 }

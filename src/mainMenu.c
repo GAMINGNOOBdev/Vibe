@@ -1,3 +1,4 @@
+#include <app.h>
 #include <mesh.h>
 #include <gu2gl.h>
 #include <audio.h>
@@ -9,6 +10,8 @@
 #include <logging.h>
 #include <pspctrl.h>
 #include <fileutil.h>
+#include <mainMenu.h>
+#include <songSelect.h>
 #include <fontRenderer.h>
 
 audio_stream_t* music[3];
@@ -36,13 +39,11 @@ textureAtlas_t mAtlas = {
 void drawText(tilemap_t* tilemap, const char* str, uint32_t color)
 {
     int len = strlen(str);
-    LOGDEBUG(stringf("string len: '%d'", len));
+    memset(tilemap->tiles, 0, sizeof(tile_t)*tilemap->width*tilemap->height);
 
     for (int i = 0; i < len; i++)
     {
         char c = str[i];
-
-        LOGDEBUG(stringf("current char: '%c' (%d)", c, c));
 
         tile_t tile = {
             .x = i % tilemap->width,
@@ -53,6 +54,20 @@ void drawText(tilemap_t* tilemap, const char* str, uint32_t color)
 
         tilemap->tiles[i] = tile;
     }
+}
+
+void switchToMainMenu()
+{
+    setAppUpdateCallback(mainMenuUpdate);
+    setAppRenderCallback(mainMenuRender);
+
+    setEndAudioCallback(musicEnded);
+    musicEnded();
+
+    drawText(mFont, " Press start", 0xFFFF0000);
+    buildTilemap(mFont);
+
+    LOGINFO("loaded main menu");
 }
 
 void mainMenuInit()
@@ -77,13 +92,13 @@ void mainMenuInit()
     mTexture0 = loadTexture("Assets/LOGO.png", GL_TRUE, GL_TRUE);
     mTexture1 = loadTexture("Assets/default.png", GL_FALSE, GL_TRUE);
 
-    mFontRenderer = createFontRenderer("Assets", "dos.fnt", 8.f, 0);
+    mFontRenderer = createFontRenderer("Assets", "dos.fnt", 16.f, 0);
     fontRendererBuildText(mFontRenderer, "Hi", 50, 50, 0xFFFFFFFF);
 
     mFont = createTilemap(&mAtlas, mTexture1, 16, 16);
     mFont->x = 144;
     mFont->y = 16;
-    drawText(mFont, " Hello World!", 0xFFFF0000);
+    drawText(mFont, " Press start", 0xFFFF0000);
     buildTilemap(mFont);
 
     mSprite = createSprite(0, 0, 1, 1, mTexture0);
@@ -115,15 +130,20 @@ void mainMenuInputHandle(float delta)
 
     if (buttonPressed(PSP_CTRL_DOWN))
         setAudioVolume(getAudioVolume()-delta);
-    
+
     if (buttonReleased(PSP_CTRL_RIGHT) || buttonReleased(PSP_CTRL_LEFT))
         musicEnded();
+
+    if (buttonPressed(PSP_CTRL_START))
+        switchToSongSelect();
 }
 
 void mainMenuUpdate(float delta)
 {
     mainMenuInputHandle(delta);
 }
+
+int frames = 0;
 
 void mainMenuRender()
 {
@@ -160,6 +180,11 @@ void mainMenuRender()
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
 
-    drawTilemap(mFont);
-    fontRendererDraw(mFontRenderer);
+    if (frames < 30)
+        drawTilemap(mFont);
+    else
+        fontRendererDraw(mFontRenderer);
+
+    frames++;
+    frames %= 60;
 }

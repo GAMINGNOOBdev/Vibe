@@ -1,5 +1,6 @@
 #include <pspkernel.h>
 #include <pspctrl.h>
+#include <pspdebug.h>
 #include <malloc.h>
 #include <math.h>
 
@@ -8,6 +9,7 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
+#include <songSelect.h>
 #include <callback.h>
 #include <mainMenu.h>
 #include <logging.h>
@@ -30,6 +32,9 @@ int main()
 {
     setupCallback();
 
+    pspDebugScreenInit();
+    pspDebugScreenPrintf("loading...");
+
     initGraphics();
     inputEnable(PSP_CTRL_MODE_ANALOG);
     timeInit();
@@ -42,9 +47,9 @@ int main()
     initAudio();
 
     mainMenuInit();
+    songSelectInit();
 
-    setAppRenderCallback(mainMenuRender);
-    setAppUpdateCallback(mainMenuUpdate);
+    switchToMainMenu();
 
     while (isRunning())
     {
@@ -63,6 +68,7 @@ int main()
         timeTick();
     }
 
+    songSelectDispose();
     mainMenuDispose();
 
     disposeGraphics();
