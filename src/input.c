@@ -39,6 +39,14 @@ uint8_t buttonPressed(uint32_t button)
     return 0;
 }
 
+uint8_t buttonPressedOnce(uint32_t button)
+{
+    if((mInputData.Buttons & button) && !(mInputLastData.Buttons & button))
+        return 1;
+
+    return 0;
+}
+
 uint8_t buttonHeld(uint32_t button)
 {
     if ((mInputData.Buttons & button) && (mInputLastData.Buttons & button))

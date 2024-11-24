@@ -1,3 +1,9 @@
 [submodule "gu2gl"]
 	path = gu2gl
 	url = https://github.com/IridescentRose/gu2gl.git
+[submodule "minimp3"]
+	path = minimp3
+	url = https://github.com/lieff/minimp3.git
+[submodule "libwave"]
+	path = libwave
+	url = https://github.com/brglng/libwave.git

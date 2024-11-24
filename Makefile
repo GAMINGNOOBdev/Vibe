@@ -1,12 +1,13 @@
 TARGET = Vibe
 
-INCDIR = inc lib gu2gl
+INCDIR = inc lib gu2gl minimp3 libwave/include
 SRCDIR = src
 
 SOURCE_FILES_FOR_COMPILING = $(call recursiveWildCard,$(SRCDIR),*.c)
 
 OBJS = \
 		src/audio.o \
+		src/beatmapList.o \
 		src/callback.o \
 		src/fileutil.o \
 		src/fontFile.o \
@@ -25,9 +26,10 @@ OBJS = \
 		src/tilemap.o \
 		src/time.o \
 		src/vertex.o \
-		lib/stb_vorbis.o
+		lib/stb_vorbis.o \
+		libwave/src/wave.o
 
-CFLAGS =
+CFLAGS = -DTINYWAV_USE_MALLOC
 CXXFLAGS = $(CFLAGS) -std=c++14 -fno-rtti -fno-exceptions -Wall -Wno-narrowing
 ASFLAGS = $(CFLAGS)
 

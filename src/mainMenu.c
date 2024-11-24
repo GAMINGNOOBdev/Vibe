@@ -14,7 +14,8 @@
 #include <songSelect.h>
 #include <fontRenderer.h>
 
-audio_stream_t* music[3];
+#define MAX_MUSIC_SIZE 5
+audio_stream_t* music[MAX_MUSIC_SIZE];
 int musicIndex = 0;
 
 void musicEnded()
@@ -23,7 +24,7 @@ void musicEnded()
     setAudioStream(music[musicIndex]);
     LOGINFO(stringf("switched to track no.%d", musicIndex));
     musicIndex++;
-    musicIndex %= 3;
+    musicIndex %= MAX_MUSIC_SIZE;
 }
 
 fontRenderer_t* mFontRenderer;
@@ -106,6 +107,8 @@ void mainMenuInit()
     music[0] = loadAudioStream("Assets/tn-shi - Mood Swing.ogg");
     music[1] = loadAudioStream("Assets/tn-shi - lol who cares.ogg");
     music[2] = loadAudioStream("Assets/tn-shi - Contradiction.ogg");
+    music[3] = loadAudioStream("Assets/TH4 LLS Dreamy Pilot.mp3");
+    music[4] = loadAudioStream("Assets/audio.wav");
 
     setEndAudioCallback(musicEnded);
     musicEnded();
@@ -113,7 +116,7 @@ void mainMenuInit()
 
 void mainMenuDispose()
 {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < MAX_MUSIC_SIZE; i++)
         closeAudioStream(music[i]);
 
     disposeTexture(mTexture0);

@@ -25,9 +25,14 @@ uint8_t analogX();
 uint8_t analogY();
 
 /**
- * @brief Check if a button is pressed
+ * @brief Check if a button is pressed down (not only once!)
  */
 uint8_t buttonPressed(uint32_t button);
+
+/**
+ * @brief Check if a button is pressed only once
+ */
+uint8_t buttonPressedOnce(uint32_t button);
 
 /**
  * @brief Check if a button is held
