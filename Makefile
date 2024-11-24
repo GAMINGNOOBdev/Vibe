@@ -7,7 +7,7 @@ SOURCE_FILES_FOR_COMPILING = $(call recursiveWildCard,$(SRCDIR),*.c)
 
 OBJS = \
 		src/audio.o \
-		src/beatmapList.o \
+		src/beatmapinfo.o \
 		src/callback.o \
 		src/fileutil.o \
 		src/fontFile.o \
