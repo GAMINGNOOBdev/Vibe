@@ -5,10 +5,12 @@
 #include <input.h>
 #include <sprite.h>
 #include <string.h>
+#include <options.h>
 #include <texture.h>
 #include <tilemap.h>
 #include <logging.h>
 #include <pspctrl.h>
+#include <pspaudio.h>
 #include <fileutil.h>
 #include <mainMenu.h>
 #include <songSelect.h>
@@ -57,8 +59,11 @@ void switchToMainMenu()
     setAppUpdateCallback(mainMenuUpdate);
     setAppRenderCallback(mainMenuRender);
 
-    setEndAudioCallback(mainMenuMusicEnded);
-    mainMenuMusicEnded();
+    if (getOptions()->playMenuMusic)
+    {
+        setEndAudioCallback(mainMenuMusicEnded);
+        mainMenuMusicEnded();
+    }
 
     drawText(mFont, " Press start", 0xFFFF0000);
     buildTilemap(mFont);
@@ -91,7 +96,7 @@ void mainMenuInit()
     mFont = createTilemap(&mAtlas, mTexture1, 16, 16);
     mFont->x = 144;
     mFont->y = 16;
-    drawText(mFont, " Press start", 0xFFFF0000);
+    drawText(mFont, " Press start", 0xFFFFFFFF);
     buildTilemap(mFont);
 
     mSprite = createSprite(0, 0.5, 4, 4, mTexture0);
@@ -113,10 +118,19 @@ void mainMenuDispose()
 void mainMenuInputHandle(float delta)
 {
     if (buttonPressed(PSP_CTRL_UP))
+    {
         setAudioVolume(getAudioVolume()+delta);
+        getOptions()->audioMasterVolume = getAudioVolume()*PSP_AUDIO_VOLUME_MAX;
+    }
 
     if (buttonPressed(PSP_CTRL_DOWN))
+    {
         setAudioVolume(getAudioVolume()-delta);
+        getOptions()->audioMasterVolume = getAudioVolume()*PSP_AUDIO_VOLUME_MAX;
+    }
+
+    if (buttonPressed(PSP_CTRL_TRIANGLE))
+        getOptions()->playMenuMusic = !getOptions()->playMenuMusic;
 
     if (buttonPressed(PSP_CTRL_START))
         switchToSongSelect();

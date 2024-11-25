@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+typedef void(*cleanup_callback_t)(void);
+
+extern cleanup_callback_t gameCleanupCallback;
+
 int isRunning();
 int exitCallback(int arg1, int arg2, void* common);
 int callbackThread(SceSize args, void* argsPtr);

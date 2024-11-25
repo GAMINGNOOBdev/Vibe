@@ -4,9 +4,11 @@
 #include <input.h>
 #include <string.h>
 #include <malloc.h>
+#include <options.h>
 #include <logging.h>
 #include <pspctrl.h>
 #include <tilemap.h>
+#include <pspaudio.h>
 #include <fileutil.h>
 #include <songlist.h>
 #include <mainMenu.h>
@@ -27,6 +29,8 @@ void beatmapSongCallback()
 
 void switchToSongSelect()
 {
+    saveOptions();
+
     setAppUpdateCallback(songSelectUpdate);
     setAppRenderCallback(songSelectRender);
 
@@ -108,7 +112,7 @@ void songSelectInputHandle(float delta)
         // unload beatmaps or do nothing
     }
 
-    if (buttonPressedOnce(PSP_CTRL_DOWN))
+    if (buttonPressedOnce(PSP_CTRL_RIGHT))
     {
         if (songListCurrent->next == NULL)
             songListCurrent = songList->start;
@@ -118,7 +122,7 @@ void songSelectInputHandle(float delta)
         selectedSongUpdated();
     }
 
-    if (buttonPressedOnce(PSP_CTRL_UP))
+    if (buttonPressedOnce(PSP_CTRL_LEFT))
     {
         if (songListCurrent->prev == NULL)
             songListCurrent = songList->end;
@@ -127,6 +131,21 @@ void songSelectInputHandle(float delta)
 
         selectedSongUpdated();
     }
+
+    if (buttonPressed(PSP_CTRL_UP))
+    {
+        setAudioVolume(getAudioVolume()+delta);
+        getOptions()->audioMasterVolume = getAudioVolume()*PSP_AUDIO_VOLUME_MAX;
+    }
+
+    if (buttonPressed(PSP_CTRL_DOWN))
+    {
+        setAudioVolume(getAudioVolume()-delta);
+        getOptions()->audioMasterVolume = getAudioVolume()*PSP_AUDIO_VOLUME_MAX;
+    }
+
+    if (buttonPressedOnce(PSP_CTRL_SELECT))
+        switchToMainMenu();
 }
 
 void songSelectUpdate(float delta)

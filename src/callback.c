@@ -1,14 +1,17 @@
 #include <callback.h>
 
-static int ExitRequest = 0;
+cleanup_callback_t gameCleanupCallback = NULL;
+int ExitRequest = 0;
 
 int isRunning()
 {
-    return !ExitRequest;
+    return ExitRequest == 0;
 }
 
 int exitCallback(int arg1, int arg2, void* common)
 {
+    if (gameCleanupCallback != NULL)
+        gameCleanupCallback();
     ExitRequest = 1;
     return 0;
 }

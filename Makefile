@@ -18,6 +18,7 @@ OBJS = \
 		src/main.o \
 		src/mainMenu.o \
 		src/mesh.o \
+		src/options.o \
 		src/songlist.o \
 		src/songSelect.o \
 		src/sprite.o \

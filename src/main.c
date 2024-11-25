@@ -12,6 +12,8 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 #include <songSelect.h>
 #include <callback.h>
 #include <mainMenu.h>
+#include <pspaudio.h>
+#include <options.h>
 #include <logging.h>
 #include <audio.h>
 #include <input.h>
@@ -21,6 +23,7 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 appUpdateCallback_t mUpdate = NULL;
 appRenderCallback_t mRender = NULL;
+FILE* logFile;
 
 void setAppUpdateCallback(appUpdateCallback_t update) { mUpdate = update; }
 appUpdateCallback_t getAppUpdateCallback() { return mUpdate; }
@@ -39,8 +42,11 @@ int main()
     inputEnable(PSP_CTRL_MODE_ANALOG);
     timeInit();
 
+    loadOptions();
+    setAudioVolume(((float)getOptions()->audioMasterVolume)/((float)PSP_AUDIO_VOLUME_MAX));
+
     remove("game.log");
-    FILE* logFile = fopen("game.log", "wb+");
+    logFile = fopen("game.log", "wb+");
     logSetStream(logFile);
     logEnableDebugMsgs(1);
 
@@ -70,6 +76,8 @@ int main()
 
     songSelectDispose();
     mainMenuDispose();
+
+    saveOptions();
 
     disposeGraphics();
     disposeAudio();
