@@ -52,6 +52,7 @@ void loadSongAudio(struct songlist_entry_t* entry)
     if (beatmapSong != NULL)
         loadSongAudio(NULL);
 
+    LOGINFO(stringf("Now playing: '%s' by '%s'", entry->songname, entry->artist));
     beatmapSong = loadAudioStream(stringf("Songs/%lld %s - %s/audio.ogg", entry->id, entry->artist, entry->songname));
     setAudioStream(beatmapSong);
 }

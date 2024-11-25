@@ -14,20 +14,15 @@
 #include <songSelect.h>
 #include <fontRenderer.h>
 
-#define MAX_MUSIC_SIZE 5
-audio_stream_t* music[MAX_MUSIC_SIZE];
-int musicIndex = 0;
+audio_stream_t* mainMenuMusic;
 
-void musicEnded()
+void mainMenuMusicEnded()
 {
-    audioStreamSeekStart(music[musicIndex]);
-    setAudioStream(music[musicIndex]);
-    LOGINFO(stringf("switched to track no.%d", musicIndex));
-    musicIndex++;
-    musicIndex %= MAX_MUSIC_SIZE;
+    audioStreamSeekStart(mainMenuMusic);
+    setAudioStream(mainMenuMusic);
 }
 
-fontRenderer_t* mFontRenderer;
+// fontRenderer_t* mFontRenderer;
 texture_t* mTexture0;
 texture_t* mTexture1;
 tilemap_t* mFont;
@@ -62,8 +57,8 @@ void switchToMainMenu()
     setAppUpdateCallback(mainMenuUpdate);
     setAppRenderCallback(mainMenuRender);
 
-    setEndAudioCallback(musicEnded);
-    musicEnded();
+    setEndAudioCallback(mainMenuMusicEnded);
+    mainMenuMusicEnded();
 
     drawText(mFont, " Press start", 0xFFFF0000);
     buildTilemap(mFont);
@@ -82,19 +77,16 @@ void mainMenuInit()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-16.0f / 9.0f, 16.0f / 9.0f, -1.0f, 1.0f, -10.0f, 10.0f);
-
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
-
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
 
-    mTexture0 = loadTexture("Assets/LOGO.png", GL_TRUE, GL_TRUE);
+    mTexture0 = loadTexture("Assets/mainMenu.png", GL_TRUE, GL_TRUE);
     mTexture1 = loadTexture("Assets/default.png", GL_FALSE, GL_TRUE);
 
-    mFontRenderer = createFontRenderer("Assets", "dos.fnt", 16.f, 0);
-    fontRendererBuildText(mFontRenderer, "Hi", 50, 50, 0xFFFFFFFF);
+    // mFontRenderer = createFontRenderer("Assets", "dos.fnt", 8.f, 0);
+    // fontRendererBuildText(mFontRenderer, "Hi", 50, 50, 0xFFFFFFFF);
 
     mFont = createTilemap(&mAtlas, mTexture1, 16, 16);
     mFont->x = 144;
@@ -102,28 +94,20 @@ void mainMenuInit()
     drawText(mFont, " Press start", 0xFFFF0000);
     buildTilemap(mFont);
 
-    mSprite = createSprite(0, 0, 1, 1, mTexture0);
+    mSprite = createSprite(0, 0.5, 4, 4, mTexture0);
 
-    music[0] = loadAudioStream("Assets/tn-shi - Mood Swing.ogg");
-    music[1] = loadAudioStream("Assets/tn-shi - lol who cares.ogg");
-    music[2] = loadAudioStream("Assets/tn-shi - Contradiction.ogg");
-    music[3] = loadAudioStream("Assets/TH4 LLS Dreamy Pilot.mp3");
-    music[4] = loadAudioStream("Assets/audio.wav");
-
-    setEndAudioCallback(musicEnded);
-    musicEnded();
+    mainMenuMusic = loadAudioStream("Assets/mainMenu.wav");
 }
 
 void mainMenuDispose()
 {
-    for (int i = 0; i < MAX_MUSIC_SIZE; i++)
-        closeAudioStream(music[i]);
+    closeAudioStream(mainMenuMusic);
 
     disposeTexture(mTexture0);
     disposeTexture(mTexture1);
     disposeTilemap(mFont);
     disposeSprite(mSprite);
-    disposeFontRenderer(mFontRenderer);
+    // disposeFontRenderer(mFontRenderer);
 }
 
 void mainMenuInputHandle(float delta)
@@ -133,9 +117,6 @@ void mainMenuInputHandle(float delta)
 
     if (buttonPressed(PSP_CTRL_DOWN))
         setAudioVolume(getAudioVolume()-delta);
-
-    if (buttonReleased(PSP_CTRL_RIGHT) || buttonReleased(PSP_CTRL_LEFT))
-        musicEnded();
 
     if (buttonPressed(PSP_CTRL_START))
         switchToSongSelect();
@@ -155,7 +136,7 @@ void mainMenuRender()
     glBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
     glEnable(GL_BLEND);
 
-    glClearColor(0xFF221111);
+    glClearColor(0xFF111111);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     ///////////////////////
@@ -185,8 +166,8 @@ void mainMenuRender()
 
     if (frames < 30)
         drawTilemap(mFont);
-    else
-        fontRendererDraw(mFontRenderer);
+    // else
+    //     fontRendererDraw(mFontRenderer);
 
     frames++;
     frames %= 60;
