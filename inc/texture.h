@@ -18,13 +18,12 @@ typedef struct
 {
     float width;
     float height;
-} textureAtlas_t;
+} texture_atlas_t;
 
-texture_t* loadTexture(const char* filename, const int flip, const int vram);
-void bindTexture(texture_t* tex);
-void disposeTexture(texture_t* tex);
+void texture_load(texture_t* texture, const char* filename, const int flip, const int vram);
+void texture_bind(texture_t* tex);
 
-void getAtlasUvIndex(textureAtlas_t* atlas, float* buffer, int index);
+void texture_atlas_get_uv_index(texture_atlas_t* atlas, float* buffer, int index);
 
 #ifdef __cplusplus
 }

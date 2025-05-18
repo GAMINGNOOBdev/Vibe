@@ -9,12 +9,15 @@ extern "C" {
 
 typedef struct
 {
-    float u, v;
+    float u;
+    float v;
     uint32_t color;
-    float x, y, z;
-} vertex_t;
+    float x;
+    float y;
+    float z;
+} __attribute__((packed)) vertex_t;
 
-vertex_t createVertex(float u, float v, uint32_t color, float x, float y, float z);
+#define VERTEX(_u,_v,_color,_x,_y,_z) (vertex_t){.u=_u,.v=_v,.color=_color,.x=_x,.y=_y,.z=_z}
 
 #ifdef __cplusplus
 }

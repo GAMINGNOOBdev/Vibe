@@ -7,11 +7,11 @@ extern "C" {
 
 #include <stdint.h>
 
-void timeInit();
-void timeTick();
-double timeDelta();
-double timeElapsed();
-uint32_t timeFPS();
+void time_init();
+void time_tick();
+double time_delta();
+double time_elapsed();
+uint32_t time_fps();
 
 #ifdef __cplusplus
 }

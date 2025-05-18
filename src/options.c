@@ -2,36 +2,31 @@
 #include <options.h>
 #include <stdio.h>
 
-options_t globalOptions = {1 , PSP_AUDIO_VOLUME_MAX};
+options_t options = {1, 1, 1};
 
-void loadOptions()
+void options_load(void)
 {
     FILE* in = fopen("options.bin", "rb");
     if (in == NULL)
     {
-        saveOptions();
+        options_save();
         return;
     }
 
-    fread(&globalOptions, sizeof(options_t), 1, in);
+    fread(&options, sizeof(options_t), 1, in);
 
     fclose(in);
 }
 
-void saveOptions()
+void options_save(void)
 {
     FILE* out = fopen("options.bin", "wb+");
     if (out == NULL)
         return;
 
-    fwrite(&globalOptions, sizeof(options_t), 1, out);
+    fwrite(&options, sizeof(options_t), 1, out);
     char pad = 0;
     fwrite(&pad, 1, 1, out);
 
     fclose(out);
-}
-
-options_t* getOptions()
-{
-    return &globalOptions;
 }

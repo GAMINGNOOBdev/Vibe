@@ -9,13 +9,15 @@ extern "C" {
 
 typedef struct
 {
-    uint8_t playMenuMusic;
-    uint32_t audioMasterVolume;
+    float master_volume;
+    float music_volume;
+    float hitsound_volume;
 } options_t;
 
-void loadOptions();
-void saveOptions();
-options_t* getOptions();
+extern options_t options;
+
+void options_load(void);
+void options_save(void);
 
 #ifdef __cplusplus
 }

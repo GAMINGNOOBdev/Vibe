@@ -22,12 +22,12 @@ uint64_t mPastTime = 0;
 uint32_t mFreq = 0;
 uint32_t mFramesPerSecond = 0;
 
-void timeInit()
+void time_init()
 {
     mFreq = sceRtcGetTickResolution();
 }
 
-void timeTick()
+void time_tick()
 {
     mPastTime = mCurrTime;
     while (1)
@@ -41,17 +41,17 @@ void timeTick()
     mFramesPerSecond = (uint32_t)((double)mFreq / mElapsed);
 }
 
-double timeDelta()
+double time_delta()
 {
     return mDelta;
 }
 
-double timeElapsed()
+double time_elapsed()
 {
     return mElapsed;
 }
 
-uint32_t timeFPS()
+uint32_t time_fps()
 {
     return mFramesPerSecond;
 }

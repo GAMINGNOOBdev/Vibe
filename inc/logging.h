@@ -15,11 +15,11 @@ typedef unsigned char loglevel_t;
 #define LOGLEVEL_ERROR      2
 #define LOGLEVEL_WARNING    3
 
-#define LOG logStr
-#define LOGINFO(msg) logStr(LOGLEVEL_INFO, msg)
-#define LOGDEBUG(msg) logStr(LOGLEVEL_DEBUG, msg)
-#define LOGERROR(msg) logStr(LOGLEVEL_ERROR, msg)
-#define LOGWARNING(msg) logStr(LOGLEVEL_WARNING, msg)
+#define LOG log_msg
+#define LOGINFO(msg) log_msg(LOGLEVEL_INFO, msg)
+#define LOGDEBUG(msg) log_msg(LOGLEVEL_DEBUG, msg)
+#define LOGERROR(msg) log_msg(LOGLEVEL_ERROR, msg)
+#define LOGWARNING(msg) log_msg(LOGLEVEL_WARNING, msg)
 
 /**
  * @brief Like printf but for building a string together
@@ -38,14 +38,14 @@ const char* stringf(const char* formatString, ...);
  * 
  * @param val "Boolean" value, 1 = debug messages show up, 0 = no debug messages
  */
-void logEnableDebugMsgs(uint8_t val);
+void log_enable_debug_messages(uint8_t val);
 
 /**
  * @brief Set an output stream for log messages
  * 
  * @param stream The output stream to which will be written, NULL to disable logging
  */
-void logSetStream(FILE* stream);
+void log_set_stream(FILE* stream);
 
 /**
  * @brief Log a message onto the cmd line
@@ -55,7 +55,7 @@ void logSetStream(FILE* stream);
  * @param lvl Logging level
  * @param msg Log message
  */
-void logStr(loglevel_t lvl, const char* msg);
+void log_msg(loglevel_t lvl, const char* msg);
 
 #ifdef __cplusplus
 }

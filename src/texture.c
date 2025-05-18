@@ -57,69 +57,64 @@ void swizzle_fast(uint8_t* out, const uint8_t* in, const uint32_t width, const u
     }
 }
 
-texture_t* loadTexture(const char* filename, const int flip, const int vram)
+void texture_load(texture_t* texture, const char* filename, const int flip, const int vram)
 {
+    if (!texture || !filename)
+    {
+        LOGERROR(stringf("could not allocate texture object for file '%s'", filename));
+        return;
+    }
+
     int width, height, channels;
     stbi_set_flip_vertically_on_load(flip);
     uint8_t* imgData = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
 
     if (!imgData)
     {
-        LOGERROR(stringf("Could not load texture '%s'", filename));
-        return NULL;
+        LOGERROR(stringf("could not load texture '%s'", filename));
+        return;
     }
+    texture->width = width;
+    texture->height = height;
+    texture->pWidth = pow2(width);
+    texture->pHeight = pow2(height);
 
-    texture_t* result = (texture_t*)malloc(sizeof(texture_t));
-    if (!result)
-    {
-        LOGERROR(stringf("Could not allocate texture object for file '%s'", filename));
-        stbi_image_free(imgData);
-        return NULL;
-    }
-    result->width = width;
-    result->height = height;
-    result->pWidth = pow2(width);
-    result->pHeight = pow2(height);
-
-    size_t size = result->pWidth * result->pHeight * 4;
+    size_t size = texture->pWidth * texture->pHeight * 4;
 
     uint32_t* dataBuffer = (uint32_t*)memalign(16, size);
     if (!dataBuffer)
     {
-        free(result);
         stbi_image_free(imgData);
-        LOGERROR(stringf("Could not allocate data for texture '%s'", filename));
-        return NULL;
+        LOGERROR(stringf("could not allocate data for texture '%s'", filename));
+        return;
     }
 
-    copy_tex_data(dataBuffer, imgData, result->pWidth, width, height);
+    copy_tex_data(dataBuffer, imgData, texture->pWidth, width, height);
     stbi_image_free(imgData);
 
     uint32_t* swizzledPixels = NULL;
     if (vram)
-        swizzledPixels = (uint32_t*)getStaticVramTexture(result->pWidth, result->pHeight, GL_PSM_8888);
+        swizzledPixels = (uint32_t*)getStaticVramTexture(texture->pWidth, texture->pHeight, GL_PSM_8888);
     else
         swizzledPixels = (uint32_t*)memalign(16, size);
 
     if (!swizzledPixels)
     {
-        LOGERROR(stringf("Could not allocate data to swizzle texture '%s'", filename));
-        return NULL;
+        LOGERROR(stringf("could not allocate data to swizzle texture '%s'", filename));
+        return;
     }
 
-    swizzle_fast((uint8_t*)swizzledPixels, (const uint8_t*)dataBuffer, result->pWidth * 4, result->pHeight);
+    swizzle_fast((uint8_t*)swizzledPixels, (const uint8_t*)dataBuffer, texture->pWidth * 4, texture->pHeight);
 
-    result->data = swizzledPixels;
+    texture->data = swizzledPixels;
     free(dataBuffer);
 
     sceKernelDcacheWritebackInvalidateAll();
 
-    LOGINFO(stringf("Texture '%s' with size '%ld' loaded into %cram", filename, size, vram ? 'v' : ' '));
-
-    return result;
+    LOGINFO(stringf("texture '%s' with size '%ld' (%ldx%ld or %ldx%ld) loaded into %cram", filename, size, width, height, texture->pWidth, texture->pHeight, vram ? 'v' : ' '));
 }
 
-void bindTexture(texture_t* tex)
+void texture_bind(texture_t* tex)
 {
     if (!tex)
         return;
@@ -131,15 +126,7 @@ void bindTexture(texture_t* tex)
     glTexImage(0, tex->pWidth, tex->pHeight, tex->pWidth, tex->data);
 }
 
-void disposeTexture(texture_t* tex)
-{
-    if (!tex)
-        return;
-
-    free(tex);
-}
-
-void getAtlasUvIndex(textureAtlas_t* atlas, float* buffer, int index)
+void texture_atlas_get_uv_index(texture_atlas_t* atlas, float* buffer, int index)
 {
     int row = index / (int)atlas->width;
     int column = index % (int)atlas->height;

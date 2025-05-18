@@ -3,12 +3,12 @@
 cleanup_callback_t gameCleanupCallback = NULL;
 int ExitRequest = 0;
 
-int isRunning()
+int is_running()
 {
     return ExitRequest == 0;
 }
 
-int exitCallback(int arg1, int arg2, void* common)
+int exit_callback(int arg1, int arg2, void* common)
 {
     if (gameCleanupCallback != NULL)
         gameCleanupCallback();
@@ -16,26 +16,26 @@ int exitCallback(int arg1, int arg2, void* common)
     return 0;
 }
 
-int callbackThread(SceSize args, void* argsPtr)
+int callback_thread(SceSize args, void* argsPtr)
 {
     int callBackID;
-    callBackID = sceKernelCreateCallback("Exit Callback", exitCallback, NULL);
+    callBackID = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
     sceKernelRegisterExitCallback(callBackID);
     sceKernelSleepThreadCB();
     return 0;
 }
 
-int setupCallback()
+int setup_callbacks()
 {
     int threadID = 0;
-    threadID = sceKernelCreateThread("Callback Update Thread", callbackThread, 0x11, 0xFA0, THREAD_ATTR_USER, 0);
+    threadID = sceKernelCreateThread("Callback Update Thread", callback_thread, 0x11, 0xFA0, THREAD_ATTR_USER, 0);
     if (threadID >= 0)
         sceKernelStartThread(threadID, 0, 0);
 
     return threadID;
 }
 
-void exitGame()
+void exit_game()
 {
     sceKernelExitGame();
 }

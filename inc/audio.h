@@ -34,18 +34,18 @@ typedef struct
     audio_format_t format;
 } audio_stream_t;
 
-audio_stream_t* loadAudioStream(const char* path);
-void audioStreamSeekStart(audio_stream_t* astream);
-void closeAudioStream(audio_stream_t* astream);
+void audio_stream_load(audio_stream_t* stream, const char* path);
+void audio_stream_seek_start(audio_stream_t* astream);
+void audio_stream_dispose(audio_stream_t* astream);
 
-typedef void(*endAudioCallback_t)();
+typedef void(*audio_end_callback_t)(void);
 
-void initAudio();
-void setAudioVolume(float volume);
-float getAudioVolume();
-void setAudioStream(audio_stream_t* astream);
-void setEndAudioCallback(endAudioCallback_t callback);
-void disposeAudio();
+void audio_init(void);
+void audio_set_volume(float volume);
+float audio_get_volume(void);
+void audio_set_stream(audio_stream_t* astream);
+void audio_set_end_callback(audio_end_callback_t callback);
+void audio_dispose(void);
 
 #ifdef __cplusplus
 }

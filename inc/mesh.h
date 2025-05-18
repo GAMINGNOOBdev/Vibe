@@ -15,9 +15,9 @@ typedef struct
     uint32_t indexCount;
 } mesh_t;
 
-mesh_t* createMesh(uint32_t vertexCount, uint32_t indexCount);
-void drawMesh(mesh_t* mesh);
-void disposeMesh(mesh_t* mesh);
+void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount);
+void mesh_draw(mesh_t* mesh);
+void mesh_dispose(mesh_t* mesh);
 
 #ifdef __cplusplus
 }

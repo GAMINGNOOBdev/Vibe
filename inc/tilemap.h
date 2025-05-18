@@ -5,10 +5,6 @@
 #include <stdint.h>
 #include <mesh.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct
 {
     int x, y, idx;
@@ -21,18 +17,14 @@ typedef struct
     float scalex, scaley;
     int width, height;
     tile_t* tiles;
-    textureAtlas_t* atlas;
+    texture_atlas_t atlas;
     texture_t* texture;
-    mesh_t* mesh;
+    mesh_t mesh;
 } tilemap_t;
 
-tilemap_t* createTilemap(textureAtlas_t* atlas, texture_t* texture, int sizex, int sizey);
-void buildTilemap(tilemap_t* tilemap);
-void drawTilemap(tilemap_t* tilemap);
-void disposeTilemap(tilemap_t* tilemap);
-
-#ifdef __cplusplus
-}
-#endif
+void tilemap_create(tilemap_t* tilemap, texture_atlas_t atlas, texture_t* texture, int sizex, int sizey);
+void tilemap_build(tilemap_t* tilemap);
+void tilemap_draw(tilemap_t* tilemap);
+void tilemap_dispose(tilemap_t* tilemap);
 
 #endif

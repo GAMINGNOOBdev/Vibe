@@ -43,34 +43,23 @@ const char* stringf(const char* formatString, ...)
     return mFormattingBuffer;
 }
 
-void logEnableDebugMsgs(uint8_t val)
+void log_enable_debug_messages(uint8_t val)
 {
     logging_debug_messages_enabled = val;
 }
 
-void logSetStream(FILE* stream)
+void log_set_stream(FILE* stream)
 {
     logging_log_messages_output_stream = stream;
 }
 
-void logStr(loglevel_t lvl, const char* msg)
+void log_msg(loglevel_t lvl, const char* msg)
 {
     if (lvl >= LOG_COLOR_COUNT - 1 || msg == NULL) return;
     if (logging_log_messages_output_stream == NULL) return;
     if (!logging_debug_messages_enabled && lvl == LOGLEVEL_DEBUG) return;
 
-#if BARANIUM_PLATFORM != BARANIUM_PLATFORM_WINDOWS
-
-    if (logging_log_messages_output_stream == stdout)
-        fprintf(logging_log_messages_output_stream, "%s%s%s%s\n", LOG_COLORS[lvl+1], LOG_LEVEL_STRINGS[lvl], msg, LOG_COLORS[0]);
-    else
-        fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
-
-#else
-
     fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
-
-#endif
 
     if (logging_log_messages_output_stream != stdout || logging_log_messages_output_stream != stderr)
         fflush(logging_log_messages_output_stream);

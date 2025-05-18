@@ -2,7 +2,6 @@
 #define __GFX_H_ 1
 
 #include <pspdisplay.h>
-#include <stdint.h>
 #include <pspgum.h>
 #include <pspgu.h>
 
@@ -14,10 +13,10 @@
 extern "C" {
 #endif
 
-void initGraphics();
-void disposeGraphics();
-void startFrame();
-void endFrame();
+void graphics_init();
+void graphics_dispose();
+void graphics_start_frame();
+void graphics_end_frame();
 
 #ifdef __cplusplus
 }

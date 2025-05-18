@@ -19,7 +19,7 @@
 ////////////////////////
 
 float audioVolume = 1.0f;
-endAudioCallback_t audioEndCallback = NULL;
+audio_end_callback_t audioEndCallback = NULL;
 audio_stream_t* global_audio_stream = NULL;
 
 ////////////////////////
@@ -28,14 +28,10 @@ audio_stream_t* global_audio_stream = NULL;
 ///                  ///
 ////////////////////////
 
-audio_stream_t* loadAudioStream(const char* path)
+void audio_stream_load(audio_stream_t* stream, const char* path)
 {
-    if (!path)
-        return NULL;
-
-    audio_stream_t* astream = malloc(sizeof(audio_stream_t));
-    if (!astream)
-        return NULL;
+    if (!path || !stream)
+        return;
 
     int lastDot = strlpos(path, '.');
     int vorbis = strcmp(&path[lastDot+1], "ogg");
@@ -46,61 +42,55 @@ audio_stream_t* loadAudioStream(const char* path)
     {
         LOGINFO("loading ogg vorbis file");
 
-        astream->stream = stb_vorbis_open_filename(path, NULL, NULL);
-        astream->info = stb_vorbis_get_info(astream->stream);
-        astream->length = stb_vorbis_stream_length_in_seconds(astream->stream);
-        astream->samples = stb_vorbis_stream_length_in_samples(astream->stream);
+        stream->stream = stb_vorbis_open_filename(path, NULL, NULL);
+        stream->info = stb_vorbis_get_info(stream->stream);
+        stream->length = stb_vorbis_stream_length_in_seconds(stream->stream);
+        stream->samples = stb_vorbis_stream_length_in_samples(stream->stream);
 
-        LOGINFO(stringf("sample rate: '%d' | channels: '%d' | max_frame_size: '%d' | length: '%f' | samples: '%d'", astream->info.sample_rate, astream->info.channels, astream->info.max_frame_size, astream->length, astream->samples));
+        LOGINFO(stringf("sample rate: '%d' | channels: '%d' | max_frame_size: '%d' | length: '%f' | samples: '%d'", stream->info.sample_rate, stream->info.channels, stream->info.max_frame_size, stream->length, stream->samples));
 
-        astream->format = AUDIO_FORMAT_VORBIS;
+        stream->format = AUDIO_FORMAT_VORBIS;
     }
     else if (mp3 == 0)
     {
         LOGINFO("loading mp3 file");
 
-        if (mp3dec_ex_open(&astream->mp3, path, MP3D_SEEK_TO_BYTE))
+        if (mp3dec_ex_open(&stream->mp3, path, MP3D_SEEK_TO_SAMPLE))
         {
-            free(astream);
-            LOGERROR(stringf("Could not load audio file '%s': Unknown error"));
-            return NULL;
+            LOGERROR(stringf("could not load audio file '%s': Unknown error"));
+            return;
         }
 
-        astream->samples = astream->mp3.samples;
-        astream->length = (float)astream->mp3.samples / (float)astream->mp3.info.hz;
+        stream->samples = stream->mp3.samples;
+        stream->length = (float)stream->mp3.samples / (float)stream->mp3.info.hz;
 
-        LOGINFO(stringf("sample rate: '%d' | channels: '%d' | frame_bytes: '%d' | length: '%f' | samples: '%d'", astream->mp3.info.hz, astream->mp3.info.channels, astream->mp3.info.frame_bytes, astream->length, astream->samples));
+        LOGINFO(stringf("sample rate: '%d' | channels: '%d' | frame_bytes: '%d' | length: '%f' | samples: '%d'", stream->mp3.info.hz, stream->mp3.info.channels, stream->mp3.info.frame_bytes, stream->length, stream->samples));
 
-        astream->format = AUDIO_FORMAT_MP3;
+        stream->format = AUDIO_FORMAT_MP3;
     }
     else if (wav == 0)
     {
         LOGINFO("loading wav file");
 
-        astream->wav = wave_open(path, WAVE_OPEN_READ);
-        if (wave_get_format(astream->wav) != WAVE_FORMAT_PCM)
+        stream->wav = wave_open(path, WAVE_OPEN_READ);
+        if (wave_get_format(stream->wav) != WAVE_FORMAT_PCM)
         {
             LOGERROR("could not load wav file: expected int16 format");
-            wave_close(astream->wav);
-            free(astream);
-            return NULL;
+            wave_close(stream->wav);
+            return;
         }
 
-        astream->format = AUDIO_FORMAT_WAV;
+        stream->format = AUDIO_FORMAT_WAV;
 
-        LOGINFO(stringf("sample rate: '%ld' | channels: '%d' | length: '%ld'", wave_get_sample_rate(astream->wav), wave_get_num_channels(astream->wav), wave_get_length(astream->wav)));
+        LOGINFO(stringf("sample rate: '%ld' | channels: '%d' | length: '%ld'", wave_get_sample_rate(stream->wav), wave_get_num_channels(stream->wav), wave_get_length(stream->wav)));
     }
     else
-    {
-        free(astream);
-        LOGERROR(stringf("Could not load audio file '%s': Invalid format"));
-        return NULL;
-    }
+        LOGERROR(stringf("could not load audio file '%s': Invalid format"));
 
-    return astream;
+    sceKernelDcacheWritebackInvalidateAll();
 }
 
-void audioStreamSeekStart(audio_stream_t* astream)
+void audio_stream_seek_start(audio_stream_t* astream)
 {
     if (!astream)
         return;
@@ -122,10 +112,13 @@ void audioStreamSeekStart(audio_stream_t* astream)
     LOGDEBUG("wav stream seeked to start");
 }
 
-void closeAudioStream(audio_stream_t* astream)
+void audio_stream_dispose(audio_stream_t* astream)
 {
     if (!astream)
         return;
+
+    if (global_audio_stream == astream)
+        global_audio_stream = NULL;
 
     if (astream->format == AUDIO_FORMAT_VORBIS)
         stb_vorbis_close(astream->stream);
@@ -133,11 +126,9 @@ void closeAudioStream(audio_stream_t* astream)
         mp3dec_ex_close(&astream->mp3);
     else
         wave_close(astream->wav);
-
-    free(astream);
 }
 
-void audioCallback(void* buffer, unsigned int length, void* userdata)
+void audio_callback(void* buffer, unsigned int length, void* userdata)
 {
     audio_stream_t* astream = global_audio_stream;
     if (!astream)
@@ -182,14 +173,14 @@ end:
         audioEndCallback();
 }
 
-void initAudio()
+void audio_init(void)
 {
     pspAudioInit();
-    pspAudioSetChannelCallback(0, audioCallback, NULL);
-    setAudioVolume(1.0f);
+    pspAudioSetChannelCallback(0, audio_callback, NULL);
+    audio_set_volume(1.0f);
 }
 
-void setAudioVolume(float volume)
+void audio_set_volume(float volume)
 {
     if (volume < 0)
         volume = 0;
@@ -202,22 +193,22 @@ void setAudioVolume(float volume)
     audioVolume = volume;
 }
 
-float getAudioVolume()
+float audio_get_volume()
 {
     return audioVolume;
 }
 
-void setAudioStream(audio_stream_t* astream)
+void audio_set_stream(audio_stream_t* astream)
 {
     global_audio_stream = astream;
 }
 
-void setEndAudioCallback(endAudioCallback_t callback)
+void audio_set_end_callback(audio_end_callback_t callback)
 {
     audioEndCallback = callback;
 }
 
-void disposeAudio()
+void audio_dispose()
 {
     pspAudioEnd();
 }

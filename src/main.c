@@ -1,90 +1,97 @@
+#include <text_renderer.h>
+#include <song_select.h>
+#include <pspdisplay.h>
 #include <pspkernel.h>
-#include <pspctrl.h>
+#include <main_menu.h>
 #include <pspdebug.h>
-#include <malloc.h>
-#include <math.h>
-
-PSP_MODULE_INFO("VIBE", 0, 0, 0);
-PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
-
-#define STB_VORBIS_HEADER_ONLY
-#include <stb_vorbis.c>
-#include <songSelect.h>
 #include <callback.h>
-#include <mainMenu.h>
-#include <pspaudio.h>
+#include <pspctrl.h>
 #include <options.h>
 #include <logging.h>
+#include <malloc.h>
 #include <audio.h>
 #include <input.h>
 #include <time.h>
 #include <gfx.h>
 #include <app.h>
 
-appUpdateCallback_t mUpdate = NULL;
-appRenderCallback_t mRender = NULL;
+PSP_MODULE_INFO("VIBE", 0, 0, 0);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+
+#define STB_VORBIS_HEADER_ONLY
+#include <stb_vorbis.c>
+
 FILE* logFile;
 
-void setAppUpdateCallback(appUpdateCallback_t update) { mUpdate = update; }
-appUpdateCallback_t getAppUpdateCallback() { return mUpdate; }
+void empty_update(float _) {}
+void empty_render(void) {}
 
-void setAppRenderCallback(appRenderCallback_t render) { mRender = render; }
-appRenderCallback_t getAppRenderCallback() { return mRender; }
+app_update_callback_t update_callback = empty_update;
+app_render_callback_t render_callback = empty_render;
+
+void app_set_update_callback(app_update_callback_t update)
+{
+    update_callback = update;
+
+    if (update_callback == NULL)
+        update_callback = empty_update;
+}
+app_update_callback_t app_get_update_callback() { return update_callback; }
+
+void app_set_render_callback(app_render_callback_t render)
+{
+    render_callback = render;
+
+    if (render_callback == NULL)
+        render_callback = empty_render;
+}
+app_render_callback_t app_get_render_callback() { return render_callback; }
 
 int main()
 {
-    setupCallback();
-
-    pspDebugScreenInit();
-    pspDebugScreenPrintf("loading...");
-
-    initGraphics();
-    inputEnable(PSP_CTRL_MODE_ANALOG);
-    timeInit();
-
-    loadOptions();
-    setAudioVolume(((float)getOptions()->audioMasterVolume)/((float)PSP_AUDIO_VOLUME_MAX));
-
+    setup_callbacks();
     remove("game.log");
     logFile = fopen("game.log", "wb+");
-    logSetStream(logFile);
-    logEnableDebugMsgs(1);
+    log_set_stream(logFile);
+    log_enable_debug_messages(1);
 
-    initAudio();
+    options_load();
 
-    mainMenuInit();
-    songSelectInit();
+    input_enable(PSP_CTRL_MODE_ANALOG);
+    audio_init();
+    time_init();
+    graphics_init();
+    text_renderer_initialize();
 
-    switchToMainMenu();
+    switch_to_main_menu();
 
-    while (isRunning())
+    while (is_running())
     {
-        inputRead();
+        input_read();
 
-        if (mUpdate)
-            mUpdate(timeDelta());
+        if (update_callback)
+            update_callback(time_delta());
 
-        startFrame();
+        graphics_start_frame();
 
-        if (mRender)
-            mRender();
+        if (render_callback)
+            render_callback();
 
-        endFrame();
+        graphics_end_frame();
 
-        timeTick();
+        time_tick();
     }
 
-    songSelectDispose();
-    mainMenuDispose();
+    options_save();
 
-    saveOptions();
+    text_renderer_dispose();
+    main_menu_dispose();
+    song_select_dispose();
 
-    disposeGraphics();
-    disposeAudio();
-
+    audio_dispose();
+    graphics_dispose();
     fclose(logFile);
-
-    exitGame();
+    exit_game();
 
     return 0;
 }

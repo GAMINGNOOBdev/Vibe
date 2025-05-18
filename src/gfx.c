@@ -4,22 +4,22 @@
 
 static uint32_t __attribute__((aligned(16))) guDrawList[262144];
 
-void initGraphics()
+void graphics_init()
 {
     guglInit(guDrawList);
 }
 
-void disposeGraphics()
+void graphics_dispose()
 {
     guglTerm();
 }
 
-void startFrame()
+void graphics_start_frame()
 {
     guglStartFrame(guDrawList, GL_FALSE);
 }
 
-void endFrame()
+void graphics_end_frame()
 {
     guglSwapBuffers(GL_TRUE, GL_FALSE);
 }

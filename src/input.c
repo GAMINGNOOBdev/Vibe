@@ -4,34 +4,34 @@
 SceCtrlData mInputData;
 SceCtrlData mInputLastData;
 
-void inputEnable(int mode)
+void input_enable(int mode)
 {
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(mode);
 }
 
-void inputRead()
+void input_read()
 {
     mInputLastData = mInputData;
     sceCtrlReadBufferPositive(&mInputData,1);
 }
 
-SceCtrlData getInputData()
+SceCtrlData input_get_data()
 {
     return mInputData;
 }
 
-uint8_t analogX()
+uint8_t analog_x()
 {
     return mInputData.Lx;
 }
 
-uint8_t analogY()
+uint8_t analog_y()
 {
     return mInputData.Ly;
 }
 
-uint8_t buttonPressed(uint32_t button)
+uint8_t button_pressed(uint32_t button)
 {
     if(mInputData.Buttons & button)
         return 1;
@@ -39,7 +39,7 @@ uint8_t buttonPressed(uint32_t button)
     return 0;
 }
 
-uint8_t buttonPressedOnce(uint32_t button)
+uint8_t button_pressed_once(uint32_t button)
 {
     if((mInputData.Buttons & button) && !(mInputLastData.Buttons & button))
         return 1;
@@ -47,7 +47,7 @@ uint8_t buttonPressedOnce(uint32_t button)
     return 0;
 }
 
-uint8_t buttonHeld(uint32_t button)
+uint8_t button_held(uint32_t button)
 {
     if ((mInputData.Buttons & button) && (mInputLastData.Buttons & button))
         return 1;
@@ -55,7 +55,7 @@ uint8_t buttonHeld(uint32_t button)
     return 0;
 }
 
-uint8_t buttonReleased(uint32_t button)
+uint8_t button_released(uint32_t button)
 {
     if (!(mInputData.Buttons & button) && (mInputLastData.Buttons & button))
         return 1;

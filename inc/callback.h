@@ -11,11 +11,11 @@ typedef void(*cleanup_callback_t)(void);
 
 extern cleanup_callback_t gameCleanupCallback;
 
-int isRunning();
-int exitCallback(int arg1, int arg2, void* common);
-int callbackThread(SceSize args, void* argsPtr);
-int setupCallback();
-void exitGame();
+int is_running();
+int exit_callback(int arg1, int arg2, void* common);
+int callback_thread(SceSize args, void* argsPtr);
+int setup_callbacks();
+void exit_game();
 
 #ifdef __cplusplus
 }

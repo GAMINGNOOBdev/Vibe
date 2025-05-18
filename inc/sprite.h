@@ -14,13 +14,12 @@ typedef struct
     float rotation;
     float width, height;
     int layer;
-    mesh_t* mesh;
-    texture_t* texture;
+    mesh_t mesh;
 } sprite_t;
 
-sprite_t* createSprite(float x, float y, float width, float height, texture_t* texture);
-void drawSprite(sprite_t* sprite);
-void disposeSprite(sprite_t* sprite);
+void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture);
+void sprite_draw(sprite_t* sprite, texture_t* texture);
+void sprite_dispose(sprite_t* sprite);
 
 #ifdef __cplusplus
 }
