@@ -8,7 +8,18 @@
 extern "C" {
 #endif
 
+typedef struct
+{
+    char* filename;
+    char* mapper;
+    char* name;
+} song_difficulty_t;
 
+typedef struct
+{
+    song_difficulty_t* data;
+    size_t count;
+} song_difficulties_t;
 
 struct songlist_entry_t;
 typedef struct songlist_entry_t
@@ -17,6 +28,8 @@ typedef struct songlist_entry_t
     uint64_t id;
     char* artist;
     char* songname;
+    char* fullname;
+    song_difficulties_t difficulties;
     struct songlist_entry_t* next;
 } songlist_entry_t;
 

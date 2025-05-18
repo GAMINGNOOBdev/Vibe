@@ -1,11 +1,12 @@
-#include "easing.h"
-#include "text_renderer.h"
+#include <text_renderer.h>
 #include <song_select.h>
 #include <song_list.h>
 #include <main_menu.h>
 #include <options.h>
 #include <texture.h>
 #include <logging.h>
+#include <easing.h>
+#include <gaming.h>
 #include <sprite.h>
 #include <audio.h>
 #include <input.h>
@@ -15,18 +16,28 @@
 #include <app.h>
 
 #define SONGS_ON_SCREEN 6
+#define DIFFICULTIES_ON_SCREEN 5
 
 typedef enum {
     SONG_SELECT_STATE_LIST,
-    SONG_SELECT_STATE_DETAILS
+    SONG_SELECT_STATE_DIFFICULTY_SELECT
 } song_select_state_t;
 
-song_select_state_t song_select_state;
-int selected_index;
-int scroll_offset;
+////////////////
+///          ///
+///   DATA   ///
+///          ///
+////////////////
 
-songlist_entry_t* current;
-songlist_entry_t* selected_song;
+song_select_state_t song_select_state = SONG_SELECT_STATE_LIST;
+int song_selected_index = 0;
+int song_scroll_offset = 0;
+
+int difficulty_selected_index = 0;
+int difficulty_scroll_offset = 0;
+
+song_difficulty_t* selected_difficulty = NULL;
+songlist_entry_t* selected_song = NULL;
 
 sprite_t song_select_background;
 sprite_t song_select_selector;
@@ -34,10 +45,11 @@ sprite_t song_select_selector;
 texture_t song_select_background_texture;
 texture_t song_select_selector_texture;
 
-void song_select_music_end()
-{
-    ///TODO: --- implement ---
-}
+/////////////////////
+///               ///
+///   FUNCTIONS   ///
+///               ///
+/////////////////////
 
 void switch_to_song_select(void)
 {
@@ -46,7 +58,7 @@ void switch_to_song_select(void)
     app_set_update_callback(song_select_update);
     app_set_render_callback(song_select_render);
 
-    audio_set_end_callback(song_select_music_end);
+    audio_set_end_callback(NULL);
     audio_set_stream(NULL);
 
     easing_enable();
@@ -63,13 +75,7 @@ void song_select_init(void)
     if (song_select_initialized)
         return;
 
-    song_list_initialize("Songs/");
-
-    song_select_state = SONG_SELECT_STATE_LIST;
-    selected_index = 0;
-    scroll_offset = 0;
-    current = songs_list.start;
-    selected_song = NULL;
+    song_list_initialize("Songs");
 
     texture_load(&song_select_background_texture, "Assets/background.png", 1, 1);
     texture_load(&song_select_selector_texture, "Assets/selector.png", 0, 1);
@@ -101,52 +107,62 @@ void song_select_input_handle(float delta)
         if (back)
             switch_to_main_menu();
 
-        if (up && selected_index > 0)
+        if (up && song_selected_index > 0)
         {
-            selected_index--;
-            if (selected_index < scroll_offset)
-                scroll_offset--;
+            song_selected_index--;
+            if (song_selected_index < song_scroll_offset)
+                song_scroll_offset--;
 
             easing_reset_timer();
             easing_set_duration(0.5f);
             easing_set_type(easeOutCubic);
         }
-        if (down && selected_index < (int)songs_list.count - 1) {
-            selected_index++;
-            if (selected_index >= scroll_offset + SONGS_ON_SCREEN)
-                scroll_offset++;
+        if (down && song_selected_index < (int)songs_list.count - 1)
+        {
+            song_selected_index++;
+            if (song_selected_index >= song_scroll_offset + SONGS_ON_SCREEN)
+                song_scroll_offset++;
 
             easing_reset_timer();
             easing_set_duration(0.5f);
             easing_set_type(easeOutCubic);
         }
-        if (confirm)
+        if (confirm && song_selected_index < (int)songs_list.count)
         {
-            selected_song = songlist_get_entry(selected_index);
-            song_select_state = SONG_SELECT_STATE_DETAILS;
+            selected_song = songlist_get_entry(song_selected_index);
+            song_select_state = SONG_SELECT_STATE_DIFFICULTY_SELECT;
             easing_reset_timer();
             easing_set_duration(1.5f);
             easing_set_type(easeOutCubic);
         }
-    } else if (song_select_state == SONG_SELECT_STATE_DETAILS)
+    }
+    else if (song_select_state == SONG_SELECT_STATE_DIFFICULTY_SELECT)
     {
         if (back)
+        {
             song_select_state = SONG_SELECT_STATE_LIST;
+            difficulty_selected_index = 0;
+            difficulty_scroll_offset = 0;
+            selected_difficulty = NULL;
+        }
 
-        // Handle difficulty selection input here (placeholder)
-        ///TODO: --- show difficulties ---
-    }
-
-    if (button_pressed(PSP_CTRL_UP))
-    {
-        audio_set_volume(audio_get_volume()+delta);
-        options.master_volume = audio_get_volume();
-    }
-
-    if (button_pressed(PSP_CTRL_DOWN))
-    {
-        audio_set_volume(audio_get_volume()-delta);
-        options.master_volume = audio_get_volume();
+        if (up && difficulty_selected_index > 0)
+        {
+            difficulty_selected_index--;
+            if (difficulty_selected_index < difficulty_scroll_offset)
+                difficulty_scroll_offset--;
+        }
+        if (down && difficulty_selected_index < (int)selected_song->difficulties.count-1)
+        {
+            difficulty_selected_index++;
+            if (difficulty_selected_index >= difficulty_scroll_offset + SONGS_ON_SCREEN)
+                difficulty_scroll_offset++;
+        }
+        if (confirm && difficulty_selected_index < (int)selected_song->difficulties.count)
+        {
+            selected_difficulty = &selected_song->difficulties.data[difficulty_selected_index+difficulty_scroll_offset];
+            switch_to_gaming(selected_song->fullname, selected_difficulty->filename);
+        }
     }
 }
 
@@ -166,12 +182,6 @@ void song_select_render(void)
     glClearColor(0xFF333333);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ///////////////////
-    ///             ///
-    ///   UI PASS   ///
-    ///             ///
-    ///////////////////
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
@@ -181,10 +191,10 @@ void song_select_render(void)
 
     if (song_select_state == SONG_SELECT_STATE_LIST)
     {
-        float y_start = 222;
+        float y_start = 242;
         for (int i = 0; i < SONGS_ON_SCREEN; i++)
         {
-            int song_index = scroll_offset + i;
+            int song_index = song_scroll_offset + i;
 
             if (song_index >= (int)songs_list.count)
                 break;
@@ -192,8 +202,8 @@ void song_select_render(void)
             songlist_entry_t* entry = songlist_get_entry(song_index);
             float y = y_start - i * 40;
             float x = 50;
-            if (song_index == selected_index)
-                x = 50 - 30*easing_get_factor();
+            if (song_index == song_selected_index)
+                x = 50 - 40*easing_get_factor();
 
             song_select_selector.y = y - 4;
             song_select_selector.x = x;
@@ -201,24 +211,42 @@ void song_select_render(void)
             sprite_draw(&song_select_selector, &song_select_selector_texture);
 
             text_renderer_draw(stringf("%s - %s", entry->artist, entry->songname), x+5, y+16, 8);
-            text_renderer_draw(stringf("ID: %llu", entry->id), x+5, y, 6);
+            text_renderer_draw(stringf("ID: %llu", entry->id), x+5, y, 8);
         }
     }
-    else if (song_select_state == SONG_SELECT_STATE_DETAILS)
+    else if (song_select_state == SONG_SELECT_STATE_DIFFICULTY_SELECT)
     {
-        float y = 222 - (selected_index % SONGS_ON_SCREEN) * 40;
-        float x = 20 - 100.f * easing_get_factor();
+        float y = 242 - (song_selected_index % SONGS_ON_SCREEN) * 40;
+        float distanceToTop = 246-y;
+        y = y + distanceToTop * easing_get_factor();
+        float x = 10;
         song_select_selector.x = x;
         song_select_selector.y = y-4;
+
         sprite_draw(&song_select_selector, &song_select_selector_texture);
-
         text_renderer_draw(stringf("%s - %s", selected_song->artist, selected_song->songname), x+5, y+16, 8);
-        text_renderer_draw(stringf("ID: %llu", selected_song->id), x+5, y, 6);
+        text_renderer_draw(stringf("ID: %llu", selected_song->id), x+5, y, 8);
 
-        // Placeholder difficulty options
-        text_renderer_draw("▶ Easy",   180, 180, 8);
-        text_renderer_draw("   Normal", 180, 160, 8);
-        text_renderer_draw("   Hard",   180, 140, 8);
+        float y_start = y-40;
+        for (int i = 0; i < DIFFICULTIES_ON_SCREEN; i++)
+        {
+            int difficulty_index = song_scroll_offset + i;
+
+            if (difficulty_index >= (int)selected_song->difficulties.count)
+                break;
+
+            song_difficulty_t entry = selected_song->difficulties.data[difficulty_index];
+            float y = y_start - i * 40;
+            float x = 50;
+            if (difficulty_index == difficulty_selected_index)
+                x = 20;
+
+            song_select_selector.y = y - 4;
+            song_select_selector.x = x;
+
+            sprite_draw(&song_select_selector, &song_select_selector_texture);
+            text_renderer_draw(stringf("%s (%s)", entry.name, entry.mapper), x+5, y+8, 8);
+        }
     }
 }
 

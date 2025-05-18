@@ -90,12 +90,6 @@ void main_menu_render(void)
     glClearColor(0xFF111111);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ///////////////////
-    ///             ///
-    ///   UI PASS   ///
-    ///             ///
-    ///////////////////
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);

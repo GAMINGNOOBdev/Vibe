@@ -33,6 +33,8 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
     if (!path || !stream)
         return;
 
+    memset(stream, 0, sizeof(audio_stream_t));
+
     int lastDot = strlpos(path, '.');
     int vorbis = strcmp(&path[lastDot+1], "ogg");
     int mp3 = strcmp(&path[lastDot+1], "mp3");
@@ -41,6 +43,7 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
     if (vorbis == 0)
     {
         LOGINFO("loading ogg vorbis file");
+        LOGINFO(path);
 
         stream->stream = stb_vorbis_open_filename(path, NULL, NULL);
         stream->info = stb_vorbis_get_info(stream->stream);
@@ -54,6 +57,7 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
     else if (mp3 == 0)
     {
         LOGINFO("loading mp3 file");
+        LOGINFO(path);
 
         if (mp3dec_ex_open(&stream->mp3, path, MP3D_SEEK_TO_SAMPLE))
         {
@@ -71,6 +75,7 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
     else if (wav == 0)
     {
         LOGINFO("loading wav file");
+        LOGINFO(path);
 
         stream->wav = wave_open(path, WAVE_OPEN_READ);
         if (wave_get_format(stream->wav) != WAVE_FORMAT_PCM)
@@ -79,13 +84,15 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
             wave_close(stream->wav);
             return;
         }
+        stream->samples = wave_get_length(stream->wav);
+        stream->length = stream->samples / (float)wave_get_sample_rate(stream->wav);
 
         stream->format = AUDIO_FORMAT_WAV;
 
-        LOGINFO(stringf("sample rate: '%ld' | channels: '%d' | length: '%ld'", wave_get_sample_rate(stream->wav), wave_get_num_channels(stream->wav), wave_get_length(stream->wav)));
+        LOGINFO(stringf("sample rate: '%ld' | channels: '%d' | length: '%f'", wave_get_sample_rate(stream->wav), wave_get_num_channels(stream->wav), stream->length));
     }
     else
-        LOGERROR(stringf("could not load audio file '%s': Invalid format"));
+        LOGERROR(stringf("could not load audio file '%s': Invalid format", path));
 
     sceKernelDcacheWritebackInvalidateAll();
 }
@@ -112,6 +119,24 @@ void audio_stream_seek_start(audio_stream_t* astream)
     LOGDEBUG("wav stream seeked to start");
 }
 
+int audio_stream_get_position(audio_stream_t* astream)
+{
+    if (!astream)
+        return 0;
+
+    if (astream->format == AUDIO_FORMAT_VORBIS)
+    {
+        int offset = stb_vorbis_get_sample_offset(astream->stream) / (float)astream->samples * 1000.f * astream->length;
+        return offset;
+    }
+    else if (astream->format == AUDIO_FORMAT_MP3)
+    {
+        return astream->processed_frames / (float)astream->samples * 1000.f * astream->length;
+    }
+
+    return astream->processed_frames / (float)astream->samples * 1000.f;
+}
+
 void audio_stream_dispose(audio_stream_t* astream)
 {
     if (!astream)
@@ -126,6 +151,8 @@ void audio_stream_dispose(audio_stream_t* astream)
         mp3dec_ex_close(&astream->mp3);
     else
         wave_close(astream->wav);
+
+    memset(astream, 0, sizeof(audio_stream_t));
 }
 
 void audio_callback(void* buffer, unsigned int length, void* userdata)
@@ -168,6 +195,8 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
     }
 
 end:
+
+    astream->processed_frames += frames;
 
     if (frames < length && audioEndCallback != NULL)
         audioEndCallback();
