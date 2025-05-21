@@ -1,4 +1,3 @@
-#include "psputils.h"
 #include <file_util.h>
 #include <song_list.h>
 #include <logging.h>
@@ -6,6 +5,10 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
+
+#ifdef __PSP__
+#include <pspkernel.h>
+#endif
 
 songlist_t songs_list = {NULL, NULL, 0};
 
@@ -130,7 +133,9 @@ void song_list_initialize(const char* path)
     for (struct stringvec_entry* entry = songs.start; entry != NULL; entry = entry->next)
         song_list_add_entry(&songs_list, entry->contents, path);
 
+    #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 
     stringvec_dispose(&songs);
 }

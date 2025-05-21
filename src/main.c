@@ -1,11 +1,14 @@
-#include <text_renderer.h>
-#include <song_select.h>
+#ifdef __PSP__
 #include <pspdisplay.h>
 #include <pspkernel.h>
-#include <main_menu.h>
 #include <pspdebug.h>
-#include <callback.h>
 #include <pspctrl.h>
+#endif
+
+#include <text_renderer.h>
+#include <song_select.h>
+#include <main_menu.h>
+#include <callback.h>
 #include <options.h>
 #include <logging.h>
 #include <malloc.h>
@@ -15,8 +18,13 @@
 #include <gfx.h>
 #include <app.h>
 
+#ifdef __PSP__
 PSP_MODULE_INFO("VIBE", 0, 0, 0);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+#else
+#include <pctypes.h>
+#include <GL/glew.h>
+#endif
 
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
@@ -63,10 +71,16 @@ int main()
     graphics_init();
     text_renderer_initialize();
 
+    options_apply();
+
     switch_to_main_menu();
 
     while (is_running())
     {
+        #ifndef __PSP__
+        glViewport(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+        #endif
+
         input_read();
 
         if (update_callback)

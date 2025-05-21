@@ -1,8 +1,17 @@
+#ifdef __PSP__
 #include <pspkernel.h>
+#endif
+
 #include <logging.h>
 #include <sprite.h>
 #include <vertex.h>
+#ifdef __PSP__
 #include <gu2gl.h>
+#else
+#include <GL/glew.h>
+#include <gfx.h>
+#include <pctypes.h>
+#endif
 #include <malloc.h>
 
 void print_vertex(vertex_t vert)
@@ -14,10 +23,11 @@ void print_vertex(vertex_t vert)
                         ));
 }
 
-void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture)
+sprite_t* sprite_create(float x, float y, float width, float height, texture_t* texture)
 {
+    sprite_t* sprite = (sprite_t*)malloc(sizeof(sprite_t));
     if (sprite == NULL)
-        return;
+        return NULL;
 
     float u = 1;
     float v = 1;
@@ -56,9 +66,13 @@ void sprite_create(sprite_t* sprite, float x, float y, float width, float height
     print_vertex(meshdata[2]);
     print_vertex(meshdata[3]);
 
+    #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 
     LOGINFO(stringf("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v));
+
+    return sprite;
 }
 
 void sprite_draw(sprite_t* sprite, texture_t* texture)
@@ -76,6 +90,10 @@ void sprite_draw(sprite_t* sprite, texture_t* texture)
     ScePspFVector3 scale = {sprite->width, sprite->height, 1.0f};
     gluScale(&scale);
 
+    #ifndef __PSP__
+    graphics_projection_matrix();
+    #endif
+
     texture_bind(texture);
     mesh_draw(&sprite->mesh);
 }
@@ -86,4 +104,5 @@ void sprite_dispose(sprite_t* sprite)
         return;
 
     mesh_dispose(&sprite->mesh);
+    free(sprite);
 }

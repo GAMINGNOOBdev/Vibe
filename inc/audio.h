@@ -14,6 +14,7 @@ extern "C" {
 
 typedef enum
 {
+    AUDIO_FORMAT_INVALID,
     AUDIO_FORMAT_VORBIS,
     AUDIO_FORMAT_MP3,
     AUDIO_FORMAT_WAV,
@@ -22,6 +23,7 @@ typedef enum
 typedef struct
 {
     float length;
+    int length_ms;
     int processed_frames;
     unsigned int samples;
 

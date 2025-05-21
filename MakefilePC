@@ -1,0 +1,30 @@
+TARGET = Vibe
+
+INCDIR = inc lib minimp3 libwave/include
+SRCDIR = src
+
+CFILES := $(shell find -L $(SRCDIR) -type f -name '*.c')
+CFILES := $(subst src/,,$(CFILES))
+OBJS = $(addprefix src/,$(CFILES:.c=.o))
+
+OBJS += \
+		lib/stb_vorbis.o \
+		libwave/src/wave.o
+
+CFLAGS = -DTINYWAV_USE_MALLOC -mcmodel=large -g -O0 -ggdb
+
+LIBS +=
+
+include make.config.pc
+
+all: $(TARGET)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
+
+.phony:
+clean:
+	rm -f $(OBJS)

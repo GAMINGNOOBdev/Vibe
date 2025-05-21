@@ -1,9 +1,18 @@
+#ifdef __PSP__
 #include <pspkernel.h>
+#endif
+
 #include <tilemap.h>
 #include <texture.h>
 #include <memory.h>
 #include <malloc.h>
+#ifdef __PSP__
 #include <gu2gl.h>
+#else
+#include <GL/glew.h>
+#include <gfx.h>
+#include <pctypes.h>
+#endif
 #include <mesh.h>
 
 void tilemap_create(tilemap_t* tilemap, texture_atlas_t atlas, texture_t* texture, int sizex, int sizey)
@@ -57,7 +66,9 @@ void tilemap_build(tilemap_t* tilemap)
         tilemap->mesh.indices[i * 6 + 5] = (i * 4) + 0;
     }
 
+    #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 }
 
 void tilemap_draw(tilemap_t* tilemap)
@@ -75,6 +86,10 @@ void tilemap_draw(tilemap_t* tilemap)
 
     ScePspFVector3 scale = {tilemap->scalex, tilemap->scaley, 0};
     gluScale(&scale);
+
+    #ifndef __PSP__
+    graphics_projection_matrix();
+    #endif
 
     texture_bind(tilemap->texture);
     mesh_draw(&tilemap->mesh);

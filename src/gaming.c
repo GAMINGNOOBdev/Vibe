@@ -9,10 +9,17 @@
 #include <sprite.h>
 #include <audio.h>
 #include <input.h>
+#ifdef __PSP__
 #include <gu2gl.h>
-#include <pspgu.h>
+#else
+#include <GL/gl.h>
+#include <pctypes.h>
+#endif
+
 #include <gfx.h>
 #include <app.h>
+
+#define MAX_OBJECTS_ON_SCREEN 500
 
 ////////////////
 ///          ///
@@ -25,6 +32,14 @@ audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
 uint8_t gaming_show_beatmap_info = 0;
 int gaming_time = 0;
+
+size_t gaming_drawlist_start = 0, gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
+
+texture_t* gaming_long_note_texture;
+texture_t* gaming_note1_texture;
+texture_t* gaming_note2_texture;
+sprite_t* gaming_long_note;
+sprite_t* gaming_note;
 
 /////////////////////
 ///               ///
@@ -50,12 +65,23 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     audio_set_end_callback(gaming_audio_end_callback);
     
     easing_disable();
-    
+
     beatmap_parse(&gaming_beatmap, beatmap_path);
 
+    LOGDEBUG("beatmap folder:");
+    LOGDEBUG(beatmap_folder);
+    LOGDEBUG("beatmap path:");
+    LOGDEBUG(beatmap_path);
+    LOGDEBUG("audio sub-path/name:");
+    LOGDEBUG(stringf("0x%16.16x", gaming_beatmap.audio_path));
+    LOGDEBUG(gaming_beatmap.audio_path);
     audio_stream_load(&gaming_audio_stream, stringf("%s/%s", beatmap_folder, gaming_beatmap.audio_path));
     audio_stream_seek_start(&gaming_audio_stream);
     audio_set_stream(&gaming_audio_stream);
+
+    gaming_time = 0;
+    gaming_drawlist_start = 0;
+    gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
 
     LOGINFO("loaded REAL gaming");
 }
@@ -66,6 +92,12 @@ void gaming_init(void)
     if (gaming_initialized)
         return;
 
+    gaming_long_note_texture = texture_load("Skin/LNTail.png", GL_TRUE, GL_TRUE);
+    gaming_note1_texture = texture_load("Skin/mania-note1.png", GL_TRUE, GL_TRUE);
+    gaming_note2_texture = texture_load("Skin/mania-note2.png", GL_TRUE, GL_TRUE);
+    gaming_long_note = sprite_create(0, 0, 30, 512, gaming_long_note_texture);
+    gaming_note = sprite_create(0, 0, 30, 12.5f, gaming_note1_texture);
+
     gaming_initialized = 1;
 }
 
@@ -74,7 +106,11 @@ void gaming_dispose(void)
     if (!gaming_initialized)
         return;
 
-    /// asdfghjkl...
+    texture_dispose(gaming_long_note_texture);
+    texture_dispose(gaming_note1_texture);
+    texture_dispose(gaming_note2_texture);
+    sprite_dispose(gaming_long_note);
+    sprite_dispose(gaming_note);
 }
 
 void gaming_update(float delta)
@@ -86,6 +122,8 @@ void gaming_update(float delta)
 
     if (back)
     {
+        gaming_drawlist_start = 0;
+        gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
         switch_to_song_select();
         audio_set_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
@@ -115,11 +153,26 @@ void gaming_render(void)
 {
     glDisable(GL_DEPTH_TEST);
 
+    #ifdef __PSP__
     glBlendFunc(GL_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 0, 0);
     glEnable(GL_BLEND);
 
-    glClearColor(0xFF333333);
+    glClearColor(0xFF111111);
+    #else
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0x11/255.f, 0x11/255.f, 0x11/255.f, 0xFF/255.f);
+    #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
+
+    #ifndef __PSP__
+    graphics_projection_matrix();
+    #endif
 
     text_renderer_draw("gaming.", 0, 0, 8);
 
@@ -129,18 +182,46 @@ void gaming_render(void)
     if (gaming_show_results_screen)
         text_renderer_draw("RESULTS", 188, 100, 8);
 
+    for (size_t i = gaming_drawlist_start; i < gaming_drawlist_end && i < gaming_beatmap.object_count; i++)
+    {
+        beatmap_hitobject_t hitobject = gaming_beatmap.objects[i];
+        texture_t* texture = gaming_note1_texture;
+        uint8_t column = hitobject.column;
+        if (column == 1 || column == 2)
+            texture = gaming_note2_texture;
+
+        gaming_note->x = 240 + (column-2)*40;
+        gaming_note->y = (hitobject.time - gaming_time);
+        gaming_long_note->height = 0;
+
+        if (hitobject.isLN)
+        {
+            gaming_long_note->height = hitobject.end-hitobject.time;
+            gaming_long_note->x = gaming_note->x;
+            gaming_long_note->y = gaming_note->y;
+        }
+
+        if (gaming_note->y < -(gaming_note->height+gaming_long_note->height+0.1f))
+        {
+            if (hitobject.isLN)
+                LOGDEBUG(stringf("note y,start,end,time,height, %2.2f|%d|%d|%d|%2.2f", gaming_note->y, hitobject.time, hitobject.end, gaming_time, gaming_long_note->height));
+            gaming_drawlist_start++;
+            if (gaming_drawlist_end + 1 < gaming_beatmap.object_count)
+                gaming_drawlist_end++;
+            continue;
+        }
+
+        if (hitobject.isLN)
+            sprite_draw(gaming_long_note, gaming_long_note_texture);
+        sprite_draw(gaming_note, texture);
+    }
+
     if (!gaming_show_beatmap_info)
         return;
 
-    text_renderer_draw(stringf("Audio: '%s'", gaming_beatmap.audio_path), 5, 264, 8);
-    text_renderer_draw(stringf("AR: %2.2f", gaming_beatmap.ar), 5, 256, 8);
-    text_renderer_draw(stringf("OD: %2.2f", gaming_beatmap.od), 5, 248, 8);
-    text_renderer_draw(stringf("HP: %2.2f", gaming_beatmap.hp), 5, 240, 8);
-    text_renderer_draw(stringf("SM: %2.2f", gaming_beatmap.slider_multiplier), 5, 232, 8);
-    text_renderer_draw(stringf("ST: %2.2f", gaming_beatmap.slider_tickrate), 5, 224, 8);
-    text_renderer_draw(stringf("Timing points: %ld", gaming_beatmap.timing_point_count), 5, 216, 8);
-    text_renderer_draw(stringf("Objects: %ld", gaming_beatmap.object_count), 5, 208, 8);
-    text_renderer_draw(stringf("Time: %d", gaming_time), 5, 200, 8);
-    int length = gaming_audio_stream.length * 1000.f;
-    text_renderer_draw(stringf("Length: %d", length), 5, 192, 8);
+    text_renderer_draw(stringf("Timing points: %ld", gaming_beatmap.timing_point_count), 5, 264, 8);
+    text_renderer_draw(stringf("Objects: %ld", gaming_beatmap.object_count), 5, 256, 8);
+    text_renderer_draw(stringf("Time: %d", gaming_time), 5, 248, 8);
+    text_renderer_draw(stringf("Length: %d", gaming_audio_stream.length_ms), 5, 240, 8);
+    text_renderer_draw(stringf("Drawlist start/end: %d/%d", gaming_drawlist_start, gaming_drawlist_end), 5, 232, 8);
 }

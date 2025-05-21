@@ -4,9 +4,16 @@
 #define MINIMP3_IMPLEMENTATION
 #include <minimp3.h>
 #include <minimp3_ex.h>
+
+#ifdef __PSP__
 #include <pspaudiolib.h>
 #include <pspkernel.h>
 #include <pspaudio.h>
+#else
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_audio.h>
+#endif
+
 #include <logging.h>
 #include <strutil.h>
 #include <malloc.h>
@@ -92,9 +99,16 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
         LOGINFO(stringf("sample rate: '%ld' | channels: '%d' | length: '%f'", wave_get_sample_rate(stream->wav), wave_get_num_channels(stream->wav), stream->length));
     }
     else
-        LOGERROR(stringf("could not load audio file '%s': Invalid format", path));
+    {
+        LOGERROR("could not load audio file: Invalid format");
+        LOGERROR(path);
+    }
 
+    stream->length_ms = stream->length * 1000.0f;
+
+    #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 }
 
 void audio_stream_seek_start(audio_stream_t* astream)
@@ -106,22 +120,27 @@ void audio_stream_seek_start(audio_stream_t* astream)
     {
         stb_vorbis_seek_start(astream->stream);
         LOGDEBUG("vorbis stream seeked to start");
-        return;
     }
     else if (astream->format == AUDIO_FORMAT_MP3)
     {
         mp3dec_ex_seek(&astream->mp3, 0);
         LOGDEBUG("mp3 stream seeked to start");
-        return;
     }
-
-    wave_seek(astream->wav, 0, 0);
-    LOGDEBUG("wav stream seeked to start");
+    else if (astream->format == AUDIO_FORMAT_WAV)
+    {
+        wave_seek(astream->wav, 0, 0);
+        LOGDEBUG("wav stream seeked to start");
+    }
+    
+    astream->processed_frames = 0;
 }
 
 int audio_stream_get_position(audio_stream_t* astream)
 {
     if (!astream)
+        return 0;
+
+    if (astream->format == AUDIO_FORMAT_INVALID)
         return 0;
 
     if (astream->format == AUDIO_FORMAT_VORBIS)
@@ -149,7 +168,7 @@ void audio_stream_dispose(audio_stream_t* astream)
         stb_vorbis_close(astream->stream);
     else if (astream->format == AUDIO_FORMAT_MP3)
         mp3dec_ex_close(&astream->mp3);
-    else
+    else if (astream->format == AUDIO_FORMAT_WAV)
         wave_close(astream->wav);
 
     memset(astream, 0, sizeof(audio_stream_t));
@@ -179,7 +198,7 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
         mp3dec_frame_info_t frameInfo;
         frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
     }
-    else
+    else if (astream->format == AUDIO_FORMAT_WAV)
     {
         frames = wave_read(astream->wav, buffer, length);
         /*float* samples = malloc(sizeof(float)*length*2);
@@ -194,7 +213,14 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
         sceKernelDcacheWritebackInvalidateAll();*/
     }
 
-end:
+    #ifndef __PSP__
+    short* buff = buffer;
+    for (uint32_t i = 0; i < length; i++)
+    {
+        buff[i] *= audioVolume;
+    }
+    #endif
+
 
     astream->processed_frames += frames;
 
@@ -202,10 +228,41 @@ end:
         audioEndCallback();
 }
 
+#ifndef __PSP__
+void sdlaudiocallback(void* userdata, Uint8* stream, int len)
+{
+    memset(stream, 0, len);
+    audio_callback((void*)stream, len / sizeof(short) / 2, userdata);
+}
+#endif
+
 void audio_init(void)
 {
+    #ifdef __PSP__
     pspAudioInit();
     pspAudioSetChannelCallback(0, audio_callback, NULL);
+    #else
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+    {
+        LOGERROR(stringf("SDL_InitSubSystem failed: %s", SDL_GetError()));
+        return;
+    }
+    SDL_AudioSpec desiredSpec;
+    SDL_zero(desiredSpec);
+    desiredSpec.freq = 44100;
+    desiredSpec.format = AUDIO_S16SYS;
+    desiredSpec.channels = 2;
+    desiredSpec.samples = 1024;
+    desiredSpec.callback = sdlaudiocallback;
+
+    if (SDL_OpenAudio(&desiredSpec, NULL) < 0)
+    {
+        LOGERROR(stringf("SDL_OpenAudio failed: %s", SDL_GetError()));
+        return;
+    }
+
+    SDL_PauseAudio(0);
+    #endif
     audio_set_volume(1.0f);
 }
 
@@ -217,8 +274,11 @@ void audio_set_volume(float volume)
     if (volume > 1)
         volume = 1;
 
-    int vol = (int)(volume * (float)PSP_VOLUME_MAX);
+    int vol;
+    #ifdef __PSP__
+    vol = (int)(volume * (float)PSP_VOLUME_MAX);
     pspAudioSetVolume(0, vol, vol);
+    #endif
     audioVolume = volume;
 }
 
@@ -239,5 +299,10 @@ void audio_set_end_callback(audio_end_callback_t callback)
 
 void audio_dispose()
 {
+    #ifdef __PSP__
     pspAudioEnd();
+    #else
+    SDL_CloseAudio();
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    #endif
 }

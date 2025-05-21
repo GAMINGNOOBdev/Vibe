@@ -1,4 +1,5 @@
 #include <time.h>
+#include <memory.h>
 #include <sys/types.h>
 
 ///
@@ -13,45 +14,53 @@
 #define i32 int32_t
 #define i64 int64_t
 
+#ifdef __PSP__
 #include <psprtc.h>
+#else
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
+#endif
 
-double mDelta = 0.0;
-double mElapsed = 0.0;
-uint64_t mCurrTime = 0;
-uint64_t mPastTime = 0;
-uint32_t mFreq = 0;
-uint32_t mFramesPerSecond = 0;
+time_data_t time_data;
 
 void time_init()
 {
-    mFreq = sceRtcGetTickResolution();
+    #ifdef __PSP__
+    time_data.freq = sceRtcGetTickResolution();
+    #else
+    time_data.freq = SDL_GetPerformanceFrequency();
+    #endif
 }
 
 void time_tick()
 {
-    mPastTime = mCurrTime;
+    time_data.pastTime = time_data.currTime;
+    #ifdef __PSP__
     while (1)
     {
-        if (sceRtcGetCurrentTick(&mCurrTime) == 0)
+        if (sceRtcGetCurrentTick(&time_data.currTime) == 0)
             break;
     }
+    #else
+    time_data.currTime = SDL_GetTicks64();
+    #endif
 
-    mElapsed = (double)mCurrTime - (double)mPastTime;
-    mDelta = mElapsed / (double)mFreq;
-    mFramesPerSecond = (uint32_t)((double)mFreq / mElapsed);
+    time_data.elapsed = (double)time_data.currTime - (double)time_data.pastTime;
+    time_data.delta = time_data.elapsed / (double)time_data.freq;
+    time_data.fps = (uint32_t)((double)time_data.freq / time_data.elapsed);
 }
 
 double time_delta()
 {
-    return mDelta;
+    return time_data.delta;
 }
 
 double time_elapsed()
 {
-    return mElapsed;
+    return time_data.elapsed;
 }
 
 uint32_t time_fps()
 {
-    return mFramesPerSecond;
+    return time_data.fps;
 }

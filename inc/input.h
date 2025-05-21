@@ -1,7 +1,10 @@
 #ifndef __INPUT_H_
 #define __INPUT_H_ 1
 
+#ifdef __PSP__
 #include <pspctrl.h>
+#endif
+
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -18,8 +21,6 @@ void input_enable(int mode);
  * @brief Read the input buffer
  */
 void input_read();
-
-SceCtrlData input_get_data();
 
 uint8_t analog_x();
 uint8_t analog_y();

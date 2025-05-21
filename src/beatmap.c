@@ -1,4 +1,7 @@
+#ifdef __PSP__
 #include <pspkernel.h>
+#endif
+
 #include <logging.h>
 #include <strutil.h>
 #include <beatmap.h>
@@ -7,7 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
+size_t getdelimV2(char **buffer, size_t *buffersz, FILE *stream, char delim) {
     char *bufptr = NULL;
     char *p = bufptr;
     size_t size;
@@ -59,9 +62,9 @@ size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
     return p - bufptr - 1;
 }
 
-size_t getline(char **buffer, size_t *buffersz, FILE *stream)
+size_t getlineV2(char **buffer, size_t *buffersz, FILE *stream)
 {
-    return getdelim(buffer, buffersz, stream, '\n');
+    return getdelimV2(buffer, buffersz, stream, '\n');
 }
 
 beatmap_timing_point_t beatmap_timing_point_parse(const char* line)
@@ -90,37 +93,37 @@ beatmap_timing_point_t beatmap_timing_point_parse(const char* line)
     strptr[commapos] = 0;
     timing_point.time = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     sscanf(strptr, "%f", &timing_point.beatLength);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     timing_point.meter = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     timing_point.sampleSet = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     timing_point.sampleIndex = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     timing_point.volume = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     timing_point.uninherited = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
+    strptr += commapos+1;
     timing_point.effects = strtoi(strptr);
 
     return timing_point;
@@ -148,26 +151,28 @@ beatmap_hitobject_t beatmap_hitobject_parse(const char* line)
     strptr[commapos] = 0;
     hitobject.column = strtoi(strptr) * 4 / 512;
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
+    strptr[commapos] = 0;
+    strptr[commapos] = ',';
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     hitobject.time = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     uint8_t type = strtoi(strptr);
     strptr[commapos] = ',';
     hitobject.isLN = ((type & (1 << 7)) > 0) ? 1 : 0;
-    strptr += commapos;
-    commapos = strpos(line, ',');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ',');
     strptr[commapos] = 0;
     hitobject.hitsound = strtoi(strptr);
     strptr[commapos] = ',';
-    strptr += commapos;
-    commapos = strpos(line, ':');
+    strptr += commapos+1;
+    commapos = strpos(strptr, ':');
     strptr[commapos] = 0;
     hitobject.end = strtoi(strptr);
     strptr[commapos] = ':';
@@ -182,7 +187,9 @@ void beatmap_parse_general(beatmap_t* map, const char* line)
         size_t size = strlen(line)-14;
         map->audio_path = malloc(size);
         memset(map->audio_path, 0, size);
-        strncpy(map->audio_path, &line[15], size);
+        memcpy(map->audio_path, &line[15], size);
+        LOGDEBUG(&line[15]);
+        LOGDEBUG(stringf("0x%16.16x", map->audio_path));
     }
 }
 
@@ -253,9 +260,10 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
 
     beatmap_section_t section = beatmapSectionNone;
 
-    char* line = NULL;
-    size_t linesize = 0;
-    while (getline(&line, &linesize, file) != EOF)
+    char line[1024];
+    char* buffer = &line[0];
+    size_t linesize = 1024;
+    while (getlineV2(&buffer, &linesize, file) != EOF)
     {
         if (line[strlen(line)-1] == '\n')
             line[strlen(line)-1] = 0;
@@ -264,53 +272,33 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
             line[strlen(line)-1] = 0;
 
         if (line[0] == 0)
-        {
-            if (line != NULL)
-                free(line);
-            line = NULL;
             continue;
-        }
 
         if (line[0] == '[')
         {
             if (strcmp(line, "[General]") == 0)
             {
                 section = beatmapSectionGeneral;
-                if (line != NULL)
-                    free(line);
-                line = NULL;
                 continue;
             }
             else if (strcmp(line, "[Difficulty]") == 0)
             {
                 section = beatmapSectionDifficulty;
-                if (line != NULL)
-                    free(line);
-                line = NULL;
                 continue;
             }
             else if (strcmp(line, "[TimingPoints]") == 0)
             {
                 section = beatmapSectionTimingPoints;
-                if (line != NULL)
-                    free(line);
-                line = NULL;
                 continue;
             }
             else if (strcmp(line, "[HitObjects]") == 0)
             {
                 section = beatmapSectionHitObjects;
-                if (line != NULL)
-                    free(line);
-                line = NULL;
                 continue;
             }
             else
             {
                 section = beatmapSectionNone;
-                if (line != NULL)
-                    free(line);
-                line = NULL;
                 continue;
             }
         }
@@ -323,20 +311,16 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
             beatmap_parse_timing_points(map, line);
         else if (section == beatmapSectionHitObjects)
             beatmap_parse_hit_objects(map, line);
-
-        if (line != NULL)
-            free(line);
-        line = NULL;
     }
-    if (line != NULL)
-        free(line);
 
     fclose(file);
 
     map->timing_points = realloc(map->timing_points, sizeof(beatmap_timing_point_t)*map->timing_point_count);
     map->objects = realloc(map->objects, sizeof(beatmap_hitobject_t)*map->object_count);
 
+    #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 }
 
 void beatmap_dispose(beatmap_t* map)

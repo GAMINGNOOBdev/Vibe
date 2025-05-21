@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-typedef struct
+typedef struct vertex_t
 {
     float u;
     float v;

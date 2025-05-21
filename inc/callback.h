@@ -1,7 +1,9 @@
 #ifndef __CALLBACK_H_
 #define __CALLBACK_H_ 1
 
+#ifdef __PSP__
 #include <pspkernel.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,9 +13,9 @@ typedef void(*cleanup_callback_t)(void);
 
 extern cleanup_callback_t gameCleanupCallback;
 
+void stop_running();
 int is_running();
 int exit_callback(int arg1, int arg2, void* common);
-int callback_thread(SceSize args, void* argsPtr);
 int setup_callbacks();
 void exit_game();
 

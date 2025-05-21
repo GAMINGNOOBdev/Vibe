@@ -14,10 +14,33 @@ size_t file_util_file_size(const char* filename)
     size_t result = 0;
 
     FILE* file = fopen(filename, "rb");
+    if (file == NULL)
+        return 0;
     
     fseek(file, 0, SEEK_END);
     result = ftell(file);
     rewind(file);
+
+    fclose(file);
+
+    return result;
+}
+
+void* file_util_file_contents(const char* filename)
+{
+    size_t size = 0;
+
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL)
+        return NULL;
+    
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+    rewind(file);
+
+    void* result = malloc(size+1);
+    memset(result, 0, size+1);
+    fread(result, 1, size, file);
 
     fclose(file);
 

@@ -13,6 +13,11 @@ typedef struct
     void* data;
     uint16_t* indices;
     uint32_t indexCount;
+
+    #ifndef __PSP__
+    uint32_t vertices;
+    uint32_t vao, vbo;
+    #endif
 } mesh_t;
 
 void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount);

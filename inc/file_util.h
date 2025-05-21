@@ -24,6 +24,16 @@ extern "C" {
 size_t file_util_file_size(const char* filename);
 
 /**
+ * Get the contents of a given file
+ * 
+ * @note Resulting pointer should be free-d by the user
+ * 
+ * @param filename Path to the file
+ * @returns Contents of the file on the disk
+*/
+void* file_util_file_contents(const char* filename);
+
+/**
  * Gets the contents of the given directory
  * @note This function may take a while to complete since it will retrieve all files from subfolders as well
  * 

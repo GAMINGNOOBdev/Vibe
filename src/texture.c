@@ -1,11 +1,19 @@
+#ifdef __PSP__
+#include <pspkernel.h>
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <texture.h>
 #include <stb_image.h>
-#include <pspkernel.h>
 #include <logging.h>
 #include <memory.h>
 #include <malloc.h>
+#ifdef __PSP__
 #include <gu2gl.h>
+#else
+#include <GL/gl.h>
+#include <pctypes.h>
+#endif
 
 uint32_t pow2(uint32_t value)
 {
@@ -57,12 +65,13 @@ void swizzle_fast(uint8_t* out, const uint8_t* in, const uint32_t width, const u
     }
 }
 
-void texture_load(texture_t* texture, const char* filename, const int flip, const int vram)
+texture_t* texture_load(const char* filename, const int flip, const int vram)
 {
+    texture_t* texture = (texture_t*)malloc(sizeof(texture_t));
     if (!texture || !filename)
     {
         LOGERROR(stringf("could not allocate texture object for file '%s'", filename));
-        return;
+        return NULL;
     }
 
     int width, height, channels;
@@ -72,21 +81,38 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     if (!imgData)
     {
         LOGERROR(stringf("could not load texture '%s'", filename));
-        return;
+        free(texture);
+        return NULL;
     }
     texture->width = width;
     texture->height = height;
+    texture->pWidth = width;
+    texture->pHeight = height;
+    #ifndef __PSP__
+    size_t size = texture->pWidth * texture->pHeight * 4;
+
+    glGenTextures(1, &texture->id);
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
+    stbi_image_free(imgData);
+    #else
     texture->pWidth = pow2(width);
     texture->pHeight = pow2(height);
 
     size_t size = texture->pWidth * texture->pHeight * 4;
+
 
     uint32_t* dataBuffer = (uint32_t*)memalign(16, size);
     if (!dataBuffer)
     {
         stbi_image_free(imgData);
         LOGERROR(stringf("could not allocate data for texture '%s'", filename));
-        return;
+        free(texture);
+        return NULL;
     }
 
     copy_tex_data(dataBuffer, imgData, texture->pWidth, width, height);
@@ -101,7 +127,8 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     if (!swizzledPixels)
     {
         LOGERROR(stringf("could not allocate data to swizzle texture '%s'", filename));
-        return;
+        free(texture);
+        return NULL;
     }
 
     swizzle_fast((uint8_t*)swizzledPixels, (const uint8_t*)dataBuffer, texture->pWidth * 4, texture->pHeight);
@@ -110,8 +137,11 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     free(dataBuffer);
 
     sceKernelDcacheWritebackInvalidateAll();
+    #endif
 
     LOGINFO(stringf("texture '%s' with size '%ld' (%ldx%ld or %ldx%ld) loaded into %cram", filename, size, width, height, texture->pWidth, texture->pHeight, vram ? 'v' : ' '));
+
+    return texture;
 }
 
 void texture_bind(texture_t* tex)
@@ -119,11 +149,25 @@ void texture_bind(texture_t* tex)
     if (!tex)
         return;
 
+    #ifdef __PSP__
     glTexMode(GL_PSM_8888, 0, 0, GL_TRUE);
     glTexFunc(GL_TFX_MODULATE, GL_TCC_RGBA); // output = vertex * texture
     glTexFilter(GL_NEAREST, GL_NEAREST);
     glTexWrap(GL_REPEAT, GL_REPEAT);
     glTexImage(0, tex->pWidth, tex->pHeight, tex->pWidth, tex->data);
+    #else
+    glBindTexture(GL_TEXTURE_2D, tex->id);
+    #endif
+}
+
+void texture_dispose(texture_t* tex)
+{
+    if (!tex)
+        return;
+
+    #ifndef __PSP__
+    glDeleteTextures(1, &tex->id);
+    #endif
 }
 
 void texture_atlas_get_uv_index(texture_atlas_t* atlas, float* buffer, int index)
