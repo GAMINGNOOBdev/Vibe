@@ -26,6 +26,13 @@ uint8_t analog_x();
 uint8_t analog_y();
 
 /**
+ * @brief Waits for input and returns the last newly pressed button
+ * 
+ * @returns The newly pressed button
+ */
+int wait_for_input(void);
+
+/**
  * @brief Check if a button is pressed down (not only once!)
  */
 uint8_t button_pressed(uint32_t button);
@@ -44,6 +51,13 @@ uint8_t button_held(uint32_t button);
  * @brief Check if a button is released
  */
 uint8_t button_released(uint32_t button);
+
+/**
+ * @brief Get the string representation of the psp buttons
+ * 
+ * @param button PSP Button
+ */
+const char* get_psp_button_string(int button);
 
 #ifdef __cplusplus
 }

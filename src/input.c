@@ -69,6 +69,25 @@ uint8_t analog_y()
     #endif
 }
 
+int wait_for_input(void)
+{
+    #ifdef __PSP__
+    for (int i = 0; i < 32; i++)
+    {
+        int button = 1 << i;
+        if (button_pressed_once(button))
+            return button;
+    }
+    #else
+    for (size_t i = 0; i < SDLK_ENDCALL; i++)
+    {
+        if (button_pressed_once(i))
+            return i;
+    }
+    #endif
+    return -1;
+}
+
 uint8_t button_pressed(uint32_t button)
 {
     #ifdef __PSP__
@@ -103,4 +122,34 @@ uint8_t button_released(uint32_t button)
     #else
     return !inputData[button] && lastInputData[button];
     #endif
+}
+
+const char* get_psp_button_string(int button)
+{
+    if (button == PSP_CTRL_SELECT)
+        return "SELECT";
+    if (button == PSP_CTRL_START)
+        return "START";
+    if (button == PSP_CTRL_UP)
+        return "\x18";
+    if (button == PSP_CTRL_RIGHT)
+        return "\x1A";
+    if (button == PSP_CTRL_DOWN)
+        return "\x19";
+    if (button == PSP_CTRL_LEFT)
+        return "\x1B";
+    if (button == PSP_CTRL_LTRIGGER)
+        return "L";
+    if (button == PSP_CTRL_RTRIGGER)
+        return "R";
+    if (button == PSP_CTRL_TRIANGLE)
+        return "\x1E";
+    if (button == PSP_CTRL_CIRCLE)
+        return "O";
+    if (button == PSP_CTRL_CROSS)
+        return "X";
+    if (button == PSP_CTRL_SQUARE)
+        return "\xA";
+
+    return "None";
 }

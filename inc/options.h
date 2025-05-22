@@ -30,7 +30,7 @@ typedef struct
     float master_volume;
     float music_volume;
     float hitsound_volume;
-    float scroll_speed;
+    uint8_t scroll_speed;
     options_flags_t flags;
     options_keybinds_t keybinds;
 } options_t;

@@ -30,6 +30,11 @@ void text_renderer_initialize(void)
 
 void text_renderer_draw(const char* str, float x, float y, float pixelsize)
 {
+    text_renderer_draw_color(str, x, y, pixelsize, 0xFFFFFFFF);
+}
+
+void text_renderer_draw_color(const char* str, float x, float y, float pixelsize, uint32_t color)
+{
     int len = strlen(str);
     memset(text_renderer_font_tilemap.tiles, 0, sizeof(tile_t)*text_renderer_font_tilemap.width*text_renderer_font_tilemap.height);
 
@@ -49,7 +54,7 @@ void text_renderer_draw(const char* str, float x, float y, float pixelsize)
             .x = xoff,
             .y = yoff,
             .idx = c,
-            .color = 0xFFFFFFFF,
+            .color = color,
         };
         //tile.y = text_renderer_font_tilemap.height - i / text_renderer_font_tilemap.width - 1;
 

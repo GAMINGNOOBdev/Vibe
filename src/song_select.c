@@ -10,6 +10,7 @@
 #include <sprite.h>
 #include <audio.h>
 #include <input.h>
+#include <time.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
@@ -208,6 +209,9 @@ void song_select_render(void)
 
     glEnable(GL_TEXTURE_2D);
     sprite_draw(song_select_background, song_select_background_texture);
+
+    if (options.flags.show_fps)
+        text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
 
     if (song_select_state == SONG_SELECT_STATE_LIST)
     {

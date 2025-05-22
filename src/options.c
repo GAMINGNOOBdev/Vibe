@@ -45,6 +45,7 @@ void options_apply()
 {
     LOGDEBUG(stringf("Master volume: %2.2f", options.master_volume));
     audio_set_volume(options.master_volume);
+    log_enable_debug_messages(options.flags.enable_debug_log);
 }
 
 void options_save(void)

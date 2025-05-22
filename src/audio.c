@@ -221,6 +221,7 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
     }
     #endif
 
+    /// TODO: --- apply music volume ---
 
     astream->processed_frames += frames;
 

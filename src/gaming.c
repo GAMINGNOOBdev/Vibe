@@ -9,6 +9,7 @@
 #include <sprite.h>
 #include <audio.h>
 #include <input.h>
+#include <time.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
@@ -30,7 +31,6 @@
 beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
-uint8_t gaming_show_beatmap_info = 0;
 int gaming_time = 0;
 
 size_t gaming_drawlist_start = 0, gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
@@ -130,9 +130,6 @@ void gaming_update(float delta)
         beatmap_dispose(&gaming_beatmap);
     }
 
-    if (confirm)
-        gaming_show_beatmap_info = !gaming_show_beatmap_info;
-
     if (button_pressed(PSP_CTRL_UP))
     {
         audio_set_volume(audio_get_volume()+delta);
@@ -174,7 +171,10 @@ void gaming_render(void)
     graphics_projection_matrix();
     #endif
 
-    text_renderer_draw("gaming.", 0, 0, 8);
+    if (options.flags.show_fps)
+        text_renderer_draw(stringf("gaming at %d fps.", time_fps()), 0, 0, 8);
+    else
+        text_renderer_draw("gaming.", 0, 0, 8);
 
     if (!gaming_beatmap.is_pure_4k)
         text_renderer_draw("NOT 4K", 192, 0, 8);
@@ -216,7 +216,7 @@ void gaming_render(void)
         sprite_draw(gaming_note, texture);
     }
 
-    if (!gaming_show_beatmap_info)
+    if (!options.flags.show_debug_info)
         return;
 
     text_renderer_draw(stringf("Timing points: %ld", gaming_beatmap.timing_point_count), 5, 264, 8);

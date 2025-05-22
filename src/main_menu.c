@@ -1,8 +1,10 @@
-#include "text_renderer.h"
 #include <gfx.h>
 #include <app.h>
+#include <time.h>
 #include <audio.h>
 #include <input.h>
+#include <options.h>
+#include <text_renderer.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
@@ -123,6 +125,9 @@ void main_menu_render(void)
 
     glEnable(GL_TEXTURE_2D);
     sprite_draw(main_menu_background, main_menu_background_texture);
+
+    if (options.flags.show_fps)
+        text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
 
     text_renderer_draw("Press Start to start", 160, 20, 8);
     text_renderer_draw("Press Select to configure settings", 104, 12, 8);
