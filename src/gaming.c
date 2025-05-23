@@ -20,7 +20,7 @@
 #include <gfx.h>
 #include <app.h>
 
-#define MAX_OBJECTS_ON_SCREEN 500
+#define MAX_OBJECTS_ON_SCREEN 256
 
 ////////////////
 ///          ///
@@ -182,7 +182,9 @@ void gaming_render(void)
     if (gaming_show_results_screen)
         text_renderer_draw("RESULTS", 188, 100, 8);
 
-    for (size_t i = gaming_drawlist_start; i < gaming_drawlist_end && i < gaming_beatmap.object_count; i++)
+    float scrollspeedfactor = options.scroll_speed / (float)SCROLL_SPEED_MAX;
+    uint16_t objcount = 0;
+    for (size_t i = gaming_drawlist_start; i < gaming_drawlist_end && i < gaming_beatmap.object_count && objcount < MAX_OBJECTS_ON_SCREEN; i++)
     {
         beatmap_hitobject_t hitobject = gaming_beatmap.objects[i];
         texture_t* texture = gaming_note1_texture;
@@ -191,12 +193,12 @@ void gaming_render(void)
             texture = gaming_note2_texture;
 
         gaming_note->x = 240 + (column-2)*40;
-        gaming_note->y = (hitobject.time - gaming_time);
+        gaming_note->y = (hitobject.time - gaming_time) * scrollspeedfactor;
         gaming_long_note->height = 0;
 
         if (hitobject.isLN)
         {
-            gaming_long_note->height = hitobject.end-hitobject.time;
+            gaming_long_note->height = (hitobject.end-hitobject.time) * scrollspeedfactor;
             gaming_long_note->x = gaming_note->x;
             gaming_long_note->y = gaming_note->y;
         }
@@ -204,7 +206,7 @@ void gaming_render(void)
         if (gaming_note->y < -(gaming_note->height+gaming_long_note->height+0.1f))
         {
             if (hitobject.isLN)
-                LOGDEBUG(stringf("note y,start,end,time,height, %2.2f|%d|%d|%d|%2.2f", gaming_note->y, hitobject.time, hitobject.end, gaming_time, gaming_long_note->height));
+                LOGDEBUG(stringf("note y,start,end,time.noteheight,height, %2.2f|%d|%d|%d|%2.2f|%2.2f", gaming_note->y, hitobject.time, hitobject.end, gaming_time, gaming_note->height, gaming_long_note->height));
             gaming_drawlist_start++;
             if (gaming_drawlist_end + 1 < gaming_beatmap.object_count)
                 gaming_drawlist_end++;
@@ -212,16 +214,18 @@ void gaming_render(void)
         }
 
         if (hitobject.isLN)
+        {
             sprite_draw(gaming_long_note, gaming_long_note_texture);
+            objcount++;
+        }
         sprite_draw(gaming_note, texture);
+        objcount++;
     }
 
     if (!options.flags.show_debug_info)
         return;
 
-    text_renderer_draw(stringf("Timing points: %ld", gaming_beatmap.timing_point_count), 5, 264, 8);
-    text_renderer_draw(stringf("Objects: %ld", gaming_beatmap.object_count), 5, 256, 8);
-    text_renderer_draw(stringf("Time: %d", gaming_time), 5, 248, 8);
-    text_renderer_draw(stringf("Length: %d", gaming_audio_stream.length_ms), 5, 240, 8);
-    text_renderer_draw(stringf("Drawlist start/end: %d/%d", gaming_drawlist_start, gaming_drawlist_end), 5, 232, 8);
+    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist start/end: %d/%d",
+                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_drawlist_start, gaming_drawlist_end);
+    text_renderer_draw(debug_text, 5, 264, 8);
 }

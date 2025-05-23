@@ -145,11 +145,11 @@ const char* get_psp_button_string(int button)
     if (button == PSP_CTRL_TRIANGLE)
         return "\x1E";
     if (button == PSP_CTRL_CIRCLE)
-        return "O";
+        return "0";
     if (button == PSP_CTRL_CROSS)
         return "X";
     if (button == PSP_CTRL_SQUARE)
-        return "\xA";
+        return "O";
 
     return "None";
 }

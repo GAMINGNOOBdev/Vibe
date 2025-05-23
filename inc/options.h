@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #define SCROLL_SPEED_MAX 40
-#define SCROLL_SPEED_MIN 1
+#define SCROLL_SPEED_MIN 10
 
 typedef struct
 {

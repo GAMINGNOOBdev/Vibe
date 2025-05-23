@@ -212,13 +212,23 @@ void settings_menu_render(void)
     if (options.flags.show_fps)
         text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
 
-    text_renderer_draw_color("X -> Select option, O -> Go back", 5, 264, 8, 0xFF00FF00);
-    text_renderer_draw_color("\x18/\x19 -> change selection/value", 5, 256, 8, 0xFF00FF00);
+    text_renderer_draw_color("X -> Select option, O -> Go back\n\x18/\x19 -> Change selection/value", 5, 264, 8, 0xFF00FF00);
 
     int y = 248;
     text_renderer_draw_color(">", 5, y - selected_option*8, 8, selected_color);
 
-    text_renderer_draw(stringf("Master volume: %2.2f%%", 100.0f * options.master_volume), 13, y, 8); y-=8;
+    const char* keybind1 = get_psp_button_string(options.keybinds.m4l1);
+    const char* keybind2 = get_psp_button_string(options.keybinds.m4l2);
+    const char* keybind3 = get_psp_button_string(options.keybinds.m4l3);
+    const char* keybind4 = get_psp_button_string(options.keybinds.m4l4);
+
+    const char* options_string = stringf("Master volume: %2.2f%%\nMusic volume: %2.2f%%\nHitsound volume: %2.2f%%\nScroll speed: %d\nKeybind 1 4k: %s\nKeybind 2 4k: %s\nKeybind 3 4k: %s\nKeybind 4 4k: %s\nShow FPS: %s\nShow debug info: %s\nEnable debug log: %s",
+                                         100.f * options.master_volume, 100.f * options.music_volume, 100.f * options.hitsound_volume, options.scroll_speed,
+                                     keybind1, keybind2, keybind3, keybind4,
+                                     options.flags.show_fps ? "true" : "false", options.flags.show_debug_info ? "true" : "false", options.flags.enable_debug_log ? "true" : "false");
+
+    text_renderer_draw(options_string, 13, y, 8);
+    /*text_renderer_draw(stringf("Master volume: %2.2f%%", 100.0f * options.master_volume), 13, y, 8); y-=8;
     text_renderer_draw(stringf("Music volume: %2.2f%%", 100.0f * options.music_volume), 13, y, 8); y-=8;
     text_renderer_draw(stringf("Hitsound volume: %2.2f%%", 100.0f * options.hitsound_volume), 13, y, 8); y-=8;
     text_renderer_draw(stringf("Scroll Speed: %d", options.scroll_speed), 13, y, 8); y-=8;
@@ -228,5 +238,5 @@ void settings_menu_render(void)
     text_renderer_draw(stringf("Keybind 4 4k: %s", get_psp_button_string(options.keybinds.m4l4)), 13, y, 8); y-=8;
     text_renderer_draw(stringf("Show FPS: %s", options.flags.show_fps ? "true" : "false"), 13, y, 8); y-=8;
     text_renderer_draw(stringf("Show Debug Info: %s", options.flags.show_debug_info ? "true" : "false"), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Enable Debug Log: %s", options.flags.enable_debug_log ? "true" : "false"), 13, y, 8); y-=8;
+    text_renderer_draw(stringf("Enable Debug Log: %s", options.flags.enable_debug_log ? "true" : "false"), 13, y, 8); y-=8;*/
 }

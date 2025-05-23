@@ -234,8 +234,7 @@ void song_select_render(void)
 
             sprite_draw(song_select_selector, song_select_selector_texture);
 
-            text_renderer_draw(stringf("%s - %s", entry->artist, entry->songname), x+5, y+16, 8);
-            text_renderer_draw(stringf("ID: %llu", entry->id), x+5, y, 8);
+            text_renderer_draw(stringf("%s - %s\nID: %llu", entry->artist, entry->songname, entry->id), x+5, y+16, 8);
         }
     }
     else if (song_select_state == SONG_SELECT_STATE_DIFFICULTY_SELECT)
@@ -248,8 +247,7 @@ void song_select_render(void)
         song_select_selector->y = y-4;
 
         sprite_draw(song_select_selector, song_select_selector_texture);
-        text_renderer_draw(stringf("%s - %s", selected_song->artist, selected_song->songname), x+5, y+16, 8);
-        text_renderer_draw(stringf("ID: %llu", selected_song->id), x+5, y, 8);
+        text_renderer_draw(stringf("%s - %s\nID: %llu", selected_song->artist, selected_song->songname, selected_song->id), x+5, y+16, 8);
 
         float y_start = y-40;
         for (int i = 0; i < DIFFICULTIES_ON_SCREEN; i++)
