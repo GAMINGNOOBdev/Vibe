@@ -7,3 +7,6 @@
 [submodule "libwave"]
 	path = libwave
 	url = https://github.com/brglng/libwave.git
+[submodule "cglm"]
+	path = cglm
+	url = https://github.com/recp/cglm.git

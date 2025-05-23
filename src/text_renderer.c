@@ -20,12 +20,12 @@
 #define FONT_CHAR_HEIGHT 8
 
 tilemap_t text_renderer_font_tilemap;
-texture_t* text_renderer_texture;
+texture_t text_renderer_texture;
 
 void text_renderer_initialize(void)
 {
-    text_renderer_texture = texture_load("Assets/font.png", GL_FALSE, GL_TRUE);
-    tilemap_create(&text_renderer_font_tilemap, (texture_atlas_t){16,16}, text_renderer_texture, 480/16, 272/16);
+    texture_load(&text_renderer_texture, "Assets/font.png", GL_FALSE, GL_TRUE);
+    tilemap_create(&text_renderer_font_tilemap, (texture_atlas_t){16,16}, &text_renderer_texture, 480/16, 272/16);
 }
 
 void text_renderer_draw(const char* str, float x, float y, float pixelsize)
@@ -72,7 +72,7 @@ void text_renderer_draw_color(const char* str, float x, float y, float pixelsize
 
 void text_renderer_dispose(void)
 {
-    texture_dispose(text_renderer_texture);
+    texture_dispose(&text_renderer_texture);
     tilemap_dispose(&text_renderer_font_tilemap);
 }
 

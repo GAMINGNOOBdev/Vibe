@@ -23,12 +23,8 @@ void print_vertex(vertex_t vert)
                         ));
 }
 
-sprite_t* sprite_create(float x, float y, float width, float height, texture_t* texture)
+void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture)
 {
-    sprite_t* sprite = (sprite_t*)malloc(sizeof(sprite_t));
-    if (sprite == NULL)
-        return NULL;
-
     float u = 1;
     float v = 1;
 
@@ -70,9 +66,9 @@ sprite_t* sprite_create(float x, float y, float width, float height, texture_t* 
     sceKernelDcacheWritebackInvalidateAll();
     #endif
 
-    LOGINFO(stringf("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v));
+    mesh_update(&sprite->mesh);
 
-    return sprite;
+    LOGINFO(stringf("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v));
 }
 
 void sprite_draw(sprite_t* sprite, texture_t* texture)
@@ -83,15 +79,28 @@ void sprite_draw(sprite_t* sprite, texture_t* texture)
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
 
+    #ifdef __PSP__
     ScePspFVector3 translation = {sprite->x, sprite->y, sprite->layer};
     gluTranslate(&translation);
     gluRotateZ(sprite->rotation);
 
     ScePspFVector3 scale = {sprite->width, sprite->height, 1.0f};
     gluScale(&scale);
+    #else
+    vec3 translation = GLM_VEC3_ZERO_INIT;
+    translation[0] = sprite->x;
+    translation[1] = sprite->y;
+    vec3 scale = GLM_VEC3_ONE_INIT;
+    scale[0] = sprite->width;
+    scale[1] = sprite->height;
+    vec3 rotation = GLM_VEC3_ZERO_INIT;
+    rotation[2] = 1;
 
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    mat4 model = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(model, translation);
+    glm_scale(model, scale);
+    glm_rotate(model, sprite->rotation, rotation);
+    graphics_model_matrix(model);
     #endif
 
     texture_bind(texture);
@@ -104,5 +113,4 @@ void sprite_dispose(sprite_t* sprite)
         return;
 
     mesh_dispose(&sprite->mesh);
-    free(sprite);
 }

@@ -10,6 +10,7 @@
 #else
 #include <GL/gl.h>
 #include <pctypes.h>
+#include <cglm/cglm.h>
 #endif
 #include <sprite.h>
 #include <texture.h>
@@ -67,9 +68,9 @@ void settings_menu_init(void)
     #ifdef __PSP__
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
-    #endif
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
+    #endif
 
     LOGDEBUG("settings menu initialized");
 }
@@ -201,12 +202,14 @@ void settings_menu_render(void)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
-
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    #else
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
+    graphics_projection_matrix(projection);
     #endif
 
     if (options.flags.show_fps)

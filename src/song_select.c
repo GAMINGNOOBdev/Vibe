@@ -16,6 +16,7 @@
 #else
 #include <GL/gl.h>
 #include <pctypes.h>
+#include <cglm/cglm.h>
 #endif
 #include <gfx.h>
 #include <app.h>
@@ -44,11 +45,11 @@ int difficulty_scroll_offset = 0;
 song_difficulty_t* selected_difficulty = NULL;
 songlist_entry_t* selected_song = NULL;
 
-sprite_t* song_select_background;
-sprite_t* song_select_selector;
+sprite_t song_select_background;
+sprite_t song_select_selector;
 
-texture_t* song_select_background_texture;
-texture_t* song_select_selector_texture;
+texture_t song_select_background_texture;
+texture_t song_select_selector_texture;
 
 /////////////////////
 ///               ///
@@ -82,11 +83,11 @@ void song_select_init(void)
 
     song_list_initialize("Songs");
 
-    song_select_background_texture = texture_load("Assets/background.png", 1, 1);
-    song_select_selector_texture = texture_load("Assets/selector.png", 0, 1);
+    texture_load(&song_select_background_texture, "Assets/background.png", 1, 1);
+    texture_load(&song_select_selector_texture, "Assets/selector.png", 0, 1);
 
-    song_select_background = sprite_create(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, song_select_background_texture);
-    song_select_selector = sprite_create(50, 222, 460, 30, song_select_selector_texture);
+    sprite_create(&song_select_background, 0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, &song_select_background_texture);
+    sprite_create(&song_select_selector, 50, 222, 460, 30, &song_select_selector_texture);
 
     song_select_initialized = 1;
 }
@@ -96,10 +97,10 @@ void song_select_dispose(void)
     if (!song_select_initialized)
         return;
 
-    texture_dispose(song_select_background_texture);
-    texture_dispose(song_select_selector_texture);
-    sprite_dispose(song_select_background);
-    sprite_dispose(song_select_selector);
+    texture_dispose(&song_select_background_texture);
+    texture_dispose(&song_select_selector_texture);
+    sprite_dispose(&song_select_background);
+    sprite_dispose(&song_select_selector);
 }
 
 void song_select_input_handle(float delta)
@@ -199,16 +200,18 @@ void song_select_render(void)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
-
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    #else
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
+    graphics_projection_matrix(projection);
     #endif
 
     glEnable(GL_TEXTURE_2D);
-    sprite_draw(song_select_background, song_select_background_texture);
+    sprite_draw(&song_select_background, &song_select_background_texture);
 
     if (options.flags.show_fps)
         text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
@@ -229,10 +232,10 @@ void song_select_render(void)
             if (song_index == song_selected_index)
                 x = 50 - 40*easing_get_factor();
 
-            song_select_selector->y = y - 4;
-            song_select_selector->x = x;
+            song_select_selector.y = y - 4;
+            song_select_selector.x = x;
 
-            sprite_draw(song_select_selector, song_select_selector_texture);
+            sprite_draw(&song_select_selector, &song_select_selector_texture);
 
             text_renderer_draw(stringf("%s - %s\nID: %llu", entry->artist, entry->songname, entry->id), x+5, y+16, 8);
         }
@@ -243,10 +246,10 @@ void song_select_render(void)
         float distanceToTop = 246-y;
         y = y + distanceToTop * easing_get_factor();
         float x = 10;
-        song_select_selector->x = x;
-        song_select_selector->y = y-4;
+        song_select_selector.x = x;
+        song_select_selector.y = y-4;
 
-        sprite_draw(song_select_selector, song_select_selector_texture);
+        sprite_draw(&song_select_selector, &song_select_selector_texture);
         text_renderer_draw(stringf("%s - %s\nID: %llu", selected_song->artist, selected_song->songname, selected_song->id), x+5, y+16, 8);
 
         float y_start = y-40;
@@ -263,10 +266,10 @@ void song_select_render(void)
             if (difficulty_index == difficulty_selected_index)
                 x = 20;
 
-            song_select_selector->y = y - 4;
-            song_select_selector->x = x;
+            song_select_selector.y = y - 4;
+            song_select_selector.x = x;
 
-            sprite_draw(song_select_selector, song_select_selector_texture);
+            sprite_draw(&song_select_selector, &song_select_selector_texture);
             text_renderer_draw(stringf("%s (%s)", entry.name, entry.mapper), x+5, y+8, 8);
         }
     }

@@ -15,6 +15,7 @@
 #else
 #include <GL/gl.h>
 #include <pctypes.h>
+#include <cglm/cglm.h>
 #endif
 
 #include <gfx.h>
@@ -35,11 +36,11 @@ int gaming_time = 0;
 
 size_t gaming_drawlist_start = 0, gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
 
-texture_t* gaming_long_note_texture;
-texture_t* gaming_note1_texture;
-texture_t* gaming_note2_texture;
-sprite_t* gaming_long_note;
-sprite_t* gaming_note;
+texture_t gaming_long_note_texture;
+texture_t gaming_note1_texture;
+texture_t gaming_note2_texture;
+sprite_t gaming_long_note;
+sprite_t gaming_note;
 
 /////////////////////
 ///               ///
@@ -92,11 +93,11 @@ void gaming_init(void)
     if (gaming_initialized)
         return;
 
-    gaming_long_note_texture = texture_load("Skin/LNTail.png", GL_TRUE, GL_TRUE);
-    gaming_note1_texture = texture_load("Skin/mania-note1.png", GL_TRUE, GL_TRUE);
-    gaming_note2_texture = texture_load("Skin/mania-note2.png", GL_TRUE, GL_TRUE);
-    gaming_long_note = sprite_create(0, 0, 30, 512, gaming_long_note_texture);
-    gaming_note = sprite_create(0, 0, 30, 12.5f, gaming_note1_texture);
+    texture_load(&gaming_long_note_texture, "Skin/LNTail.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_note1_texture, "Skin/mania-note1.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_note2_texture, "Skin/mania-note2.png", GL_TRUE, GL_TRUE);
+    sprite_create(&gaming_long_note, 0, 0, 30, 512, &gaming_long_note_texture);
+    sprite_create(&gaming_note, 0, 0, 30, 12.5f, &gaming_note1_texture);
 
     gaming_initialized = 1;
 }
@@ -106,11 +107,11 @@ void gaming_dispose(void)
     if (!gaming_initialized)
         return;
 
-    texture_dispose(gaming_long_note_texture);
-    texture_dispose(gaming_note1_texture);
-    texture_dispose(gaming_note2_texture);
-    sprite_dispose(gaming_long_note);
-    sprite_dispose(gaming_note);
+    texture_dispose(&gaming_long_note_texture);
+    texture_dispose(&gaming_note1_texture);
+    texture_dispose(&gaming_note2_texture);
+    sprite_dispose(&gaming_long_note);
+    sprite_dispose(&gaming_note);
 }
 
 void gaming_update(float delta)
@@ -163,12 +164,14 @@ void gaming_render(void)
     #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
-
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    #else
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
+    graphics_projection_matrix(projection);
     #endif
 
     if (options.flags.show_fps)
@@ -187,26 +190,26 @@ void gaming_render(void)
     for (size_t i = gaming_drawlist_start; i < gaming_drawlist_end && i < gaming_beatmap.object_count && objcount < MAX_OBJECTS_ON_SCREEN; i++)
     {
         beatmap_hitobject_t hitobject = gaming_beatmap.objects[i];
-        texture_t* texture = gaming_note1_texture;
+        texture_t* texture = &gaming_note1_texture;
         uint8_t column = hitobject.column;
         if (column == 1 || column == 2)
-            texture = gaming_note2_texture;
+            texture = &gaming_note2_texture;
 
-        gaming_note->x = 240 + (column-2)*40;
-        gaming_note->y = (hitobject.time - gaming_time) * scrollspeedfactor;
-        gaming_long_note->height = 0;
+        gaming_note.x = 240 + (column-2)*40;
+        gaming_note.y = (hitobject.time - gaming_time) * scrollspeedfactor;
+        gaming_long_note.height = 0;
 
         if (hitobject.isLN)
         {
-            gaming_long_note->height = (hitobject.end-hitobject.time) * scrollspeedfactor;
-            gaming_long_note->x = gaming_note->x;
-            gaming_long_note->y = gaming_note->y;
+            gaming_long_note.height = (hitobject.end-hitobject.time) * scrollspeedfactor;
+            gaming_long_note.x = gaming_note.x;
+            gaming_long_note.y = gaming_note.y;
         }
 
-        if (gaming_note->y < -(gaming_note->height+gaming_long_note->height+0.1f))
+        if (gaming_note.y < -(gaming_note.height+gaming_long_note.height+0.1f))
         {
             if (hitobject.isLN)
-                LOGDEBUG(stringf("note y,start,end,time.noteheight,height, %2.2f|%d|%d|%d|%2.2f|%2.2f", gaming_note->y, hitobject.time, hitobject.end, gaming_time, gaming_note->height, gaming_long_note->height));
+                LOGDEBUG(stringf("note y,start,end,time.noteheight,height, %2.2f|%d|%d|%d|%2.2f|%2.2f", gaming_note.y, hitobject.time, hitobject.end, gaming_time, gaming_note.height, gaming_long_note.height));
             gaming_drawlist_start++;
             if (gaming_drawlist_end + 1 < gaming_beatmap.object_count)
                 gaming_drawlist_end++;
@@ -215,10 +218,10 @@ void gaming_render(void)
 
         if (hitobject.isLN)
         {
-            sprite_draw(gaming_long_note, gaming_long_note_texture);
+            sprite_draw(&gaming_long_note, &gaming_long_note_texture);
             objcount++;
         }
-        sprite_draw(gaming_note, texture);
+        sprite_draw(&gaming_note, texture);
         objcount++;
     }
 

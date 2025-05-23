@@ -24,7 +24,7 @@ typedef struct
     float height;
 } texture_atlas_t;
 
-texture_t* texture_load(const char* filename, const int flip, const int vram);
+void texture_load(texture_t* texture, const char* filename, const int flip, const int vram);
 void texture_bind(texture_t* tex);
 void texture_dispose(texture_t* tex);
 

@@ -10,6 +10,7 @@
 #else
 #include <GL/gl.h>
 #include <pctypes.h>
+#include <cglm/cglm.h>
 #endif
 #include <sprite.h>
 #include <texture.h>
@@ -32,8 +33,8 @@
 ///          ///
 ////////////////
 
-texture_t* main_menu_background_texture;
-sprite_t* main_menu_background;
+texture_t main_menu_background_texture;
+sprite_t main_menu_background;
 
 /////////////////////
 ///               ///
@@ -64,12 +65,12 @@ void main_menu_init(void)
     #ifdef __PSP__
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
-    #endif
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
+    #endif
 
-    main_menu_background_texture = texture_load("Assets/mainMenu.png", GL_TRUE, GL_TRUE);
-    main_menu_background = sprite_create(0, 0, 480, 272, main_menu_background_texture);
+    texture_load(&main_menu_background_texture, "Assets/mainMenu.png", GL_TRUE, GL_TRUE);
+    sprite_create(&main_menu_background, 0, 0, 480, 272, &main_menu_background_texture);
 
     LOGDEBUG("main menu initialized");
 }
@@ -79,8 +80,8 @@ void main_menu_dispose(void)
     if (!menu_initialized)
         return;
 
-    texture_dispose(main_menu_background_texture);
-    sprite_dispose(main_menu_background);
+    texture_dispose(&main_menu_background_texture);
+    sprite_dispose(&main_menu_background);
 }
 
 void main_menu_input_handle(float delta)
@@ -113,18 +114,20 @@ void main_menu_render(void)
     glClearColor(0x11/255.f, 0x11/255.f, 0x11/255.f, 0xFF/255.f);
     #endif
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
-
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    #else
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
+    graphics_projection_matrix(projection);
     #endif
 
     glEnable(GL_TEXTURE_2D);
-    sprite_draw(main_menu_background, main_menu_background_texture);
+    sprite_draw(&main_menu_background, &main_menu_background_texture);
 
     if (options.flags.show_fps)
         text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);

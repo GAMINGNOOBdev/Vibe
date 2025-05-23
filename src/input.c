@@ -12,6 +12,7 @@
 SceCtrlData mInputData;
 SceCtrlData mInputLastData;
 #else
+#include <pctypes.h>
 /// SDLK_ENDCALL is currently the last one i guess
 uint8_t inputData[SDLK_ENDCALL];
 uint8_t lastInputData[SDLK_ENDCALL];

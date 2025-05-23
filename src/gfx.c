@@ -203,22 +203,24 @@ void graphics_end_frame()
     SDL_GL_SwapWindow(sdlwindow);
 }
 
-void graphics_projection_matrix()
+void graphics_projection_matrix(mat4 matrix)
 {
-    glMatrixMode(GL_PROJECTION);
-    float matrix[16];
-    glLoadMatrixf(matrix);
+    float data[16];
+    for (uint8_t y = 0; y < 4; y++)
+        for (uint8_t x = 0; x < 4; x++)
+            data[y*4+x] = matrix[y][x];
 
-    glUniformMatrix4fv(shaderProjectionID, 1, 0, matrix);
+    glUniformMatrix4fv(shaderProjectionID, 1, 0, data);
 }
 
-void graphics_model_matrix()
+void graphics_model_matrix(mat4 matrix)
 {
-    glMatrixMode(GL_MODEL);
-    float matrix[16];
-    glLoadMatrixf(matrix);
+    float data[16];
+    for (uint8_t y = 0; y < 4; y++)
+        for (uint8_t x = 0; x < 4; x++)
+            data[y*4+x] = matrix[y][x];
 
-    glUniformMatrix4fv(shaderModelID, 1, 0, matrix);
+    glUniformMatrix4fv(shaderModelID, 1, 0, data);
 }
 
 #endif

@@ -12,6 +12,7 @@
 #include <GL/glew.h>
 #include <gfx.h>
 #include <pctypes.h>
+#include <cglm/mat4.h>
 #endif
 #include <mesh.h>
 
@@ -20,10 +21,7 @@ void tilemap_create(tilemap_t* tilemap, texture_atlas_t atlas, texture_t* textur
     tilemap_dispose(tilemap);
     tilemap->tiles = (tile_t*)malloc(sizeof(tile_t)*sizex*sizey);
     if (tilemap->tiles == NULL)
-    {
-        free(tilemap);
         return;
-    }
 
     mesh_create(&tilemap->mesh, sizex*sizey*4, sizex*sizey*6);
 
@@ -66,6 +64,8 @@ void tilemap_build(tilemap_t* tilemap)
         tilemap->mesh.indices[i * 6 + 5] = (i * 4) + 0;
     }
 
+    mesh_update(&tilemap->mesh);
+
     #ifdef __PSP__
     sceKernelDcacheWritebackInvalidateAll();
     #endif
@@ -78,6 +78,7 @@ void tilemap_draw(tilemap_t* tilemap)
     if (tilemap->mesh.indexCount == 0 || tilemap->texture == NULL)
         return;
 
+    #ifdef __PSP__
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
 
@@ -86,9 +87,18 @@ void tilemap_draw(tilemap_t* tilemap)
 
     ScePspFVector3 scale = {tilemap->scalex, tilemap->scaley, 0};
     gluScale(&scale);
+    #else
+    vec3 translation = GLM_VEC3_ZERO_INIT;
+    translation[0] = tilemap->x;
+    translation[1] = tilemap->y;
+    vec3 scale = GLM_VEC3_ONE_INIT;
+    scale[0] = tilemap->scalex;
+    scale[1] = tilemap->scaley;
 
-    #ifndef __PSP__
-    graphics_projection_matrix();
+    mat4 model = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(model, translation);
+    glm_scale(model, scale);
+    graphics_model_matrix(model);
     #endif
 
     texture_bind(tilemap->texture);

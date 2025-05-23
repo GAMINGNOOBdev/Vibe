@@ -5,6 +5,8 @@
 #include <pspdisplay.h>
 #include <pspgum.h>
 #include <pspgu.h>
+#else
+#include <cglm/cglm.h>
 #endif
 
 #define PSP_BUFFER_WIDTH 512
@@ -21,8 +23,8 @@ void graphics_start_frame();
 void graphics_end_frame();
 
 #ifndef __PSP__
-void graphics_projection_matrix();
-void graphics_model_matrix();
+void graphics_projection_matrix(mat4 matrix);
+void graphics_model_matrix(mat4 matrix);
 #endif
 
 #ifdef __cplusplus

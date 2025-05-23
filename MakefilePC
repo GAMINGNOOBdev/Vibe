@@ -1,11 +1,14 @@
 TARGET = Vibe
 
-INCDIR = inc lib minimp3 libwave/include
+INCDIR = inc lib minimp3 libwave/include cglm/include
 SRCDIR = src
 
 CFILES := $(shell find -L $(SRCDIR) -type f -name '*.c')
 CFILES := $(subst src/,,$(CFILES))
 OBJS = $(addprefix src/,$(CFILES:.c=.o))
+
+CGLMSRCFILES += $(shell find -L cglm/src -type f -name '*.c')
+OBJS += $(CGLMSRCFILES:.c=.o)
 
 OBJS += \
 		lib/stb_vorbis.o \

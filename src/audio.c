@@ -201,16 +201,6 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
     else if (astream->format == AUDIO_FORMAT_WAV)
     {
         frames = wave_read(astream->wav, buffer, length);
-        /*float* samples = malloc(sizeof(float)*length*2);
-        frames = tinywav_read_f(&astream->wav, samples, length);
-        short* buf = buffer;
-        for (int i = 0; i < length; i++)
-        {
-            buf[i*2 + 0] = samples[i*2 + 0];
-            buf[i*2 + 1] = samples[i*2 + 1];
-        }
-        free(samples);
-        sceKernelDcacheWritebackInvalidateAll();*/
     }
 
     #ifndef __PSP__
