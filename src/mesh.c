@@ -16,26 +16,39 @@ void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount)
     if (mesh == NULL)
         return;
 
+    #ifdef __PSP__
     mesh->data = memalign(16, sizeof(vertex_t) * vertexCount);
-    memset(mesh->data, 0, sizeof(vertex_t) * vertexCount);
+    mesh->indices = (uint16_t*)memalign(16, sizeof(uint16_t) * indexCount);
+    #else
+    mesh->data = malloc(sizeof(vertex_t) * vertexCount);
+    mesh->indices = malloc(sizeof(uint32_t) * indexCount);
+    #endif
+
     if (mesh->data == NULL)
         return;
-
-    mesh->indices = (uint16_t*)memalign(16, sizeof(uint16_t) * indexCount);
-    memset(mesh->indices, 0, sizeof(uint16_t) * indexCount);
     if (mesh->indices == NULL)
     {
         free(mesh->data);
         return;
     }
-
+    memset(mesh->data, 0, sizeof(vertex_t) * vertexCount);
+    memset(mesh->indices, 0, sizeof(uint16_t) * indexCount);
     mesh->indexCount = indexCount;
 
     #ifndef __PSP__
+    memset(mesh->indices, 0, sizeof(uint32_t) * indexCount);
     glGenVertexArrays(1, &mesh->vao);
-    glGenBuffers(1, &mesh->vbo);
-
     glBindVertexArray(mesh->vao);
+    glGenBuffers(1, &mesh->vbo);
+    glGenBuffers(1, &mesh->ibo);
+
+    LOGDEBUG(stringf("VAO,VBO,IBO: %d,%d,%d (0x%16.16x,0x%16.16x,0x%16.16x)",
+        mesh->vao, mesh->vbo, mesh->ibo, mesh->vao, mesh->vbo, mesh->ibo));
+
+    mesh->vertices = vertexCount;
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh->vertices * sizeof(vertex_t), mesh->data, GL_DYNAMIC_DRAW);
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(struct vertex_t, u));
     glEnableVertexAttribArray(1);
@@ -43,11 +56,6 @@ void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount)
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(struct vertex_t, x));
 
-    mesh->vertices = vertexCount;
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->vertices * sizeof(vertex_t), mesh->data, GL_DYNAMIC_DRAW);
-
-    glGenBuffers(1, &mesh->ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(uint32_t), mesh->indices, GL_DYNAMIC_DRAW);
 
@@ -83,9 +91,6 @@ void mesh_draw(mesh_t* mesh)
     #ifdef __PSP__
     glDrawElements(GL_TRIANGLES, GL_INDEX_16BIT | GL_TEXTURE_32BITF | GL_COLOR_8888 | GL_VERTEX_32BITF | GL_TRANSFORM_3D, mesh->indexCount, mesh->indices, mesh->data);
     #else
-    ///FIXME: --- for some reason glDrawElements fucking dies ---
-    return;
-
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo);
     glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, NULL);

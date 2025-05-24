@@ -43,7 +43,7 @@ void graphics_end_frame()
 SDL_Window* sdlwindow;
 GLuint globalSdlShader;
 SDL_GLContext glcontext;
-GLint shaderProjectionID, shaderModelID;
+GLint shaderProjectionID, shaderModelID, shaderTextureID;
 
 GLuint compile_shader(const char* src, GLenum type)
 {
@@ -156,9 +156,10 @@ void graphics_init()
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+	SDL_GL_SetSwapInterval(0);
 
-    sdlwindow = SDL_CreateWindow("psp-game-client-desktop", 0, 0, 480, 272, SDL_WINDOW_OPENGL);
+    sdlwindow = SDL_CreateWindow("psp-game-client-desktop", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, SDL_WINDOW_OPENGL);
     glcontext = SDL_GL_CreateContext(sdlwindow);
 
     GLenum error;
@@ -181,9 +182,10 @@ void graphics_init()
     free(pixelshader);
 
     shaderModelID = glGetUniformLocation(globalSdlShader, "u_modelview");
+    shaderTextureID = glGetUniformLocation(globalSdlShader, "u_texture");
     shaderProjectionID = glGetUniformLocation(globalSdlShader, "u_projection");
 
-    LOGINFO(stringf("Shader IDs{ .projection=%d, .model=%d }", shaderProjectionID, shaderModelID));
+    LOGINFO(stringf("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID));
 }
 
 void graphics_dispose()
@@ -194,6 +196,7 @@ void graphics_dispose()
 
 void graphics_start_frame()
 {
+    glViewport(0, 0, PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2);
     glUseProgram(globalSdlShader);
 }
 
@@ -221,6 +224,11 @@ void graphics_model_matrix(mat4 matrix)
             data[y*4+x] = matrix[y][x];
 
     glUniformMatrix4fv(shaderModelID, 1, 0, data);
+}
+
+void graphics_texture_uniform(GLuint id)
+{
+    glUniform1i(shaderTextureID, id);
 }
 
 #endif

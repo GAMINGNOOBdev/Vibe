@@ -7,10 +7,6 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * @brief Enables input
  * @note To use analog stick as well use PSP_CTRL_MODE_ANALOG mode
@@ -58,9 +54,5 @@ uint8_t button_released(uint32_t button);
  * @param button PSP Button
  */
 const char* get_psp_button_string(int button);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

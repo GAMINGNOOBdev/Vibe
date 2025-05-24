@@ -4,10 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct
 {
     char* filename;
@@ -45,9 +41,5 @@ extern songlist_t songs_list;
 void song_list_initialize(const char* path);
 songlist_entry_t* songlist_get_entry(int index);
 void song_list_dispose(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

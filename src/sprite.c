@@ -43,19 +43,18 @@ void sprite_create(sprite_t* sprite, float x, float y, float width, float height
     sprite->height = height;
 
     vertex_t* meshdata = (vertex_t*)sprite->mesh.data;
-    uint16_t* meshindices = sprite->mesh.indices;
     meshdata[0] = VERTEX(0, 0, 0xFFFFFFFF,  0.f,  0.f, 0.0f);
     meshdata[1] = VERTEX(0, v, 0xFFFFFFFF,  0.f,  1.f, 0.0f);
     meshdata[2] = VERTEX(u, v, 0xFFFFFFFF,  1.f,  1.f, 0.0f);
     meshdata[3] = VERTEX(u, 0, 0xFFFFFFFF,  1.f,  0.f, 0.0f);
 
-    meshindices[0] = 0;
-    meshindices[1] = 1;
-    meshindices[2] = 2;
+    sprite->mesh.indices[0] = 0;
+    sprite->mesh.indices[1] = 1;
+    sprite->mesh.indices[2] = 2;
 
-    meshindices[3] = 2;
-    meshindices[4] = 3;
-    meshindices[5] = 0;
+    sprite->mesh.indices[3] = 2;
+    sprite->mesh.indices[4] = 3;
+    sprite->mesh.indices[5] = 0;
 
     print_vertex(meshdata[0]);
     print_vertex(meshdata[1]);

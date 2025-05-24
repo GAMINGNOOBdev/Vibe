@@ -1,10 +1,6 @@
 #ifndef __APPLICATION_H_
 #define __APPLICATION_H_ 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef void(*app_update_callback_t)(float delta);
 typedef void(*app_render_callback_t)();
 
@@ -13,9 +9,5 @@ app_update_callback_t app_get_update_callback();
 
 void app_set_render_callback(app_render_callback_t render);
 app_render_callback_t app_get_render_callback();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -4,10 +4,6 @@
 #include <stddef.h>
 #include <strutil.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define FilterMaskFiles                 0x00 // Only files inside the given directory
 #define FilterMaskAllFiles              0x01 // All files including files from subfolders
 #define FilterMaskFolders               0x02 // Only folder inside the given directory
@@ -57,9 +53,5 @@ const char* file_util_get_file_name(const char* filePath);
  * @returns Only the extension from the file path (WITH a `.`)
 */
 const char* file_util_get_extension(const char* filePath);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

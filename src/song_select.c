@@ -198,7 +198,7 @@ void song_select_render(void)
     glClearColor(0x33/255.f, 0x33/255.f, 0x33/255.f, 0xFF/255.f);
     #endif
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
@@ -210,7 +210,6 @@ void song_select_render(void)
     graphics_projection_matrix(projection);
     #endif
 
-    glEnable(GL_TEXTURE_2D);
     sprite_draw(&song_select_background, &song_select_background_texture);
 
     if (options.flags.show_fps)

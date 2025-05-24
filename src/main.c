@@ -77,10 +77,6 @@ int main()
 
     while (is_running())
     {
-        #ifndef __PSP__
-        glViewport(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-        #endif
-
         input_read();
 
         if (update_callback)

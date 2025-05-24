@@ -4,17 +4,15 @@
 #include <stdint.h>
 #include <vertex.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct
 {
     void* data;
-    uint16_t* indices;
     uint32_t indexCount;
-
-    #ifndef __PSP__
+    
+    #ifdef __PSP__
+    uint16_t* indices;
+    #else
+    uint32_t* indices;
     uint32_t vertices;
     uint32_t vao, vbo, ibo;
     #endif
@@ -24,9 +22,5 @@ void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount);
 void mesh_update(mesh_t* mesh);
 void mesh_draw(mesh_t* mesh);
 void mesh_dispose(mesh_t* mesh);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

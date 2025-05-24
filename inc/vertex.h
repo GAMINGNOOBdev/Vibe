@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct vertex_t
 {
     float u;
@@ -18,9 +14,5 @@ typedef struct vertex_t
 } __attribute__((packed)) vertex_t;
 
 #define VERTEX(_u,_v,_color,_x,_y,_z) (vertex_t){.u=_u,.v=_v,.color=_color,.x=_x,.y=_y,.z=_z}
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

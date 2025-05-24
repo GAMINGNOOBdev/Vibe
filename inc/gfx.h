@@ -6,16 +6,13 @@
 #include <pspgum.h>
 #include <pspgu.h>
 #else
+#include <GL/glew.h>
 #include <cglm/cglm.h>
 #endif
 
 #define PSP_BUFFER_WIDTH 512
 #define PSP_SCREEN_WIDTH 480
 #define PSP_SCREEN_HEIGHT 272
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void graphics_init();
 void graphics_dispose();
@@ -25,10 +22,7 @@ void graphics_end_frame();
 #ifndef __PSP__
 void graphics_projection_matrix(mat4 matrix);
 void graphics_model_matrix(mat4 matrix);
-#endif
-
-#ifdef __cplusplus
-}
+void graphics_texture_uniform(GLuint id);
 #endif
 
 #endif

@@ -1,10 +1,6 @@
 #ifndef __STRUTIL_H_
 #define __STRUTIL_H_ 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stddef.h>
 
@@ -30,9 +26,5 @@ void stringvec_push_back(stringvec_t* vec, const char* value);
 int strpos(const char* str, char c);
 int strlpos(const char* str, char c);
 uint64_t strtoi(const char* str);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

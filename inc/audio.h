@@ -1,10 +1,6 @@
 #ifndef __AUDIO_H_
 #define __AUDIO_H_ 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 #define MINIMP3_NO_SIMD
@@ -22,6 +18,8 @@ typedef enum
 
 typedef struct
 {
+    float volume;
+
     float length;
     int length_ms;
     int processed_frames;
@@ -50,9 +48,5 @@ float audio_get_volume(void);
 void audio_set_stream(audio_stream_t* astream);
 void audio_set_end_callback(audio_end_callback_t callback);
 void audio_dispose(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

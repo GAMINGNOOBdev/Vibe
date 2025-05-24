@@ -34,7 +34,8 @@ audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
 int gaming_time = 0;
 
-size_t gaming_drawlist_start = 0, gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
+size_t gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
+beatmap_hitobject_t gaming_drawlist[MAX_OBJECTS_ON_SCREEN];
 
 texture_t gaming_long_note_texture;
 texture_t gaming_note1_texture;
@@ -80,9 +81,18 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     audio_stream_seek_start(&gaming_audio_stream);
     audio_set_stream(&gaming_audio_stream);
 
+    gaming_audio_stream.volume = options.music_volume;
+
     gaming_time = 0;
-    gaming_drawlist_start = 0;
-    gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
+    gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
+    size_t gaming_drawlist_size = MAX_OBJECTS_ON_SCREEN;
+    if (gaming_beatmap.object_count < gaming_drawlist_size)
+        gaming_drawlist_size = gaming_beatmap.object_count;
+
+    for (int i = 0; i < MAX_OBJECTS_ON_SCREEN; i++)
+        gaming_drawlist[i].time = -1;
+
+    memcpy(gaming_drawlist, gaming_beatmap.objects, MAX_OBJECTS_ON_SCREEN * sizeof(beatmap_hitobject_t));
 
     LOGINFO("loaded REAL gaming");
 }
@@ -123,8 +133,6 @@ void gaming_update(float delta)
 
     if (back)
     {
-        gaming_drawlist_start = 0;
-        gaming_drawlist_end = MAX_OBJECTS_ON_SCREEN;
         switch_to_song_select();
         audio_set_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
@@ -186,10 +194,12 @@ void gaming_render(void)
         text_renderer_draw("RESULTS", 188, 100, 8);
 
     float scrollspeedfactor = options.scroll_speed / (float)SCROLL_SPEED_MAX;
-    uint16_t objcount = 0;
-    for (size_t i = gaming_drawlist_start; i < gaming_drawlist_end && i < gaming_beatmap.object_count && objcount < MAX_OBJECTS_ON_SCREEN; i++)
+    for (size_t i = 0; i < MAX_OBJECTS_ON_SCREEN; i++)
     {
-        beatmap_hitobject_t hitobject = gaming_beatmap.objects[i];
+        beatmap_hitobject_t hitobject = gaming_drawlist[i];
+        if (hitobject.time == -1)
+            continue;
+
         texture_t* texture = &gaming_note1_texture;
         uint8_t column = hitobject.column;
         if (column == 1 || column == 2)
@@ -197,38 +207,42 @@ void gaming_render(void)
 
         gaming_note.x = 240 + (column-2)*40;
         gaming_note.y = (hitobject.time - gaming_time) * scrollspeedfactor;
+        float lnheight = 0;
         gaming_long_note.height = 0;
 
         if (hitobject.isLN)
         {
-            gaming_long_note.height = (hitobject.end-hitobject.time) * scrollspeedfactor;
+            lnheight = (hitobject.end-hitobject.time) * scrollspeedfactor;
+            gaming_long_note.height = lnheight;
             gaming_long_note.x = gaming_note.x;
             gaming_long_note.y = gaming_note.y;
         }
 
-        if (gaming_note.y < -(gaming_note.height+gaming_long_note.height+0.1f))
+        if (gaming_note.y+lnheight < -(gaming_note.height+0.1f))
         {
             if (hitobject.isLN)
                 LOGDEBUG(stringf("note y,start,end,time.noteheight,height, %2.2f|%d|%d|%d|%2.2f|%2.2f", gaming_note.y, hitobject.time, hitobject.end, gaming_time, gaming_note.height, gaming_long_note.height));
-            gaming_drawlist_start++;
-            if (gaming_drawlist_end + 1 < gaming_beatmap.object_count)
-                gaming_drawlist_end++;
+
+            if (gaming_beatmap_drawlist_index + 1 >= gaming_beatmap.object_count)
+                gaming_drawlist[i].time = -1;
+            else
+            {
+                gaming_beatmap_drawlist_index++;
+                gaming_drawlist[i] = gaming_beatmap.objects[gaming_beatmap_drawlist_index];
+            }
+
             continue;
         }
 
         if (hitobject.isLN)
-        {
             sprite_draw(&gaming_long_note, &gaming_long_note_texture);
-            objcount++;
-        }
         sprite_draw(&gaming_note, texture);
-        objcount++;
     }
 
     if (!options.flags.show_debug_info)
         return;
 
-    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist start/end: %d/%d",
-                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_drawlist_start, gaming_drawlist_end);
+    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist index: %d",
+                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_beatmap_drawlist_index);
     text_renderer_draw(debug_text, 5, 264, 8);
 }

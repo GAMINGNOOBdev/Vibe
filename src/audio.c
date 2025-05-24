@@ -41,6 +41,7 @@ void audio_stream_load(audio_stream_t* stream, const char* path)
         return;
 
     memset(stream, 0, sizeof(audio_stream_t));
+    stream->volume = 1;
 
     int lastDot = strlpos(path, '.');
     int vorbis = strcmp(&path[lastDot+1], "ogg");
@@ -191,25 +192,35 @@ void audio_callback(void* buffer, unsigned int length, void* userdata)
         short* buf = (short*)buffer;
         numFrames *= astream->info.channels;
         frames = stb_vorbis_get_samples_short_interleaved(astream->stream, astream->info.channels, buf, numFrames);
+
+        if (astream->volume != 1)
+        {
+            for (int i = 0; i < numFrames; i++)
+                buf[i] *= astream->volume;
+        }
     }
     else if (astream->format == AUDIO_FORMAT_MP3)
     {
         numFrames *= astream->mp3.info.channels;
         mp3dec_frame_info_t frameInfo;
         frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
+
+        if (astream->volume != 1)
+        {
+            for (int i = 0; i < numFrames; i++)
+                ((mp3d_sample_t*)buffer)[i] *= astream->volume;
+        }
     }
     else if (astream->format == AUDIO_FORMAT_WAV)
     {
-        frames = wave_read(astream->wav, buffer, length);
-    }
+        frames = wave_read(astream->wav, buffer, numFrames);
 
-    #ifndef __PSP__
-    short* buff = buffer;
-    for (uint32_t i = 0; i < length; i++)
-    {
-        buff[i] *= audioVolume;
+        if (astream->volume != 1)
+        {
+            for (int i = 0; i < numFrames; i++)
+                ((WaveI16*)buffer)[i] *= astream->volume;
+        }
     }
-    #endif
 
     /// TODO: --- apply music volume ---
 
@@ -224,6 +235,11 @@ void sdlaudiocallback(void* userdata, Uint8* stream, int len)
 {
     memset(stream, 0, len);
     audio_callback((void*)stream, len / sizeof(short) / 2, userdata);
+
+    for (int i = 0; i < len / sizeof(short); i++)
+    {
+        ((short*)stream)[i] *= audioVolume;
+    }
 }
 #endif
 
@@ -265,9 +281,8 @@ void audio_set_volume(float volume)
     if (volume > 1)
         volume = 1;
 
-    int vol;
     #ifdef __PSP__
-    vol = (int)(volume * (float)PSP_VOLUME_MAX);
+    int vol = (int)(volume * (float)PSP_VOLUME_MAX);
     pspAudioSetVolume(0, vol, vol);
     #endif
     audioVolume = volume;

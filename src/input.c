@@ -80,11 +80,7 @@ int wait_for_input(void)
             return button;
     }
     #else
-    for (size_t i = 0; i < SDLK_ENDCALL; i++)
-    {
-        if (button_pressed_once(i))
-            return i;
-    }
+    ///FIXME: somehow detect new keypress from sdl (maybe using callbacks and setting a flag to listen to new keypresses idk)
     #endif
     return -1;
 }

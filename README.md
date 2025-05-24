@@ -5,16 +5,15 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
 After that just run
 ```bash
-make
+bash compile.sh
 ```
-If you want to build for linux/macos (no windows support because f- microsoft) run
+> [!NOTE]
+> `compile.sh` clean builds the entire project for the psp
+
+If you want to build for linux/macos (no windows support because f*ck microsoft) run
 ```bash
 make -f MakefilePC
 ```
-
-> [!NOTE]
-> Desktop builds are currently VERY wip!!!!
-> The rendering engine is completely screwed up, any sort of help would be appreciated.
 
 ## How to game
 Set your preferred keybinds, volumes and scroll speed in the settings menu while on the settings screen.

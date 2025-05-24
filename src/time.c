@@ -42,7 +42,7 @@ void time_tick()
             break;
     }
     #else
-    time_data.currTime = SDL_GetTicks64();
+    time_data.currTime = SDL_GetPerformanceCounter();
     #endif
 
     time_data.elapsed = (double)time_data.currTime - (double)time_data.pastTime;

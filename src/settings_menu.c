@@ -129,6 +129,7 @@ void settings_menu_handle_option_values(float delta)
     }
     if (selected_option > 3 && selected_option < 8)
     {
+        #ifdef __PSP__
         int button = wait_for_input();
         if (button == -1)
             return;
@@ -141,6 +142,7 @@ void settings_menu_handle_option_values(float delta)
             options.keybinds.m4l3 = button;
         if (selected_option == 7)
             options.keybinds.m4l4 = button;
+        #endif
 
         settings_option_set_select_state();
         return;
@@ -200,7 +202,7 @@ void settings_menu_render(void)
     glClearColor(0x00/255.f, 0x00/255.f, 0x00/255.f, 0xFF/255.f);
     #endif
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);

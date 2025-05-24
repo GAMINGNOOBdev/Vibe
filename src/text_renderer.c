@@ -56,7 +56,6 @@ void text_renderer_draw_color(const char* str, float x, float y, float pixelsize
             .idx = c,
             .color = color,
         };
-        //tile.y = text_renderer_font_tilemap.height - i / text_renderer_font_tilemap.width - 1;
 
         text_renderer_font_tilemap.tiles[i] = tile;
         xoff++;

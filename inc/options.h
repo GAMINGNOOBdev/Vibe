@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define SCROLL_SPEED_MAX 40
 #define SCROLL_SPEED_MIN 10
 
@@ -40,9 +36,5 @@ extern options_t options;
 void options_load(void);
 void options_apply(void);
 void options_save(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

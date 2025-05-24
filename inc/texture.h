@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
+#ifndef __PSP__
+#include <GL/glew.h>
 #endif
 
 typedef struct
@@ -14,7 +14,7 @@ typedef struct
     void* data;
 
     #ifndef __PSP__
-    uint32_t id;
+    GLuint id;
     #endif
 } texture_t;
 
@@ -29,9 +29,5 @@ void texture_bind(texture_t* tex);
 void texture_dispose(texture_t* tex);
 
 void texture_atlas_get_uv_index(texture_atlas_t* atlas, float* buffer, int index);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

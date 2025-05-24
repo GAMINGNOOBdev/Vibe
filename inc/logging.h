@@ -1,9 +1,5 @@
-#ifndef __BARANIUM__LOGGING_H_
-#define __BARANIUM__LOGGING_H_ 1
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __LOGGING_H_
+#define __LOGGING_H_ 1
 
 #include <stdint.h>
 #include <stdio.h>
@@ -56,9 +52,5 @@ void log_set_stream(FILE* stream);
  * @param msg Log message
  */
 void log_msg(loglevel_t lvl, const char* msg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

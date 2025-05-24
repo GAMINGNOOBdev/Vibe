@@ -4,10 +4,6 @@
 #include <texture.h>
 #include <mesh.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct
 {
     float x, y;
@@ -20,9 +16,5 @@ typedef struct
 void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture);
 void sprite_draw(sprite_t* sprite, texture_t* texture);
 void sprite_dispose(sprite_t* sprite);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

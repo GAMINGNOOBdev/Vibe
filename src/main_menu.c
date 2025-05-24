@@ -126,7 +126,6 @@ void main_menu_render(void)
     graphics_projection_matrix(projection);
     #endif
 
-    glEnable(GL_TEXTURE_2D);
     sprite_draw(&main_menu_background, &main_menu_background_texture);
 
     if (options.flags.show_fps)

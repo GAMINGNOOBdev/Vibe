@@ -11,6 +11,7 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
+#include <gfx.h>
 #include <GL/gl.h>
 #include <pctypes.h>
 #endif
@@ -97,6 +98,8 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
     stbi_image_free(imgData);
+
+    LOGDEBUG(stringf("texture id: %d (0x%16.16x)", texture->id, texture->id));
     #else
     texture->pWidth = pow2(width);
     texture->pHeight = pow2(height);
@@ -150,7 +153,9 @@ void texture_bind(texture_t* tex)
     glTexWrap(GL_REPEAT, GL_REPEAT);
     glTexImage(0, tex->pWidth, tex->pHeight, tex->pWidth, tex->data);
     #else
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex->id);
+    graphics_texture_uniform(0);
     #endif
 }
 
