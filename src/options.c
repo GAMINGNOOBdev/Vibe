@@ -29,7 +29,12 @@ options_t options = {
 
 void options_load(void)
 {
-    FILE* in = fopen("options.bin", "rb");
+    FILE* in = NULL;
+    #ifdef __PSP__
+    in = fopen("options.bin", "rb");
+    #else
+    in = fopen("options_pc.bin", "rb");
+    #endif
     if (in == NULL)
     {
         options_save();
@@ -50,7 +55,12 @@ void options_apply()
 
 void options_save(void)
 {
-    FILE* out = fopen("options.bin", "wb+");
+    FILE* out = NULL;
+    #ifdef __PSP__
+    out = fopen("options.bin", "wb+");
+    #else
+    out = fopen("options_pc.bin", "wb+");
+    #endif
     if (out == NULL)
         return;
 

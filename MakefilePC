@@ -1,4 +1,4 @@
-TARGET = Vibe
+TARGET = Vibe.elf
 
 INCDIR = inc lib minimp3 libwave/include cglm/include
 SRCDIR = src

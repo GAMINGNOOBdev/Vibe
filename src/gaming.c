@@ -22,7 +22,7 @@
 #include <gfx.h>
 #include <app.h>
 
-#define MAX_OBJECTS_ON_SCREEN 256
+#define MAX_OBJECTS_ON_SCREEN 128
 
 ////////////////
 ///          ///
@@ -221,9 +221,6 @@ void gaming_render(void)
 
         if (gaming_note.y+lnheight < -(gaming_note.height+0.1f))
         {
-            if (hitobject.isLN)
-                LOGDEBUG(stringf("note y,start,end,time.noteheight,height, %2.2f|%d|%d|%d|%2.2f|%2.2f", gaming_note.y, hitobject.time, hitobject.end, gaming_time, gaming_note.height, gaming_long_note.height));
-
             if (gaming_beatmap_drawlist_index + 1 >= gaming_beatmap.object_count)
                 gaming_drawlist[i].time = -1;
             else

@@ -129,7 +129,6 @@ void settings_menu_handle_option_values(float delta)
     }
     if (selected_option > 3 && selected_option < 8)
     {
-        #ifdef __PSP__
         int button = wait_for_input();
         if (button == -1)
             return;
@@ -142,7 +141,6 @@ void settings_menu_handle_option_values(float delta)
             options.keybinds.m4l3 = button;
         if (selected_option == 7)
             options.keybinds.m4l4 = button;
-        #endif
 
         settings_option_set_select_state();
         return;

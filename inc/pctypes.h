@@ -27,7 +27,7 @@ typedef struct
 #define PSP_CTRL_LEFT SDLK_LEFT
 #define PSP_CTRL_RIGHT SDLK_RIGHT
 #define PSP_CTRL_LTRIGGER SDLK_q
-#define PSP_CTRL_RTRIGGER SDLK_e
+#define PSP_CTRL_RTRIGGER SDLK_w
 
 #endif // __PSP__
 

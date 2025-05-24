@@ -14,6 +14,7 @@ SceCtrlData mInputLastData;
 #else
 #include <pctypes.h>
 /// SDLK_ENDCALL is currently the last one i guess
+int last_pressed_key = -1;
 uint8_t inputData[SDLK_ENDCALL];
 uint8_t lastInputData[SDLK_ENDCALL];
 #endif
@@ -38,15 +39,22 @@ void input_read()
     mInputLastData = mInputData;
     sceCtrlReadBufferPositive(&mInputData,1);
     #else
+    last_pressed_key = -1;
     memcpy(lastInputData, inputData, SDLK_ENDCALL);
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
+    {
         if (event.type == SDL_QUIT)
             stop_running();
         else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+        {
             if (event.key.keysym.sym >= 0 && event.key.keysym.sym < SDLK_ENDCALL)
                 inputData[event.key.keysym.sym] = event.key.state;
+            if (event.type == SDL_KEYDOWN)
+                last_pressed_key = event.key.keysym.sym;
+        }
+    }
     #endif
 }
 
@@ -79,10 +87,11 @@ int wait_for_input(void)
         if (button_pressed_once(button))
             return button;
     }
-    #else
-    ///FIXME: somehow detect new keypress from sdl (maybe using callbacks and setting a flag to listen to new keypresses idk)
-    #endif
+
     return -1;
+    #else
+    return last_pressed_key;
+    #endif
 }
 
 uint8_t button_pressed(uint32_t button)
@@ -123,6 +132,7 @@ uint8_t button_released(uint32_t button)
 
 const char* get_psp_button_string(int button)
 {
+    #ifdef __PSP__
     if (button == PSP_CTRL_SELECT)
         return "SELECT";
     if (button == PSP_CTRL_START)
@@ -147,6 +157,11 @@ const char* get_psp_button_string(int button)
         return "X";
     if (button == PSP_CTRL_SQUARE)
         return "O";
+    #else
+    const char* name = SDL_GetKeyName(button);
+    if (name)
+        return name;
+    #endif
 
     return "None";
 }
