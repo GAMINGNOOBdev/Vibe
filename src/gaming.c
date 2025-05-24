@@ -7,6 +7,7 @@
 #include <easing.h>
 #include <gaming.h>
 #include <sprite.h>
+#include <memory.h>
 #include <audio.h>
 #include <input.h>
 #include <time.h>
