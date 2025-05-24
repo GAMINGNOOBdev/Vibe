@@ -1,6 +1,17 @@
 # Vibe
 This is a psp rhythm game project that randomly came into my mind while i was pressing random buttons (and triggers) to the music.
 
+## Work in progress areas of the project
+- Proper hitobject positioning/movment
+- Proper scroll velocity application
+- Scroll direction change (optional setting) + judgement line
+- Actual hit inputs & judgement
+- Hitsounds and hit effects (possibly animated in the future)
+- Better LN Skinning
+- Skin system
+- Text rendering system improvements (batch rendering perhaps?)
+- Performance optimizations for running the game at default clock speed
+
 ## How to build
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
 After that just run
@@ -29,5 +40,5 @@ Folders have to be in the format `<id> <artist> - <title>` in order to be detect
 It should theoretically be possible to just copy your osu beatmaps folder into this game.
 
 ## How to contribute
-message me on my [discord](https://discord.gg/8R5YyM3MEn) and suggest stuff
+message me on my [discord server](https://discord.gg/8R5YyM3MEn) (or dm me: `__bocchi_chan__`) and suggest stuff
 or make a pull request/issue and tell me stuff

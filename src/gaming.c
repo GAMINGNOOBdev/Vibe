@@ -37,6 +37,10 @@ int gaming_time = 0;
 
 size_t gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
 beatmap_hitobject_t gaming_drawlist[MAX_OBJECTS_ON_SCREEN];
+beatmap_timing_point_t gaming_current_timing_point;
+size_t gaming_timing_point_index;
+float gaming_scroll_speed_base;
+float gaming_scroll_velocity;
 
 texture_t gaming_long_note_texture;
 texture_t gaming_note1_texture;
@@ -95,6 +99,13 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
 
     memcpy(gaming_drawlist, gaming_beatmap.objects, MAX_OBJECTS_ON_SCREEN * sizeof(beatmap_hitobject_t));
 
+    gaming_scroll_speed_base = options.scroll_speed / (float)SCROLL_SPEED_MAX;
+    gaming_scroll_velocity = 1;
+
+    gaming_timing_point_index = 0;
+    gaming_current_timing_point = gaming_beatmap.timing_points[gaming_timing_point_index];
+    gaming_timing_point_index++;
+
     LOGINFO("loaded REAL gaming");
 }
 
@@ -128,6 +139,19 @@ void gaming_dispose(void)
 void gaming_update(float delta)
 {
     gaming_time = audio_stream_get_position(&gaming_audio_stream);
+    if (gaming_current_timing_point.time < gaming_time && gaming_timing_point_index < gaming_beatmap.timing_point_count)
+    {
+        gaming_current_timing_point = gaming_beatmap.timing_points[gaming_timing_point_index];
+        gaming_timing_point_index++;
+
+        if (!gaming_current_timing_point.uninherited)
+        {
+            float sv = gaming_current_timing_point.beatLength;
+            if (sv < 0)
+                sv = -sv;
+            gaming_scroll_velocity = 100.f / sv;
+        }
+    }
 
     int confirm = button_pressed_once(PSP_CTRL_CROSS);
     int back = button_pressed_once(PSP_CTRL_CIRCLE);
@@ -138,18 +162,6 @@ void gaming_update(float delta)
         audio_set_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
-    }
-
-    if (button_pressed(PSP_CTRL_UP))
-    {
-        audio_set_volume(audio_get_volume()+delta);
-        options.master_volume = audio_get_volume();
-    }
-
-    if (button_pressed(PSP_CTRL_DOWN))
-    {
-        audio_set_volume(audio_get_volume()-delta);
-        options.master_volume = audio_get_volume();
     }
 
     if (button_pressed_once(PSP_CTRL_START))
@@ -194,7 +206,6 @@ void gaming_render(void)
     if (gaming_show_results_screen)
         text_renderer_draw("RESULTS", 188, 100, 8);
 
-    float scrollspeedfactor = options.scroll_speed / (float)SCROLL_SPEED_MAX;
     for (size_t i = 0; i < MAX_OBJECTS_ON_SCREEN; i++)
     {
         beatmap_hitobject_t hitobject = gaming_drawlist[i];
@@ -207,13 +218,13 @@ void gaming_render(void)
             texture = &gaming_note2_texture;
 
         gaming_note.x = 240 + (column-2)*40;
-        gaming_note.y = (hitobject.time - gaming_time) * scrollspeedfactor;
+        gaming_note.y = (hitobject.time - gaming_time) * gaming_scroll_speed_base;
         float lnheight = 0;
         gaming_long_note.height = 0;
 
         if (hitobject.isLN)
         {
-            lnheight = (hitobject.end-hitobject.time) * scrollspeedfactor;
+            lnheight = (hitobject.end-hitobject.time) * gaming_scroll_speed_base;
             gaming_long_note.height = lnheight;
             gaming_long_note.x = gaming_note.x;
             gaming_long_note.y = gaming_note.y;
@@ -240,7 +251,7 @@ void gaming_render(void)
     if (!options.flags.show_debug_info)
         return;
 
-    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist index: %d",
-                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_beatmap_drawlist_index);
+    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist index: %d\nTiming point (%d|%2.2f)",
+                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_beatmap_drawlist_index, gaming_current_timing_point.uninherited, gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -100.f / gaming_current_timing_point.beatLength);
     text_renderer_draw(debug_text, 5, 264, 8);
 }
