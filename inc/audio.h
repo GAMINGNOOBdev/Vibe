@@ -37,7 +37,7 @@ typedef struct
 
 void audio_stream_load(audio_stream_t* stream, const char* path);
 void audio_stream_seek_start(audio_stream_t* astream);
-int audio_stream_get_position(audio_stream_t* astream);
+float audio_stream_get_position(audio_stream_t* astream);
 void audio_stream_dispose(audio_stream_t* astream);
 
 typedef void(*audio_end_callback_t)(void);

@@ -4,6 +4,7 @@
 #include <texture.h>
 #include <logging.h>
 #include <beatmap.h>
+#include <scoring.h>
 #include <easing.h>
 #include <gaming.h>
 #include <sprite.h>
@@ -33,7 +34,7 @@
 beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
-int gaming_time = 0;
+float gaming_time = 0;
 
 size_t gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
 beatmap_hitobject_t gaming_drawlist[MAX_OBJECTS_ON_SCREEN];
@@ -47,6 +48,8 @@ texture_t gaming_note1_texture;
 texture_t gaming_note2_texture;
 sprite_t gaming_long_note;
 sprite_t gaming_note;
+
+score_t score;
 
 /////////////////////
 ///               ///
@@ -88,7 +91,6 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
 
     gaming_audio_stream.volume = options.music_volume;
 
-    gaming_time = 0;
     gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
     size_t gaming_drawlist_size = MAX_OBJECTS_ON_SCREEN;
     if (gaming_beatmap.object_count < gaming_drawlist_size)
@@ -105,6 +107,12 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     gaming_timing_point_index = 0;
     gaming_current_timing_point = gaming_beatmap.timing_points[gaming_timing_point_index];
     gaming_timing_point_index++;
+
+    score_calculator_init(&score);
+    score_calculator_clear();
+    score_calculator_set_difficulty(gaming_beatmap.od);
+
+    gaming_time = audio_stream_get_position(&gaming_audio_stream);
 
     LOGINFO("loaded REAL gaming");
 }
@@ -196,15 +204,24 @@ void gaming_render(void)
     #endif
 
     if (options.flags.show_fps)
-        text_renderer_draw(stringf("gaming at %d fps.", time_fps()), 0, 0, 8);
+        text_renderer_draw(stringf("%d score gaming at %d fps.", score.total_score, time_fps()), 0, 0, 8);
     else
-        text_renderer_draw("gaming.", 0, 0, 8);
+        text_renderer_draw(stringf("%d score gaming.", score.total_score), 0, 0, 8);
 
     if (!gaming_beatmap.is_pure_4k)
         text_renderer_draw("NOT 4K", 192, 0, 8);
 
     if (gaming_show_results_screen)
         text_renderer_draw("RESULTS", 188, 100, 8);
+
+    gaming_note.x = 165;
+    gaming_note.y = 20;
+    float old_height = gaming_note.height;
+    gaming_note.height = 5;
+    gaming_note.width = 145;
+    sprite_draw(&gaming_note, NULL);
+    gaming_note.height = old_height;
+    gaming_note.width = 30;
 
     for (size_t i = 0; i < MAX_OBJECTS_ON_SCREEN; i++)
     {
@@ -217,8 +234,8 @@ void gaming_render(void)
         if (column == 1 || column == 2)
             texture = &gaming_note2_texture;
 
-        gaming_note.x = 240 + (column-2)*40;
-        gaming_note.y = (hitobject.time - gaming_time) * gaming_scroll_speed_base;
+        gaming_note.x = 240 + (column-2)*35;
+        gaming_note.y = 20 + (hitobject.time - gaming_time) * gaming_scroll_speed_base; /// judgement line at y=20
         float lnheight = 0;
         gaming_long_note.height = 0;
 
@@ -232,6 +249,9 @@ void gaming_render(void)
 
         if (gaming_note.y+lnheight < -(gaming_note.height+0.1f))
         {
+            if (!hitobject.hit)
+                score_calculator_judge_as(JudgementMiss);
+
             if (gaming_beatmap_drawlist_index + 1 >= gaming_beatmap.object_count)
                 gaming_drawlist[i].time = -1;
             else
@@ -246,12 +266,27 @@ void gaming_render(void)
         if (hitobject.isLN)
             sprite_draw(&gaming_long_note, &gaming_long_note_texture);
         sprite_draw(&gaming_note, texture);
+
+        ///FIXME: find a better spot to handle inputs
+        int key = options.keybinds.m4l1;
+        if (column == 1)
+            key = options.keybinds.m4l2;
+        else if (column == 2)
+            key = options.keybinds.m4l3;
+        else if (column == 3)
+            key = options.keybinds.m4l4;
+
+        if (button_pressed(key) && score_calculator_should_be_considered(hitobject.time, gaming_time))
+            hitobject.hit = score_calculator_judge(&hitobject, gaming_time);
     }
 
     if (!options.flags.show_debug_info)
         return;
 
-    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %d\nLength: %d\nDrawlist index: %d\nTiming point (%d|%2.2f)",
-                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_audio_stream.length_ms, gaming_beatmap_drawlist_index, gaming_current_timing_point.uninherited, gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -100.f / gaming_current_timing_point.beatLength);
+    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %2.2f\nDrawlist index: %d\nTiming point (%d|%2.2f)\nNum of: miss/meh/ok/good/great/perfect\n%d|%d|%d|%d|%d|%d",
+                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_beatmap_drawlist_index,
+                                     gaming_current_timing_point.uninherited,
+                                     gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -100.f / gaming_current_timing_point.beatLength,
+                                     score.numMiss, score.numMeh, score.numOk, score.numGood, score.numGreat, score.numPerfect);
     text_renderer_draw(debug_text, 5, 264, 8);
 }

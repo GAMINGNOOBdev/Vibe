@@ -22,6 +22,7 @@ void graphics_end_frame();
 #ifndef __PSP__
 void graphics_projection_matrix(mat4 matrix);
 void graphics_model_matrix(mat4 matrix);
+void graphics_no_texture(void);
 void graphics_texture_uniform(GLuint id);
 #endif
 

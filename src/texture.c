@@ -143,16 +143,22 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
 
 void texture_bind(texture_t* tex)
 {
+    #ifdef __PSP__
     if (!tex)
         return;
 
-    #ifdef __PSP__
     glTexMode(GL_PSM_8888, 0, 0, GL_TRUE);
     glTexFunc(GL_TFX_MODULATE, GL_TCC_RGBA); // output = vertex * texture
     glTexFilter(GL_NEAREST, GL_NEAREST);
     glTexWrap(GL_REPEAT, GL_REPEAT);
     glTexImage(0, tex->pWidth, tex->pHeight, tex->pWidth, tex->data);
     #else
+    if (!tex)
+    {
+        graphics_no_texture();
+        return;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex->id);
     graphics_texture_uniform(0);

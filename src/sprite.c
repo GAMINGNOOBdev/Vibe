@@ -72,7 +72,7 @@ void sprite_create(sprite_t* sprite, float x, float y, float width, float height
 
 void sprite_draw(sprite_t* sprite, texture_t* texture)
 {
-    if (sprite == NULL || texture == NULL || sprite->mesh.indexCount == 0)
+    if (sprite == NULL || sprite->mesh.indexCount == 0)
         return;
 
     glMatrixMode(GL_MODEL);

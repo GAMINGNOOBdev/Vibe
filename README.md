@@ -2,15 +2,17 @@
 This is a psp rhythm game project that randomly came into my mind while i was pressing random buttons (and triggers) to the music.
 
 ## Work in progress areas of the project
-- Proper hitobject positioning/movment
-- Proper scroll velocity application
-- Scroll direction change (optional setting) + judgement line
 - Actual hit inputs & judgement
-- Hitsounds and hit effects (possibly animated in the future)
-- Better LN Skinning
-- Skin system
+- Health system
+- Proper hitobject positioning/movment
 - Text rendering system improvements (batch rendering perhaps?)
 - Performance optimizations for running the game at default clock speed
+- Proper scroll velocity application
+- Hitsounds and hit effects (possibly animated in the future)
+- Scroll direction change (optional setting) + judgement line
+- Better LN Skinning
+- Skin system
+- Replays (?)
 
 ## How to build
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>

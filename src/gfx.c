@@ -43,7 +43,7 @@ void graphics_end_frame()
 SDL_Window* sdlwindow;
 GLuint globalSdlShader;
 SDL_GLContext glcontext;
-GLint shaderProjectionID, shaderModelID, shaderTextureID;
+GLint shaderProjectionID, shaderModelID, shaderTextureID, shaderTextureAvailableID;
 
 GLuint compile_shader(const char* src, GLenum type)
 {
@@ -184,6 +184,7 @@ void graphics_init()
     shaderModelID = glGetUniformLocation(globalSdlShader, "u_modelview");
     shaderTextureID = glGetUniformLocation(globalSdlShader, "u_texture");
     shaderProjectionID = glGetUniformLocation(globalSdlShader, "u_projection");
+    shaderTextureAvailableID = glGetUniformLocation(globalSdlShader, "u_texture_available");
 
     LOGINFO(stringf("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID));
 }
@@ -226,8 +227,14 @@ void graphics_model_matrix(mat4 matrix)
     glUniformMatrix4fv(shaderModelID, 1, 0, data);
 }
 
+void graphics_no_texture(void)
+{
+    glUniform1ui(shaderTextureAvailableID, 0);
+}
+
 void graphics_texture_uniform(GLuint id)
 {
+    glUniform1ui(shaderTextureAvailableID, 1);
     glUniform1i(shaderTextureID, id);
 }
 

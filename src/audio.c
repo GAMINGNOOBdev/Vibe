@@ -136,7 +136,7 @@ void audio_stream_seek_start(audio_stream_t* astream)
     astream->processed_frames = 0;
 }
 
-int audio_stream_get_position(audio_stream_t* astream)
+float audio_stream_get_position(audio_stream_t* astream)
 {
     if (!astream)
         return 0;
@@ -146,15 +146,14 @@ int audio_stream_get_position(audio_stream_t* astream)
 
     if (astream->format == AUDIO_FORMAT_VORBIS)
     {
-        int offset = stb_vorbis_get_sample_offset(astream->stream) / (float)astream->samples * 1000.f * astream->length;
-        return offset;
+        return (float)stb_vorbis_get_sample_offset(astream->stream) / (float)astream->samples * 1000.f * astream->length;
     }
     else if (astream->format == AUDIO_FORMAT_MP3)
     {
-        return astream->processed_frames / (float)astream->samples * 1000.f * astream->length;
+        return (float)astream->processed_frames / (float)astream->samples * 1000.f * astream->length;
     }
 
-    return astream->processed_frames / (float)astream->samples * 1000.f;
+    return (float)astream->processed_frames / (float)astream->samples * 1000.f;
 }
 
 void audio_stream_dispose(audio_stream_t* astream)
