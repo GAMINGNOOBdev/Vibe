@@ -18,6 +18,16 @@ void input_enable(int mode);
  */
 void input_read();
 
+#ifndef __PSP__
+/**
+ * @brief Write a button's state
+ * 
+ * @param key Key
+ * @param value Value
+ */
+void input_write(int key, int value);
+#endif
+
 uint8_t analog_x();
 uint8_t analog_y();
 
@@ -42,11 +52,6 @@ uint8_t button_pressed_once(uint32_t button);
  * @brief Check if a button is held
  */
 uint8_t button_held(uint32_t button);
-
-/**
- * @brief Check if a button is released
- */
-uint8_t button_released(uint32_t button);
 
 /**
  * @brief Get the string representation of the psp buttons

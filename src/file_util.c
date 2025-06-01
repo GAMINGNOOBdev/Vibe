@@ -168,13 +168,7 @@ const char* file_util_get_file_name(const char* str)
 
 const char* file_util_get_extension(const char* str)
 {
-    int lastDot = -1;
-    for (int i = 0; i < strlen(str); i++)
-    {
-        if (str[i] == '.')
-            lastDot = i;
-    }
-
+    int lastDot = strlpos(str, '.');
     if (lastDot == -1)
         return str;
     

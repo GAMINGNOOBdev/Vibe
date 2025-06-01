@@ -17,8 +17,8 @@
 #ifdef __PSP__
 #include <psprtc.h>
 #else
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #endif
 
 time_data_t time_data;
@@ -28,8 +28,11 @@ void time_init()
     #ifdef __PSP__
     time_data.freq = sceRtcGetTickResolution();
     #else
-    time_data.freq = SDL_GetPerformanceFrequency();
+    time_data.freq = glfwGetTimerFrequency();
     #endif
+
+    time_data.total = 0;
+    time_data.total_frames = 0;
 }
 
 void time_tick()
@@ -42,12 +45,25 @@ void time_tick()
             break;
     }
     #else
-    time_data.currTime = SDL_GetPerformanceCounter();
+    time_data.currTime = glfwGetTimerValue();
     #endif
 
     time_data.elapsed = (double)time_data.currTime - (double)time_data.pastTime;
     time_data.delta = time_data.elapsed / (double)time_data.freq;
     time_data.fps = (uint32_t)((double)time_data.freq / time_data.elapsed);
+
+    time_data.total += time_data.delta;
+    time_data.total_frames++;
+}
+
+double time_total()
+{
+    return time_data.total;
+}
+
+uint64_t time_total_frames()
+{
+    return time_data.total_frames;
 }
 
 double time_delta()

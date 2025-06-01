@@ -10,48 +10,50 @@
 #include <stddef.h>
 #include <stdio.h>
 
-size_t getdelimV2(char **buffer, size_t *buffersz, FILE *stream, char delim) {
+size_t getdelimV2(char **buffer, size_t *buffersz, FILE *stream, char delim)
+{
     char *bufptr = NULL;
     char *p = bufptr;
     size_t size;
     int c;
 
-    if (buffer == NULL) {
+    if (buffer == NULL)
         return -1;
-    }
-    if (stream == NULL) {
+    if (stream == NULL)
         return -1;
-    }
-    if (buffersz == NULL) {
+    if (buffersz == NULL)
         return -1;
-    }
+
     bufptr = *buffer;
     size = *buffersz;
 
     c = fgetc(stream);
-    if (c == EOF) {
+    if (c == EOF)
         return -1;
-    }
-    if (bufptr == NULL) {
+
+    if (bufptr == NULL)
+    {
         bufptr = malloc(128);
-        if (bufptr == NULL) {
+        if (bufptr == NULL)
             return -1;
-        }
+
         size = 128;
     }
     p = bufptr;
-    while(c != EOF) {
-        if ((p - bufptr) > (size - 1)) {
+    while(c != EOF)
+    {
+        if ((p - bufptr) > (size - 1))
+        {
             size = size + 128;
             bufptr = realloc(bufptr, size);
-            if (bufptr == NULL) {
+            if (bufptr == NULL)
                 return -1;
-            }
         }
+
         *p++ = c;
-        if (c == delim) {
+        if (c == delim)
             break;
-        }
+
         c = fgetc(stream);
     }
 
@@ -338,4 +340,22 @@ void beatmap_dispose(beatmap_t* map)
         free(map->objects);
 
     memset(map, 0, sizeof(beatmap_t));
+}
+
+float beatmap_calculate_sv(beatmap_timing_point_t* timings, int timing_count, beatmap_hitobject_t hitobject)
+{
+    float sv = 1;
+    for (int i = 0; i < timing_count; i++)
+    {
+        beatmap_timing_point_t timing = timings[i];
+        if (timing.time > hitobject.time)
+            break;
+
+        if (timing.uninherited)
+            continue;
+
+        sv = -100.f / timing.beatLength;
+    }
+
+    return sv;
 }

@@ -26,12 +26,11 @@ typedef struct
     uint8_t hitsound;
 
     uint8_t column : 3;
-
     uint8_t hit : 1;
     uint8_t held : 1;
     uint8_t isLN : 1;
-    uint8_t headHit : 1;
-    uint8_t released : 1;
+    uint8_t tailHit : 1;
+    uint8_t reserved : 1;
 } beatmap_hitobject_t;
 
 typedef enum
@@ -61,5 +60,6 @@ typedef struct
 
 void beatmap_parse(beatmap_t* map, const char* filepath);
 void beatmap_dispose(beatmap_t* map);
+float beatmap_calculate_sv(beatmap_timing_point_t* timings, int timing_count, beatmap_hitobject_t hitobject);
 
 #endif

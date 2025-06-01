@@ -3,9 +3,10 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
-#include <SDL2/SDL_video.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <input.h>
+#include <memory.h>
 #include <pctypes.h>
 #endif
 
@@ -39,10 +40,10 @@ void graphics_end_frame()
 #include <logging.h>
 #include <GL/glew.h>
 #include <pctypes.h>
+#include <GLFW/glfw3.h>
 
-SDL_Window* sdlwindow;
-GLuint globalSdlShader;
-SDL_GLContext glcontext;
+GLFWwindow* glfwwindow;
+GLuint globalShader;
 GLint shaderProjectionID, shaderModelID, shaderTextureID, shaderTextureAvailableID;
 
 GLuint compile_shader(const char* src, GLenum type)
@@ -146,27 +147,66 @@ void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum se
     LOG(type == GL_DEBUG_TYPE_ERROR ? LOGLEVEL_ERROR : LOGLEVEL_DEBUG, stringf("[%s][%s]: %s", glDebugSeverityString(severity), glDebugTypeString(type), message));
 }
 
+void graphicsWindowResizeEvent(GLFWwindow* win, int width, int height)
+{
+    LOGINFO("Resized window???");
+}
+
+extern int last_pressed_key;
+void graphicsWindowKeyboardEvent(GLFWwindow* win, int key, int scancode, int action, int _)
+{
+    last_pressed_key = -1;
+    if (action == GLFW_PRESS)
+        last_pressed_key = key;
+
+    input_write(key, action);
+}
+
+void graphicsWindowMouseButtonEvent(GLFWwindow* win, int button, int action, int _)
+{
+}
+
+void graphicsWindowMouseMoveEvent(GLFWwindow* win, double xPos, double yPos)
+{
+}
+
+void graphicsWindowMouseScrollEvent(GLFWwindow* win, double xScroll, double yScroll)
+{
+}
+
+void graphicsWindowFileDropEvent(GLFWwindow* win, int path_count, const char** paths)
+{
+}
+
 void graphics_init()
 {
-    SDL_Init(SDL_INIT_EVERYTHING);
+    int glfwstatus = glfwInit();
+    if (glfwstatus != GLFW_TRUE)
+    {
+        LOGERROR("Failed to initialize glfw");
+        stop_running();
+        return;
+    }
 
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-	SDL_GL_SetSwapInterval(0);
+    glfwDefaultWindowHints();
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwwindow = glfwCreateWindow(PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, "psp-game-desktop-client", NULL, NULL);
+    glfwMakeContextCurrent(glfwwindow);
+    glfwFocusWindow(glfwwindow);
+    glfwSwapInterval(1); // 1 = vsync, 0 = no vsync
 
-    sdlwindow = SDL_CreateWindow("psp-game-client-desktop", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, SDL_WINDOW_OPENGL);
-    glcontext = SDL_GL_CreateContext(sdlwindow);
+    glfwSetFramebufferSizeCallback(glfwwindow, graphicsWindowResizeEvent);
+    glfwSetKeyCallback(glfwwindow, graphicsWindowKeyboardEvent);
+    glfwSetMouseButtonCallback(glfwwindow, graphicsWindowMouseButtonEvent);
+    glfwSetCursorPosCallback(glfwwindow, graphicsWindowMouseMoveEvent);
+    glfwSetScrollCallback(glfwwindow, graphicsWindowMouseScrollEvent);
+    glfwSetDropCallback(glfwwindow, graphicsWindowFileDropEvent);
 
     GLenum error;
     if ((error = glewInit()) != GLEW_OK)
     {
         LOGERROR(stringf("Couldn't init glew smh: %s", glewGetErrorString(error)));
-        SDL_Quit();
+        glfwTerminate();
         stop_running();
         return;
     }
@@ -177,34 +217,40 @@ void graphics_init()
 
     void* vertexshader = file_util_file_contents("Assets/desktop.vs");
     void* pixelshader = file_util_file_contents("Assets/desktop.fs");
-    globalSdlShader = create_shader(vertexshader, pixelshader);
+    globalShader = create_shader(vertexshader, pixelshader);
     free(vertexshader);
     free(pixelshader);
 
-    shaderModelID = glGetUniformLocation(globalSdlShader, "u_modelview");
-    shaderTextureID = glGetUniformLocation(globalSdlShader, "u_texture");
-    shaderProjectionID = glGetUniformLocation(globalSdlShader, "u_projection");
-    shaderTextureAvailableID = glGetUniformLocation(globalSdlShader, "u_texture_available");
+    shaderModelID = glGetUniformLocation(globalShader, "u_modelview");
+    shaderTextureID = glGetUniformLocation(globalShader, "u_texture");
+    shaderProjectionID = glGetUniformLocation(globalShader, "u_projection");
+    shaderTextureAvailableID = glGetUniformLocation(globalShader, "u_texture_available");
 
     LOGINFO(stringf("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID));
 }
 
 void graphics_dispose()
 {
-    SDL_GL_DeleteContext(glcontext);
-    SDL_Quit();
+    glfwDestroyWindow(glfwwindow);
+    glfwTerminate();
 }
 
 void graphics_start_frame()
 {
     glViewport(0, 0, PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2);
-    glUseProgram(globalSdlShader);
+    glUseProgram(globalShader);
 }
 
 void graphics_end_frame()
 {
     glUseProgram(0);
-    SDL_GL_SwapWindow(sdlwindow);
+    glfwSwapBuffers(glfwwindow);
+    glfwPollEvents();
+}
+
+uint8_t graphics_should_terminate(void)
+{
+    return glfwWindowShouldClose(glfwwindow);
 }
 
 void graphics_projection_matrix(mat4 matrix)

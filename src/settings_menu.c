@@ -96,6 +96,10 @@ void settings_menu_handle_menu_movement(void)
         selected_option--;
     if (button_pressed_once(PSP_CTRL_DOWN) && selected_option < NUM_OPTIONS)
         selected_option++;
+
+    if (selected_option == NUM_OPTIONS)
+        selected_option = NUM_OPTIONS-1;
+
     if (button_pressed_once(PSP_CTRL_CROSS))
         settings_option_set_select_state();
 }
@@ -231,15 +235,4 @@ void settings_menu_render(void)
                                      options.flags.show_fps ? "true" : "false", options.flags.show_debug_info ? "true" : "false", options.flags.enable_debug_log ? "true" : "false");
 
     text_renderer_draw(options_string, 13, y, 8);
-    /*text_renderer_draw(stringf("Master volume: %2.2f%%", 100.0f * options.master_volume), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Music volume: %2.2f%%", 100.0f * options.music_volume), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Hitsound volume: %2.2f%%", 100.0f * options.hitsound_volume), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Scroll Speed: %d", options.scroll_speed), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Keybind 1 4k: %s", get_psp_button_string(options.keybinds.m4l1)), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Keybind 2 4k: %s", get_psp_button_string(options.keybinds.m4l2)), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Keybind 3 4k: %s", get_psp_button_string(options.keybinds.m4l3)), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Keybind 4 4k: %s", get_psp_button_string(options.keybinds.m4l4)), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Show FPS: %s", options.flags.show_fps ? "true" : "false"), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Show Debug Info: %s", options.flags.show_debug_info ? "true" : "false"), 13, y, 8); y-=8;
-    text_renderer_draw(stringf("Enable Debug Log: %s", options.flags.enable_debug_log ? "true" : "false"), 13, y, 8); y-=8;*/
 }

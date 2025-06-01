@@ -1,8 +1,9 @@
+#include "time.h"
 #ifdef __PSP__
 #include <pspctrl.h>
 #else
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #endif
 #include <input.h>
 #include <logging.h>
@@ -13,10 +14,18 @@ SceCtrlData mInputData;
 SceCtrlData mInputLastData;
 #else
 #include <pctypes.h>
-/// SDLK_ENDCALL is currently the last one i guess
+#include <memory.h>
 int last_pressed_key = -1;
-uint8_t inputData[SDLK_ENDCALL];
-uint8_t lastInputData[SDLK_ENDCALL];
+typedef struct
+{
+    int state;
+    uint64_t pressed_frame;
+} glfw_key_t;
+
+glfw_key_t inputData[GLFW_KEY_LAST];
+
+extern GLFWwindow* glfwwindow;
+extern void graphicsWindowKeyboardEvent(GLFWwindow* win, int key, int scancode, int action, int _);
 #endif
 
 void input_enable(int mode)
@@ -24,12 +33,6 @@ void input_enable(int mode)
     #ifdef __PSP__
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(mode);
-    #else
-    if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0)
-    {
-        LOGERROR(stringf("SDL_InitSubSystem failed: %s", SDL_GetError()));
-        return;
-    }
     #endif
 }
 
@@ -40,23 +43,29 @@ void input_read()
     sceCtrlReadBufferPositive(&mInputData,1);
     #else
     last_pressed_key = -1;
-    memcpy(lastInputData, inputData, SDLK_ENDCALL);
-
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
+    for (int i = 0; i < GLFW_KEY_LAST; i++)
     {
-        if (event.type == SDL_QUIT)
-            stop_running();
-        else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
-        {
-            if (event.key.keysym.sym >= 0 && event.key.keysym.sym < SDLK_ENDCALL)
-                inputData[event.key.keysym.sym] = event.key.state;
-            if (event.type == SDL_KEYDOWN)
-                last_pressed_key = event.key.keysym.sym;
-        }
+        if (inputData[i].state == GLFW_PRESS && time_total_frames() > inputData[i].pressed_frame + 1)
+            graphicsWindowKeyboardEvent(glfwwindow, i, -1, GLFW_REPEAT, -1);
     }
     #endif
 }
+
+
+#ifndef __PSP__
+void input_write(int key, int value)
+{
+    inputData[key].state = value;
+    inputData[key].pressed_frame = time_total_frames();
+
+    /*LOGDEBUG(stringf("key,value: { '%s' | '%s' (0x%8.8x) }",
+                     get_psp_button_string(key),
+                     (value == GLFW_PRESS) ? "GLFW_PRESS" :
+                     (value == GLFW_REPEAT) ? "GLFW_REPEAT" :
+                     (value == GLFW_RELEASE) ? "GLFW_RELEASE" :
+                     "UNKNOWN"));*/
+}
+#endif
 
 uint8_t analog_x()
 {
@@ -90,7 +99,13 @@ int wait_for_input(void)
 
     return -1;
     #else
-    return last_pressed_key;
+    for (int i = 0; i < GLFW_KEY_LAST; i++)
+    {
+        if (button_pressed_once(i))
+            return i;
+    }
+
+    return -1;
     #endif
 }
 
@@ -99,7 +114,7 @@ uint8_t button_pressed(uint32_t button)
     #ifdef __PSP__
     return (mInputData.Buttons & button) ? 1 : 0;
     #else
-    return inputData[button];
+    return inputData[button].state == GLFW_PRESS || inputData[button].state == GLFW_REPEAT;
     #endif
 }
 
@@ -108,7 +123,7 @@ uint8_t button_pressed_once(uint32_t button)
     #ifdef __PSP__
     return ((mInputData.Buttons & button) && !(mInputLastData.Buttons & button)) ? 1 : 0;
     #else
-    return inputData[button] && !lastInputData[button];
+    return inputData[button].state == GLFW_PRESS;
     #endif
 }
 
@@ -117,16 +132,7 @@ uint8_t button_held(uint32_t button)
     #ifdef __PSP__
     return ((mInputData.Buttons & button) && (mInputLastData.Buttons & button)) ? 1 : 0;
     #else
-    return inputData[button] && lastInputData[button];
-    #endif
-}
-
-uint8_t button_released(uint32_t button)
-{
-    #ifdef __PSP__
-    return (!(mInputData.Buttons & button) && (mInputLastData.Buttons & button)) ? 1 : 0;
-    #else
-    return !inputData[button] && lastInputData[button];
+    return inputData[button].state == GLFW_REPEAT;
     #endif
 }
 
@@ -158,7 +164,7 @@ const char* get_psp_button_string(int button)
     if (button == PSP_CTRL_SQUARE)
         return "O";
     #else
-    const char* name = SDL_GetKeyName(button);
+    const char* name = glfwGetKeyName(button, glfwGetKeyScancode(button));
     if (name)
         return name;
     #endif

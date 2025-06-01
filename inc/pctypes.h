@@ -3,31 +3,24 @@
 
 #ifndef __PSP__
 
-#include <SDL2/SDL.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
-typedef struct
-{
-    float x, y, z;
-} ScePspFVector3;
-
-#define gluTranslate(translation) glTranslatef((translation)->x, (translation)->y, (translation)->z);
-#define gluRotateZ(rot) glRotatef(rot, 0, 0, 1);
-#define gluScale(scale) glScalef((scale)->x, (scale)->y, (scale)->z)
 #define GL_MODEL GL_MODELVIEW
 
 #define PSP_CTRL_MODE_ANALOG 0
-#define PSP_CTRL_START SDLK_SPACE
-#define PSP_CTRL_SELECT SDLK_RETURN
-#define PSP_CTRL_CROSS SDLK_y
-#define PSP_CTRL_CIRCLE SDLK_x
-#define PSP_CTRL_TRIANGLE SDLK_s
-#define PSP_CTRL_SQUARE SDLK_a
-#define PSP_CTRL_UP SDLK_UP
-#define PSP_CTRL_DOWN SDLK_DOWN
-#define PSP_CTRL_LEFT SDLK_LEFT
-#define PSP_CTRL_RIGHT SDLK_RIGHT
-#define PSP_CTRL_LTRIGGER SDLK_q
-#define PSP_CTRL_RTRIGGER SDLK_w
+#define PSP_CTRL_START GLFW_KEY_SPACE
+#define PSP_CTRL_SELECT GLFW_KEY_ENTER
+#define PSP_CTRL_CROSS GLFW_KEY_Z
+#define PSP_CTRL_CIRCLE GLFW_KEY_X
+#define PSP_CTRL_TRIANGLE GLFW_KEY_S
+#define PSP_CTRL_SQUARE GLFW_KEY_A
+#define PSP_CTRL_UP GLFW_KEY_UP
+#define PSP_CTRL_DOWN GLFW_KEY_DOWN
+#define PSP_CTRL_LEFT GLFW_KEY_LEFT
+#define PSP_CTRL_RIGHT GLFW_KEY_RIGHT
+#define PSP_CTRL_LTRIGGER GLFW_KEY_Q
+#define PSP_CTRL_RTRIGGER GLFW_KEY_W
 
 #endif // __PSP__
 

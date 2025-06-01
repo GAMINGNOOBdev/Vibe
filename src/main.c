@@ -65,10 +65,10 @@ int main()
 
     options_load();
 
-    input_enable(PSP_CTRL_MODE_ANALOG);
     audio_init();
-    time_init();
     graphics_init();
+    input_enable(PSP_CTRL_MODE_ANALOG);
+    time_init();
     text_renderer_initialize();
 
     options_apply();

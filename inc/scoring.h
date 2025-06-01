@@ -51,8 +51,10 @@ typedef struct
 void score_calculator_init(score_t* scoreObj);
 void score_calculator_clear();
 void score_calculator_set_difficulty(float difficulty);
+int score_calculator_is_missed(beatmap_hitobject_t hitobject, float time);
 int score_calculator_should_be_considered(int time, float hit_time);
 int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time);
+int score_calculator_judge_release(beatmap_hitobject_t* hitobject, float hit_time);
 void score_calculator_judge_as(scoring_judgement_type_t judgement);
 
 #endif

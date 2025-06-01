@@ -1,5 +1,5 @@
-#ifndef __FILE_uTIL__H_
-#define __FILEUTIL_H_ 1
+#ifndef __FILE_UTIL_H_
+#define __FILE_UTIL_H_ 1
 
 #include <stddef.h>
 #include <strutil.h>

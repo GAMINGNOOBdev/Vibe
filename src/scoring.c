@@ -1,4 +1,5 @@
 #include <scoring.h>
+#include <beatmap.h>
 #include <memory.h>
 
 scoring_criteria_t score_criteria = {
@@ -56,6 +57,16 @@ int8_t score_calculator_check_if_time_in_range(float time, scoring_hitwindow_t* 
     return 0;
 }
 
+int score_calculator_is_missed(beatmap_hitobject_t hitobject, float time)
+{
+    float deltaT = hitobject.time - time;
+
+    if (hitobject.isLN)
+        deltaT = hitobject.end - time;
+
+    return deltaT < -score_criteria.miss.value && !hitobject.hit;
+}
+
 int score_calculator_should_be_considered(int time, float hit_time)
 {
     float t = hit_time - (float)time;
@@ -98,6 +109,35 @@ int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time)
 
     scoring_judgement_type_t judgement = JudgementNone;
     if (score_calculator_check_if_time_in_range(time, &score_criteria.miss))
+        judgement = JudgementNone; // ignore judgement if in the range of missing
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.meh))
+        judgement = JudgementMeh;
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.ok))
+        judgement = JudgementOk;
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.good))
+        judgement = JudgementGood;
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.great))
+        judgement = JudgementGreat;
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.perfect))
+        judgement = JudgementPerfect;
+
+    if (judgement == JudgementNone)
+        return 0;
+    score_calculator_judge_as(judgement);
+    score_calculator_add_score(judgement);
+
+    return 1;
+}
+
+int score_calculator_judge_release(beatmap_hitobject_t* hitobject, float hit_time)
+{
+    if (hitobject->tailHit)
+        return 0;
+
+    float time = hit_time - (float)hitobject->end;
+
+    scoring_judgement_type_t judgement = JudgementNone;
+    if (score_calculator_check_if_time_in_range(time, &score_criteria.miss))
         judgement = JudgementMiss;
     if (score_calculator_check_if_time_in_range(time, &score_criteria.meh))
         judgement = JudgementMeh;
@@ -113,25 +153,34 @@ int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time)
     if (judgement == JudgementNone)
         return 0;
     score_calculator_judge_as(judgement);
-
-    // score calculation and combo handling here !!!
     score_calculator_add_score(judgement);
 
+    hitobject->tailHit = 1;
     return 1;
 }
 
 void score_calculator_judge_as(scoring_judgement_type_t judgement)
 {
     if (judgement == JudgementMiss)
+    {
         score_object->numMiss++;
+        if (score_object->max_combo < score_object->combo)
+            score_object->max_combo = score_object->combo;
+
+        score_object->combo = 0;
+        return;
+    }
+    
     if (judgement == JudgementMeh)
         score_object->numMeh++;
-    if (judgement == JudgementOk)
+    else if (judgement == JudgementOk)
         score_object->numOk++;
-    if (judgement == JudgementGood)
+    else if (judgement == JudgementGood)
         score_object->numGood++;
-    if (judgement == JudgementGreat)
+    else if (judgement == JudgementGreat)
         score_object->numGreat++;
-    if (judgement == JudgementPerfect)
+    else if (judgement == JudgementPerfect)
         score_object->numPerfect++;
+
+        score_object->combo++;
 }

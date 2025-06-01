@@ -3,11 +3,11 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 
 ## Work in progress areas of the project
 - Actual hit inputs & judgement
-- Health system
 - Proper hitobject positioning/movment
+- Proper scroll velocity application
+- Health system
 - Text rendering system improvements (batch rendering perhaps?)
 - Performance optimizations for running the game at default clock speed
-- Proper scroll velocity application
 - Hitsounds and hit effects (possibly animated in the future)
 - Scroll direction change (optional setting) + judgement line
 - Better LN Skinning

@@ -6,7 +6,7 @@
 #include <input.h>
 #include <logging.h>
 #else
-#include <SDL2/SDL.h>
+#include <gfx.h>
 #endif
 
 cleanup_callback_t gameCleanupCallback = NULL;
@@ -19,7 +19,11 @@ void stop_running()
 
 int is_running()
 {
+    #ifdef __PSP__
     return ExitRequest == 0;
+    #else
+    return ExitRequest == 0 && graphics_should_terminate() == 0;
+    #endif
 }
 
 int exit_callback(int arg1, int arg2, void* common)
@@ -58,7 +62,5 @@ void exit_game()
 {
     #ifdef __PSP__
     sceKernelExitGame();
-    #else
-    SDL_Quit();
     #endif
 }
