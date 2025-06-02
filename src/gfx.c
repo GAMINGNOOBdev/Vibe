@@ -35,12 +35,14 @@ void graphics_end_frame()
 }
 
 #else
+#include <miniz.h>
 #include <file_util.h>
 #include <callback.h>
 #include <logging.h>
 #include <GL/glew.h>
 #include <pctypes.h>
 #include <GLFW/glfw3.h>
+#include <sys/stat.h>
 
 GLFWwindow* glfwwindow;
 GLuint globalShader;
@@ -174,8 +176,66 @@ void graphicsWindowMouseScrollEvent(GLFWwindow* win, double xScroll, double yScr
 {
 }
 
+void extractZipFileToDest(const char* filepath)
+{
+    mz_zip_archive archive;
+    if (!mz_zip_reader_init_file(&archive, filepath, 0))
+    {
+        LOGERROR(stringf("Unable to extract file '%s'", filepath));
+        return;
+    }
+
+    char* outputdir = "Songs/";
+    const char* dir = &filepath[strlpos(filepath, '/')+1];
+    size_t size =  strlen(dir) - 3;
+    outputdir = malloc(strlen("Songs/") + size);
+    memset(outputdir, 0, strlen("Songs/") + size);
+    strncpy(outputdir, "Songs/", strlen("Songs/"));
+    strncpy(&outputdir[strlen("Songs/")], dir, strlen(dir) - 2);
+    LOGERROR(stringf("outputdir: '%s'", outputdir));
+
+    const int mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+    mkdir(outputdir, mode);
+
+    int file_count = mz_zip_reader_get_num_files(&archive);
+    for (int i = 0; i < file_count; i++)
+    {
+        mz_zip_archive_file_stat file;
+        if (!mz_zip_reader_file_stat(&archive, i, &file))
+        {
+            LOGERROR(stringf("Unable to extract file %d", i));
+            continue;
+        }
+
+        if (mz_zip_reader_is_file_a_directory(&archive, i))
+        {
+            LOGINFO(stringf("DIRECTORY '%s/%s'", outputdir, file.m_filename));
+            mkdir(stringf("%s/%s", outputdir, file.m_filename), mode);
+            continue;
+        }
+
+        LOGINFO(stringf("extracting '%s/%s'", outputdir, file.m_filename));
+        if (!mz_zip_reader_extract_to_file(&archive, i, stringf("%s/%s", outputdir, file.m_filename), 0))
+        {
+            LOGERROR(stringf("failed to extract file %s", file.m_filename));
+        }
+    }
+}
+
 void graphicsWindowFileDropEvent(GLFWwindow* win, int path_count, const char** paths)
 {
+    for (int i = 0; i < path_count; i++)
+    {
+        int idx = strlpos(paths[i], '.');
+        if (idx == -1)
+            continue;
+    
+        if (strcmp(&paths[i][idx], ".osz") != 0)
+            continue;
+
+        LOGINFO(stringf("Extracting '%s'...", paths[i]));
+        extractZipFileToDest(paths[i]);
+    }
 }
 
 void graphics_init()
@@ -237,7 +297,9 @@ void graphics_dispose()
 
 void graphics_start_frame()
 {
-    glViewport(0, 0, PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2);
+    int width, height;
+    glfwGetWindowSize(glfwwindow, &width, &height);
+    glViewport(0, 0, width, height);
     glUseProgram(globalShader);
 }
 

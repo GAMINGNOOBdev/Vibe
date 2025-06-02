@@ -1,6 +1,6 @@
 TARGET = Vibe.elf
 
-INCDIR = inc lib minimp3 libwave/include cglm/include
+INCDIR = inc lib minimp3 libwave/include cglm/include miniz
 SRCDIR = src
 
 CFILES := $(shell find -L $(SRCDIR) -type f -name '*.c')
@@ -12,9 +12,10 @@ OBJS += $(CGLMSRCFILES:.c=.o)
 
 OBJS += \
 		lib/stb_vorbis.o \
-		libwave/src/wave.o
+		libwave/src/wave.o \
+		miniz/miniz.o
 
-CFLAGS = -DTINYWAV_USE_MALLOC -mcmodel=large -g -O0 -ggdb
+CFLAGS = -DTINYWAV_USE_MALLOC -mcmodel=large -g -O0 -ggdb -DMINIZ_NO_TIME
 
 LIBS +=
 

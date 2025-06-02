@@ -43,14 +43,31 @@ size_t gaming_timing_point_index;
 float gaming_scroll_speed_base;
 float gaming_beat_length;
 
-texture_t gaming_long_note_texture;
-texture_t gaming_note1_texture;
-texture_t gaming_note2_texture;
-texture_t gaming_judgementline_texture;
-sprite_t gaming_long_note;
-sprite_t gaming_note;
+typedef struct
+{
+    texture_t judgementline_texture;
+    texture_t long_note_texture;
+    texture_t lanehit_texture;
+    texture_t note1_texture;
+    texture_t note2_texture;
+
+    texture_t maniahit300g_texture;
+    texture_t maniahit300_texture;
+    texture_t maniahit200_texture;
+    texture_t maniahit100_texture;
+    texture_t maniahit50_texture;
+    texture_t maniahit0_texture;
+
+    sprite_t long_note;
+    sprite_t maniahit;
+    sprite_t note;
+} gaming_drawinfo_t;
+gaming_drawinfo_t gaming_drawinfo;
+texture_t* gaming_maniahit_texture = NULL;
 
 score_t score;
+const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
+float gaming_judgement_visible_timer = 0;
 
 /////////////////////
 ///               ///
@@ -62,6 +79,27 @@ void gaming_audio_end_callback(void)
 {
     audio_set_stream(NULL);
     gaming_show_results_screen = 1;
+}
+
+void gaming_score_judgement_display_callback(scoring_judgement_type_t judgement)
+{
+    gaming_maniahit_texture = NULL;
+
+    if (judgement == JudgementMiss)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit0_texture;
+    else if (judgement == JudgementMeh)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit50_texture;
+    else if (judgement == JudgementOk)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit100_texture;
+    else if (judgement == JudgementGood)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit200_texture;
+    else if (judgement == JudgementGreat)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit300_texture;
+    else if (judgement == JudgementPerfect)
+        gaming_maniahit_texture = &gaming_drawinfo.maniahit300g_texture;
+
+    if (judgement != JudgementNone)
+        gaming_judgement_visible_timer = time_total();
 }
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
@@ -114,6 +152,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     score_calculator_init(&score);
     score_calculator_clear();
     score_calculator_set_difficulty(gaming_beatmap.od);
+    score_calculator_set_judgement_callback(gaming_score_judgement_display_callback);
 
     gaming_time = audio_stream_get_position(&gaming_audio_stream);
 
@@ -126,12 +165,22 @@ void gaming_init(void)
     if (gaming_initialized)
         return;
 
-    texture_load(&gaming_judgementline_texture, "Skin/mania-stage-hint.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_long_note_texture, "Skin/LNTail.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_note1_texture, "Skin/mania-note1.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_note2_texture, "Skin/mania-note2.png", GL_TRUE, GL_TRUE);
-    sprite_create(&gaming_long_note, 0, 0, 30, 512, &gaming_long_note_texture);
-    sprite_create(&gaming_note, 0, 0, 30, 12.5f, &gaming_note1_texture);
+    texture_load(&gaming_drawinfo.judgementline_texture, "Skin/mania-stage-hint.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.lanehit_texture, "Skin/mania-lanehit.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.long_note_texture, "Skin/LNTail.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.note1_texture, "Skin/mania-note1.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.note2_texture, "Skin/mania-note2.png", GL_TRUE, GL_TRUE);
+
+    texture_load(&gaming_drawinfo.maniahit300g_texture, "Skin/mania-hit300g.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.maniahit300_texture, "Skin/mania-hit300.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.maniahit200_texture, "Skin/mania-hit200.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.maniahit100_texture, "Skin/mania-hit100.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.maniahit50_texture, "Skin/mania-hit50.png", GL_TRUE, GL_TRUE);
+    texture_load(&gaming_drawinfo.maniahit0_texture, "Skin/mania-hit0.png", GL_TRUE, GL_TRUE);
+
+    sprite_create(&gaming_drawinfo.long_note, 0, 0, 30, 512, &gaming_drawinfo.long_note_texture);
+    sprite_create(&gaming_drawinfo.maniahit, (PSP_SCREEN_WIDTH-16)/2.f, PSP_SCREEN_HEIGHT - 48, 16, 16, &gaming_drawinfo.maniahit0_texture);
+    sprite_create(&gaming_drawinfo.note, 0, 0, 30, 12.5f, &gaming_drawinfo.note1_texture);
 
     gaming_initialized = 1;
 }
@@ -141,12 +190,22 @@ void gaming_dispose(void)
     if (!gaming_initialized)
         return;
 
-    texture_dispose(&gaming_judgementline_texture);
-    texture_dispose(&gaming_long_note_texture);
-    texture_dispose(&gaming_note1_texture);
-    texture_dispose(&gaming_note2_texture);
-    sprite_dispose(&gaming_long_note);
-    sprite_dispose(&gaming_note);
+    texture_dispose(&gaming_drawinfo.judgementline_texture);
+    texture_dispose(&gaming_drawinfo.long_note_texture);
+    texture_dispose(&gaming_drawinfo.lanehit_texture);
+    texture_dispose(&gaming_drawinfo.note1_texture);
+    texture_dispose(&gaming_drawinfo.note2_texture);
+
+    texture_dispose(&gaming_drawinfo.maniahit300g_texture);
+    texture_dispose(&gaming_drawinfo.maniahit300_texture);
+    texture_dispose(&gaming_drawinfo.maniahit200_texture);
+    texture_dispose(&gaming_drawinfo.maniahit100_texture);
+    texture_dispose(&gaming_drawinfo.maniahit50_texture);
+    texture_dispose(&gaming_drawinfo.maniahit0_texture);
+
+    sprite_dispose(&gaming_drawinfo.long_note);
+    sprite_dispose(&gaming_drawinfo.maniahit);
+    sprite_dispose(&gaming_drawinfo.note);
 }
 
 void gaming_update(float delta)
@@ -280,9 +339,9 @@ void gaming_render(void)
     #endif
 
     if (options.flags.show_fps)
-        text_renderer_draw(stringf("%d score gaming at %d fps.", score.total_score, time_fps()), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming at %d fps.", score.combo, time_fps()), 0, 0, 8);
     else
-        text_renderer_draw(stringf("%d score gaming.", score.total_score), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming.", score.combo), 0, 0, 8);
 
     if (!gaming_beatmap.is_pure_4k)
         text_renderer_draw("NOT 4K", 192, 0, 8);
@@ -301,32 +360,32 @@ void gaming_render(void)
         if (hitobject.time - gaming_time > 1000.f)
             continue;
 
-        texture_t* texture = &gaming_note1_texture;
+        texture_t* texture = &gaming_drawinfo.note1_texture;
         uint8_t column = hitobject.column;
-        gaming_note.x = 240 + (column-2)*35;
+        gaming_drawinfo.note.x = 240 + (column-2)*35;
         if (column == 1 || column == 2)
-            texture = &gaming_note2_texture;
+            texture = &gaming_drawinfo.note2_texture;
 
         sv = beatmap_calculate_sv(gaming_beatmap.timing_points, gaming_beatmap.timing_point_count, hitobject);
 
         float progress = (hitobject.time - gaming_time);
         float pixels_per_ms = (float)PSP_SCREEN_HEIGHT / gaming_scroll_speed_base;
-        gaming_note.y = 20 + progress * pixels_per_ms * sv; /// judgement line at y=20
+        gaming_drawinfo.note.y = 20 + progress * pixels_per_ms * sv; /// judgement line at y=20
         float lnheight = 0;
-        gaming_long_note.height = 0;
+        gaming_drawinfo.long_note.height = 0;
 
-        if (gaming_note.y > PSP_SCREEN_HEIGHT+100.f)
+        if (gaming_drawinfo.note.y > PSP_SCREEN_HEIGHT+100.f)
             continue;
 
         if (hitobject.isLN)
         {
             lnheight = (hitobject.end-hitobject.time) * pixels_per_ms * sv;
-            gaming_long_note.height = lnheight;
-            gaming_long_note.x = gaming_note.x;
-            gaming_long_note.y = gaming_note.y;
+            gaming_drawinfo.long_note.height = lnheight;
+            gaming_drawinfo.long_note.x = gaming_drawinfo.note.x;
+            gaming_drawinfo.long_note.y = gaming_drawinfo.note.y;
         }
 
-        if (gaming_note.y+lnheight < -(gaming_note.height+0.1f) || (hitobject.isLN ? hitobject.hit && hitobject.tailHit : hitobject.hit) || score_calculator_is_missed(hitobject, gaming_time))
+        if (gaming_drawinfo.note.y+lnheight < -(gaming_drawinfo.note.height+0.1f) || (hitobject.isLN ? hitobject.hit && hitobject.tailHit : hitobject.hit) || score_calculator_is_missed(hitobject, gaming_time))
         {
             if (!hitobject.hit)
                 score_calculator_judge_as(JudgementMiss);
@@ -343,26 +402,55 @@ void gaming_render(void)
         }
 
         if (hitobject.isLN)
-            sprite_draw(&gaming_long_note, &gaming_long_note_texture);
-        sprite_draw(&gaming_note, texture);
+            sprite_draw(&gaming_drawinfo.long_note, &gaming_drawinfo.long_note_texture);
+        sprite_draw(&gaming_drawinfo.note, texture);
     }
 
-    gaming_note.x = 165;
-    gaming_note.y = 20;
-    float old_height = gaming_note.height;
-    gaming_note.height = 6;
-    gaming_note.width = 145;
-    sprite_draw(&gaming_note, &gaming_judgementline_texture);
-    gaming_note.height = old_height;
-    gaming_note.width = 30;
+    // draw hit info (300g, 300, 200, 100, 50, MISS)
+    if (gaming_maniahit_texture != NULL && time_total() - gaming_judgement_visible_timer < GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE)
+        sprite_draw(&gaming_drawinfo.maniahit, gaming_maniahit_texture);
+
+    // handle judgement line positioning
+    gaming_drawinfo.note.x = 165;
+    gaming_drawinfo.note.y = 20;
+    float old_height = gaming_drawinfo.note.height;
+    gaming_drawinfo.note.height = 6;
+    gaming_drawinfo.note.width = 145;
+    
+    // draw judgement line
+    sprite_draw(&gaming_drawinfo.note, &gaming_drawinfo.judgementline_texture);
+    gaming_drawinfo.note.height = 20;
+    gaming_drawinfo.note.width = 30;
+    for (int i = 0; i < 4; i++)
+    {
+        int key = options.keybinds.m4l1;
+        if (i == 1)
+            key = options.keybinds.m4l2;
+        else if (i == 2)
+            key = options.keybinds.m4l3;
+        else if (i == 3)
+            key = options.keybinds.m4l4;
+
+        if(button_pressed(key))
+        {
+            gaming_drawinfo.note.x = 240 + (i-2)*35;
+            gaming_drawinfo.note.y = 0;
+            sprite_draw(&gaming_drawinfo.note, &gaming_drawinfo.lanehit_texture);
+        }
+    }
+    gaming_drawinfo.note.height = old_height;
 
     if (!options.flags.show_debug_info)
+    {
+        const char* info_text = stringf("Score: %d", score.total_score);
+        text_renderer_draw(info_text, 5, 264, 8);
         return;
+    }
 
-    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %2.2f\nDrawlist index: %d\nTiming point (%d|%2.2f|sv: %2.2f)\nNum of: X/meh/ok/gud/grt/pfct/combo\n%d|%d|%d|%d|%d|%d|%d",
+    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %2.2f\nDrawlist index: %d\nTiming point (%d|%2.2f|sv: %2.2f)\nNum of: X/meh/ok/gud/grt/pfct/score\n%d|%d|%d|%d|%d|%d|%d",
                                      gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_beatmap_drawlist_index,
                                      gaming_current_timing_point.uninherited,
                                      gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -1, sv,
-                                     score.numMiss, score.numMeh, score.numOk, score.numGood, score.numGreat, score.numPerfect, score.combo);
+                                     score.numMiss, score.numMeh, score.numOk, score.numGood, score.numGreat, score.numPerfect, score.total_score);
     text_renderer_draw(debug_text, 5, 264, 8);
 }

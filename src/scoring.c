@@ -11,18 +11,24 @@ scoring_criteria_t score_criteria = {
     .miss = {.max=188.f, .avg=173.f, .min=158.f, .value=173.f},
 };
 score_t* score_object = NULL;
+scoring_judgement_set_callback_t score_judgement_callback = NULL;
 
 void score_calculator_init(score_t* scoreObj)
 {
     score_object = scoreObj;
 }
 
-void score_calculator_clear()
+void score_calculator_clear(void)
 {
     if (score_object == NULL)
         return;
 
     memset(score_object, 0, sizeof(score_t));
+}
+
+void score_calculator_set_judgement_callback(scoring_judgement_set_callback_t callback)
+{
+    score_judgement_callback = callback;
 }
 
 void score_calculator_apply_difficulty(scoring_hitwindow_t* hitwindow, float od)
@@ -121,6 +127,9 @@ int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time)
     if (score_calculator_check_if_time_in_range(time, &score_criteria.perfect))
         judgement = JudgementPerfect;
 
+    if (score_judgement_callback != NULL)
+        score_judgement_callback(judgement);
+
     if (judgement == JudgementNone)
         return 0;
     score_calculator_judge_as(judgement);
@@ -150,6 +159,9 @@ int score_calculator_judge_release(beatmap_hitobject_t* hitobject, float hit_tim
     if (score_calculator_check_if_time_in_range(time, &score_criteria.perfect))
         judgement = JudgementPerfect;
 
+    if (score_judgement_callback != NULL)
+        score_judgement_callback(judgement);
+
     if (judgement == JudgementNone)
         return 0;
     score_calculator_judge_as(judgement);
@@ -161,6 +173,9 @@ int score_calculator_judge_release(beatmap_hitobject_t* hitobject, float hit_tim
 
 void score_calculator_judge_as(scoring_judgement_type_t judgement)
 {
+    if (score_judgement_callback != NULL)
+        score_judgement_callback(judgement);
+
     if (judgement == JudgementMiss)
     {
         score_object->numMiss++;
@@ -170,7 +185,7 @@ void score_calculator_judge_as(scoring_judgement_type_t judgement)
         score_object->combo = 0;
         return;
     }
-    
+
     if (judgement == JudgementMeh)
         score_object->numMeh++;
     else if (judgement == JudgementOk)
