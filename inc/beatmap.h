@@ -50,6 +50,7 @@ typedef struct
 
     uint8_t is_pure_4k;
 
+    size_t hit_count;
     size_t object_count;
     size_t timing_point_count;
 

@@ -233,6 +233,9 @@ void beatmap_parse_hit_objects(beatmap_t* map, const char* line)
 
     beatmap_hitobject_t hitobject = beatmap_hitobject_parse(line);
     map->objects[map->object_count] = hitobject;
+    if (hitobject.isLN)
+        map->hit_count++;
+    map->hit_count++;
 
     if (hitobject.column >= 4)
         map->is_pure_4k = 0;

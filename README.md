@@ -5,9 +5,11 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - ~~Actual hit inputs & judgement~~
 - ~~Proper hitobject positioning/movment~~
 - ~~Proper scroll velocity application~~
+- ~~Actual accuracy&scoring&combo gaming~~
+- Hitsounds and hit effects (possibly animated in the future)
+- Combo effecting accuracy and score
 - Health system
 - Text rendering system improvements (batch rendering perhaps?)
-- Hitsounds and hit effects (possibly animated in the future)
 - Scroll direction change (optional setting) + judgement line
 - Performance optimizations for running the game at default clock speed
 - Better LN Skinning

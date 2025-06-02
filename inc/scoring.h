@@ -46,6 +46,7 @@ typedef struct
     scoring_hitwindow_t ok;
     scoring_hitwindow_t meh;
     scoring_hitwindow_t miss;
+    int total_objects;
 } scoring_criteria_t;
 
 typedef void(*scoring_judgement_set_callback_t)(scoring_judgement_type_t judgement);
@@ -54,6 +55,7 @@ void score_calculator_init(score_t* scoreObj);
 void score_calculator_clear(void);
 void score_calculator_set_judgement_callback(scoring_judgement_set_callback_t callback);
 void score_calculator_set_difficulty(float difficulty);
+void score_calculator_set_total_objects(int total_objects);
 int score_calculator_is_missed(beatmap_hitobject_t hitobject, float time);
 int score_calculator_should_be_considered(int time, float hit_time);
 int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time);

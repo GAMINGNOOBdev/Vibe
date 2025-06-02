@@ -9,6 +9,7 @@ scoring_criteria_t score_criteria = {
     .ok = {.max=127.f, .avg=112.f, .min=97.f, .value=112.f},
     .meh = {.max=151.f, .avg=136.f, .min=121.f, .value=136.f},
     .miss = {.max=188.f, .avg=173.f, .min=158.f, .value=173.f},
+    0
 };
 score_t* score_object = NULL;
 scoring_judgement_set_callback_t score_judgement_callback = NULL;
@@ -55,6 +56,11 @@ void score_calculator_set_difficulty(float difficulty)
     score_calculator_apply_difficulty(&score_criteria.miss, difficulty);
 }
 
+void score_calculator_set_total_objects(int total_objects)
+{
+    score_criteria.total_objects = total_objects;
+}
+
 int8_t score_calculator_check_if_time_in_range(float time, scoring_hitwindow_t* window)
 {
     if (time < window->value && time > -window->value)
@@ -82,20 +88,28 @@ int score_calculator_should_be_considered(int time, float hit_time)
     return 1;
 }
 
-void score_calculator_add_score(scoring_judgement_type_t judgement)
+void score_calculator_calc_score(void)
 {
-    if (judgement == JudgementMiss)
-        score_object->total_score += SCORE_MISS;
-    if (judgement == JudgementMeh)
-        score_object->total_score += SCORE_MEH;
-    if (judgement == JudgementOk)
-        score_object->total_score += SCORE_OK;
-    if (judgement == JudgementGood)
-        score_object->total_score += SCORE_GOOD;
-    if (judgement == JudgementGreat)
-        score_object->total_score += SCORE_GREAT;
-    if (judgement == JudgementPerfect)
-        score_object->total_score += SCORE_PERFECT;
+    int totalHits = score_object->numMiss + score_object->numMeh + score_object->numOk +
+                    score_object->numGood + score_object->numGreat + score_object->numPerfect;
+
+    int weighted = SCORE_MISS * score_object->numMiss +
+                   SCORE_MEH * score_object->numMeh +
+                   SCORE_OK * score_object->numOk +
+                   SCORE_GOOD * score_object->numGood +
+                   SCORE_GREAT * score_object->numGreat +
+                   SCORE_PERFECT * score_object->numPerfect;
+
+    int accscore = SCORE_MISS * score_object->numMiss +
+                   SCORE_MEH * score_object->numMeh +
+                   SCORE_OK * score_object->numOk +
+                   SCORE_GOOD * score_object->numGood +
+                   SCORE_GREAT * score_object->numGreat +
+                   SCORE_GREAT * score_object->numPerfect;
+
+    score_object->accuracy = (float)accscore / (SCORE_GREAT * totalHits);
+
+    score_object->total_score = (int)((float)weighted / (SCORE_PERFECT * score_criteria.total_objects) * MAX_SCORE);
 }
 
 int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time)
@@ -133,7 +147,6 @@ int score_calculator_judge(beatmap_hitobject_t* hitobject, float hit_time)
     if (judgement == JudgementNone)
         return 0;
     score_calculator_judge_as(judgement);
-    score_calculator_add_score(judgement);
 
     return 1;
 }
@@ -165,7 +178,6 @@ int score_calculator_judge_release(beatmap_hitobject_t* hitobject, float hit_tim
     if (judgement == JudgementNone)
         return 0;
     score_calculator_judge_as(judgement);
-    score_calculator_add_score(judgement);
 
     hitobject->tailHit = 1;
     return 1;
@@ -183,6 +195,7 @@ void score_calculator_judge_as(scoring_judgement_type_t judgement)
             score_object->max_combo = score_object->combo;
 
         score_object->combo = 0;
+        score_calculator_calc_score();
         return;
     }
 
@@ -197,5 +210,6 @@ void score_calculator_judge_as(scoring_judgement_type_t judgement)
     else if (judgement == JudgementPerfect)
         score_object->numPerfect++;
 
-        score_object->combo++;
+    score_object->combo++;
+    score_calculator_calc_score();
 }

@@ -31,7 +31,7 @@
 ///          ///
 ////////////////
 
-beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
+beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
 float gaming_time = 0;
@@ -152,6 +152,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     score_calculator_init(&score);
     score_calculator_clear();
     score_calculator_set_difficulty(gaming_beatmap.od);
+    score_calculator_set_total_objects(gaming_beatmap.hit_count);
     score_calculator_set_judgement_callback(gaming_score_judgement_display_callback);
 
     gaming_time = audio_stream_get_position(&gaming_audio_stream);
@@ -416,7 +417,7 @@ void gaming_render(void)
     float old_height = gaming_drawinfo.note.height;
     gaming_drawinfo.note.height = 6;
     gaming_drawinfo.note.width = 145;
-    
+
     // draw judgement line
     sprite_draw(&gaming_drawinfo.note, &gaming_drawinfo.judgementline_texture);
     gaming_drawinfo.note.height = 20;
@@ -442,7 +443,7 @@ void gaming_render(void)
 
     if (!options.flags.show_debug_info)
     {
-        const char* info_text = stringf("Score: %d", score.total_score);
+        const char* info_text = stringf("Score: %d\nAcc: %2.2f", score.total_score, score.accuracy * 100.f);
         text_renderer_draw(info_text, 5, 264, 8);
         return;
     }
