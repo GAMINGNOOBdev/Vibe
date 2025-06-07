@@ -1,17 +1,23 @@
 # Vibe
 This is a psp rhythm game project that randomly came into my mind while i was pressing random buttons (and triggers) to the music.
 
+## Currently working parts of the game
+- Actual hit inputs & judgement
+- Proper hitobject positioning/movment
+- Scroll velocity application
+- Actual accuracy&scoring&combo gaming
+- Actual results screen
+
 ## Work in progress areas of the project
-- ~~Actual hit inputs & judgement~~
-- ~~Proper hitobject positioning/movment~~
-- ~~Proper scroll velocity application~~
-- ~~Actual accuracy&scoring&combo gaming~~
-- Hitsounds and hit effects (possibly animated in the future)
+- Hitsounds
+- Ingame pause menu (perhaps, idk, maybe)
 - Combo effecting accuracy and score
+- Better emulation fo SV changes in osu!mania
 - Health system
 - Text rendering system improvements (batch rendering perhaps?)
 - Scroll direction change (optional setting) + judgement line
 - Performance optimizations for running the game at default clock speed
+- Actual hit effects
 - Better LN Skinning
 - Skin system
 - Replays (?)

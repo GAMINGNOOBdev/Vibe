@@ -166,6 +166,22 @@ void graphicsWindowKeyboardEvent(GLFWwindow* win, int key, int scancode, int act
 
 void graphicsWindowMouseButtonEvent(GLFWwindow* win, int button, int action, int _)
 {
+    int width, height;
+    glfwGetWindowSize(win, &width, &height);
+
+    double xpos, ypos;
+    glfwGetCursorPos(win, &xpos, &ypos);
+
+    double scaleFactorX = (double)PSP_SCREEN_WIDTH / width;
+    double scaleFactorY = (double)PSP_SCREEN_HEIGHT / height;
+
+    if (action == GLFW_PRESS)
+    {
+        int x = xpos * scaleFactorX;
+        int y = ypos * scaleFactorY;
+
+        LOGDEBUG(stringf("pressed mouse at psp position %d|%d (inv y: %d|%d) or windowpos %2.2f|%2.2f", x, y, x, PSP_SCREEN_HEIGHT-y, xpos, ypos));
+    }
 }
 
 void graphicsWindowMouseMoveEvent(GLFWwindow* win, double xPos, double yPos)

@@ -1,5 +1,5 @@
-#ifndef __APPLICATION_H_
-#define __APPLICATION_H_ 1
+#ifndef __APP_H_
+#define __APP_H_ 1
 
 typedef void(*app_update_callback_t)(float delta);
 typedef void(*app_render_callback_t)();

@@ -125,11 +125,30 @@ void song_select_input_handle(float delta)
             easing_set_duration(0.5f);
             easing_set_type(easeOutCubic);
         }
+        else if (up && song_selected_index == 0)
+        {
+            song_selected_index = songs_list.count-1;
+            if (song_selected_index >= song_scroll_offset + SONGS_ON_SCREEN)
+                song_scroll_offset = song_selected_index - SONGS_ON_SCREEN + 1;
+
+            easing_reset_timer();
+            easing_set_duration(0.5f);
+            easing_set_type(easeOutCubic);
+        }
         if (down && song_selected_index < (int)songs_list.count - 1)
         {
             song_selected_index++;
             if (song_selected_index >= song_scroll_offset + SONGS_ON_SCREEN)
                 song_scroll_offset++;
+
+            easing_reset_timer();
+            easing_set_duration(0.5f);
+            easing_set_type(easeOutCubic);
+        }
+        else if (down && song_selected_index == (int)songs_list.count - 1)
+        {
+            song_selected_index = 0;
+            song_scroll_offset = 0;
 
             easing_reset_timer();
             easing_set_duration(0.5f);
@@ -160,11 +179,22 @@ void song_select_input_handle(float delta)
             if (difficulty_selected_index < difficulty_scroll_offset)
                 difficulty_scroll_offset--;
         }
+        else if (up && difficulty_selected_index == 0)
+        {
+            difficulty_selected_index = selected_song->difficulties.count - 1;
+            if (difficulty_selected_index >= difficulty_scroll_offset + DIFFICULTIES_ON_SCREEN)
+                difficulty_scroll_offset = difficulty_selected_index - DIFFICULTIES_ON_SCREEN + 1;
+        }
         if (down && difficulty_selected_index < (int)selected_song->difficulties.count - 1)
         {
             difficulty_selected_index++;
             if (difficulty_selected_index >= difficulty_scroll_offset + DIFFICULTIES_ON_SCREEN)
                 difficulty_scroll_offset++;
+        }
+        else if (down && difficulty_selected_index == (int)selected_song->difficulties.count - 1)
+        {
+            difficulty_selected_index = 0;
+            difficulty_scroll_offset = 0;
         }
         if (confirm && difficulty_selected_index < (int)selected_song->difficulties.count)
         {
@@ -273,4 +303,3 @@ void song_select_render(void)
         }
     }
 }
-

@@ -49,6 +49,11 @@ void text_renderer_draw_color(const char* str, float x, float y, float pixelsize
             xoff = 0;
             continue;
         }
+        if (c == '\t')
+        {
+            xoff += 4-xoff%4;
+            continue;
+        }
 
         tile_t tile = {
             .x = xoff,
@@ -74,4 +79,3 @@ void text_renderer_dispose(void)
     texture_dispose(&text_renderer_texture);
     tilemap_dispose(&text_renderer_font_tilemap);
 }
-

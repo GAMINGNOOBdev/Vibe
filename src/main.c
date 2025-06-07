@@ -5,6 +5,7 @@
 #include <pspctrl.h>
 #endif
 
+#include <results_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
 #include <main_menu.h>
@@ -12,6 +13,7 @@
 #include <options.h>
 #include <logging.h>
 #include <malloc.h>
+#include <gaming.h>
 #include <audio.h>
 #include <input.h>
 #include <time.h>
@@ -97,6 +99,8 @@ int main()
     text_renderer_dispose();
     main_menu_dispose();
     song_select_dispose();
+    gaming_dispose();
+    results_screen_dispose();
 
     audio_dispose();
     graphics_dispose();

@@ -1,3 +1,4 @@
+#include "results_screen.h"
 #include <text_renderer.h>
 #include <song_select.h>
 #include <options.h>
@@ -40,32 +41,14 @@ size_t gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
 beatmap_hitobject_t gaming_drawlist[MAX_OBJECTS_ON_SCREEN];
 beatmap_timing_point_t gaming_current_timing_point;
 size_t gaming_timing_point_index;
+float gaming_scroll_speed_current;
 float gaming_scroll_speed_base;
 float gaming_beat_length;
 
-typedef struct
-{
-    texture_t judgementline_texture;
-    texture_t long_note_texture;
-    texture_t lanehit_texture;
-    texture_t note1_texture;
-    texture_t note2_texture;
-
-    texture_t maniahit300g_texture;
-    texture_t maniahit300_texture;
-    texture_t maniahit200_texture;
-    texture_t maniahit100_texture;
-    texture_t maniahit50_texture;
-    texture_t maniahit0_texture;
-
-    sprite_t long_note;
-    sprite_t maniahit;
-    sprite_t note;
-} gaming_drawinfo_t;
 gaming_drawinfo_t gaming_drawinfo;
 texture_t* gaming_maniahit_texture = NULL;
 
-score_t score;
+score_t gaming_score;
 const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
 float gaming_judgement_visible_timer = 0;
 
@@ -141,6 +124,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     memcpy(gaming_drawlist, gaming_beatmap.objects, MAX_OBJECTS_ON_SCREEN * sizeof(beatmap_hitobject_t));
 
     gaming_scroll_speed_base = 11485.f / (float)options.scroll_speed;
+    gaming_scroll_speed_current = 1;
     gaming_beat_length = 1;
 
     gaming_timing_point_index = 0;
@@ -149,7 +133,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     if (gaming_current_timing_point.uninherited)
         gaming_beat_length = gaming_current_timing_point.beatLength;
 
-    score_calculator_init(&score);
+    score_calculator_init(&gaming_score);
     score_calculator_clear();
     score_calculator_set_difficulty(gaming_beatmap.od);
     score_calculator_set_total_objects(gaming_beatmap.hit_count);
@@ -211,6 +195,14 @@ void gaming_dispose(void)
 
 void gaming_update(float delta)
 {
+    if (gaming_show_results_screen)
+    {
+        switch_to_results_screen(&gaming_drawinfo, &gaming_score);
+        audio_set_stream(NULL);
+        audio_stream_dispose(&gaming_audio_stream);
+        beatmap_dispose(&gaming_beatmap);
+    }
+
     gaming_time = audio_stream_get_position(&gaming_audio_stream);
     if (gaming_current_timing_point.time < gaming_time && gaming_timing_point_index < gaming_beatmap.timing_point_count)
     {
@@ -219,6 +211,13 @@ void gaming_update(float delta)
 
         if (gaming_current_timing_point.uninherited)
             gaming_beat_length = gaming_current_timing_point.beatLength;
+        else
+            gaming_scroll_speed_current = -100.f / gaming_current_timing_point.beatLength;
+    }
+
+    if (button_pressed_once(PSP_CTRL_SELECT))
+    {
+        gaming_audio_end_callback();
     }
 
     if (button_pressed_once(PSP_CTRL_START))
@@ -228,9 +227,6 @@ void gaming_update(float delta)
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
     }
-
-    if (button_pressed_once(PSP_CTRL_SELECT))
-        gaming_audio_end_callback();
 }
 
 void gaming_handle_note_inputs()
@@ -320,12 +316,12 @@ void gaming_render(void)
     glBlendFunc(GL_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 0, 0);
     glEnable(GL_BLEND);
 
-    glClearColor(0xFF111111);
+    glClearColor(0xFF000000);
     #else
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glClearColor(0x11/255.f, 0x11/255.f, 0x11/255.f, 0xFF/255.f);
+    glClearColor(0, 0, 0, 0xFF/255.f);
     #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -340,15 +336,12 @@ void gaming_render(void)
     #endif
 
     if (options.flags.show_fps)
-        text_renderer_draw(stringf("%d combo gaming at %d fps.", score.combo, time_fps()), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming at %d fps.", gaming_score.combo, time_fps()), 0, 0, 8);
     else
-        text_renderer_draw(stringf("%d combo gaming.", score.combo), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming.", gaming_score.combo), 0, 0, 8);
 
     if (!gaming_beatmap.is_pure_4k)
         text_renderer_draw("NOT 4K", 192, 0, 8);
-
-    if (gaming_show_results_screen)
-        text_renderer_draw("RESULTS", 188, 100, 8);
 
     float sv = 1.0f;
 
@@ -358,7 +351,7 @@ void gaming_render(void)
         if (hitobject.time == -1)
             continue;
 
-        if (hitobject.time - gaming_time > 1000.f)
+        if (hitobject.time - gaming_time > 2000.f)
             continue;
 
         texture_t* texture = &gaming_drawinfo.note1_texture;
@@ -443,7 +436,7 @@ void gaming_render(void)
 
     if (!options.flags.show_debug_info)
     {
-        const char* info_text = stringf("Score: %d\nAcc: %2.2f", score.total_score, score.accuracy * 100.f);
+        const char* info_text = stringf("Score: %d\nAcc: %2.2f", gaming_score.total_score, gaming_score.accuracy * 100.f);
         text_renderer_draw(info_text, 5, 264, 8);
         return;
     }
@@ -452,6 +445,6 @@ void gaming_render(void)
                                      gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_beatmap_drawlist_index,
                                      gaming_current_timing_point.uninherited,
                                      gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -1, sv,
-                                     score.numMiss, score.numMeh, score.numOk, score.numGood, score.numGreat, score.numPerfect, score.total_score);
+                                     gaming_score.numMiss, gaming_score.numMeh, gaming_score.numOk, gaming_score.numGood, gaming_score.numGreat, gaming_score.numPerfect, gaming_score.total_score);
     text_renderer_draw(debug_text, 5, 264, 8);
 }
