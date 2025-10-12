@@ -46,7 +46,8 @@ static const char* alGetErrorString(ALenum error)
     return "AL_UNKNOWN";
 }
 
-#define ALCALL(call, ...) alError = alGetError(); call(__VA_ARGS__); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s: %s", #call, alGetErrorString(alError));}
+#define ALCALL(call, ...) alError = alGetError(); call(__VA_ARGS__); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s:%d: %s: %s", __FILE__, __LINE__, #call, alGetErrorString(alError));}
+#define ALBUFFERDATA(buffer, format, data, size, samplerate) alError = alGetError(); alBufferData(buffer, format, data, size, samplerate); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s:%d: alBufferData( 0x%x, %d, 0x%x, %d, %d ): %s", __FILE__, __LINE__, buffer, format, data, size, samplerate, alGetErrorString(alError));}
 #endif
 
 ////////////////////////
@@ -451,7 +452,12 @@ void audio_fill_source_data(int index, int numBuffers, ALuint buffers[])
         else
             sfx_audio_callback((void*)stream, frames, (void*)((size_t)index-1));
 
-        ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, stream, bytes, astream->freq);
+        ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, stream, bytes, astream->freq);
+        if (alError != AL_NO_ERROR)
+        {
+            ALCALL(alSourceUnqueueBuffers, source, 1, &buffer);
+            break;
+        }
         ALCALL(alSourceQueueBuffers, source, 1, &buffer);
     }
 
@@ -486,7 +492,7 @@ void audio_update_source(int index)
     }
 
     ALint processed_buffer_count = 0;
-    ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
+    static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
     ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
     if (processed_buffer_count <= 0)
         return;
@@ -531,8 +537,8 @@ void audio_set_music_stream(audio_stream_t* astream)
     #ifndef __PSP__
     if (astream != NULL)
     {
-        ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-        ALCALL(alSourceUnqueueBuffers, audio_data.sources[0], 4, processed_buffers);
+        static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
+        ALCALL(alSourceUnqueueBuffers, audio_data.sources[0], AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
         ALCALL(alSourceStop, audio_data.sources[0]);
         audio_fill_source_data(0, 0, NULL);
         ALCALL(alSourcePlay, audio_data.sources[0]);
@@ -556,7 +562,7 @@ void audio_play_sfx_stream(audio_stream_t* astream)
         int idx = i + 1;
         if (astream != NULL)
         {
-            ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
+            static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
             ALCALL(alSourceUnqueueBuffers, audio_data.sources[idx], 4, processed_buffers);
             ALCALL(alSourceStop, audio_data.sources[idx]);
             audio_fill_source_data(idx, 0, NULL);

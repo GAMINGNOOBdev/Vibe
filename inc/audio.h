@@ -10,7 +10,11 @@
 
 #define AUDIO_FREQ 44100
 #define AUDIO_CHANNELS 2
+#ifdef __PSP__
 #define AUDIO_FRAME_SIZE 0x100
+#else
+#define AUDIO_FRAME_SIZE 0x400
+#endif
 #define AUDIO_STREAMS_MAX 8
 #define AUDIO_SFX_STREAMS_MAX 7
 #define AUDIO_BUFFERS_PER_SOURCE 4

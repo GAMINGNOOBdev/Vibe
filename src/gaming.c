@@ -284,7 +284,7 @@ void gaming_update(float delta)
             gaming_show_results_screen = 1;
     }
 
-    if (button_pressed_once(options.keybinds.select))
+    if ((button_pressed_once(options.keybinds.select) || button_pressed_once(options.keybinds.back)) && gaming_time > 1000.0f)
     {
         gaming_audio_end_callback();
     }
