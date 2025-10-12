@@ -3,6 +3,7 @@
 #include <time.h>
 #include <audio.h>
 #include <input.h>
+#include <strutil.h>
 #include <options.h>
 #include <text_renderer.h>
 #ifdef __PSP__
@@ -86,10 +87,10 @@ void main_menu_dispose(void)
 
 void main_menu_input_handle(float delta)
 {
-    if (button_pressed_once(PSP_CTRL_START))
+    if (button_pressed_once(options.keybinds.start))
         switch_to_song_select();
 
-    if (button_pressed_once(PSP_CTRL_SELECT))
+    if (button_pressed_once(options.keybinds.select))
         switch_to_settings_menu();
 }
 

@@ -22,7 +22,19 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Skin system
 - Replays (?)
 
+## Default Keybinds
+The default keybinds on the "desktop" version are as follows:
+| Bind Name | Key |
+|-----------|-----|
+|Confirm|Z|
+|Start|Enter|
+|Select|Space|
+|Back|Escape|
+You can change these keybinds in the settings.
+The non-modifyable keys are the "shoulder buttons" and the directional buttons (mapped to arrow keys).
+
 ## How to build
+### PSP
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
 After that just run
 ```bash
@@ -31,6 +43,8 @@ bash compile.sh
 > [!NOTE]
 > `compile.sh` clean builds the entire project for the psp
 
+
+### Desktop (linux/mac)
 If you want to build for linux/macos (no windows support because f*ck microsoft) run
 ```bash
 make -f MakefilePC

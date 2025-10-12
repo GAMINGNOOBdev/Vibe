@@ -57,6 +57,25 @@ void app_set_render_callback(app_render_callback_t render)
 }
 app_render_callback_t app_get_render_callback() { return render_callback; }
 
+#ifndef __PSP__
+#include <pthread.h>
+
+void* audio_thread(void* arg)
+{
+    while (is_running())
+    {
+        audio_update();
+    }
+    return NULL;
+}
+
+pthread_t audio_thread_id;
+void setup_audio_thread()
+{
+    pthread_create(&audio_thread_id, NULL, audio_thread, NULL);
+}
+#endif
+
 int main()
 {
     setup_callbacks();
@@ -76,6 +95,9 @@ int main()
     options_apply();
 
     switch_to_main_menu();
+    #ifndef __PSP__
+    setup_audio_thread();
+    #endif
 
     while (is_running())
     {
@@ -101,6 +123,10 @@ int main()
     song_select_dispose();
     gaming_dispose();
     results_screen_dispose();
+
+    #ifndef __PSP__
+    pthread_join(audio_thread_id, NULL);
+    #endif
 
     audio_dispose();
     graphics_dispose();

@@ -69,7 +69,7 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
     DIR* directory = opendir(path);
     if (directory == NULL)
     {
-        LOGERROR(stringf("could not find folder '%s'", path));
+        LOGERROR("could not find folder '%s'", path);
         stringvec_dispose(&result);
         return result;
     }

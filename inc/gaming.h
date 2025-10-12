@@ -3,6 +3,7 @@
 
 #include <texture.h>
 #include <sprite.h>
+#include <audio.h>
 
 typedef struct
 {
@@ -23,6 +24,13 @@ typedef struct
     sprite_t maniahit;
     sprite_t note;
 } gaming_drawinfo_t;
+
+typedef struct
+{
+    audio_stream_t drum_hitclap, drum_hitnormal, drum_hitfinish, drum_hitwhistle;
+    audio_stream_t soft_hitclap, soft_hitnormal, soft_hitfinish, soft_hitwhistle;
+    audio_stream_t normal_hitclap, normal_hitnormal, normal_hitfinish, normal_hitwhistle;
+} gaming_soundinfo_t;
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path);
 

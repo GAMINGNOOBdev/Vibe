@@ -4,6 +4,7 @@
 #include <main_menu.h>
 #include <options.h>
 #include <texture.h>
+#include <strutil.h>
 #include <logging.h>
 #include <easing.h>
 #include <gaming.h>
@@ -64,8 +65,7 @@ void switch_to_song_select(void)
     app_set_update_callback(song_select_update);
     app_set_render_callback(song_select_render);
 
-    audio_set_end_callback(NULL);
-    audio_set_stream(NULL);
+    audio_set_music_stream(NULL);
 
     easing_enable();
     easing_reset_timer();
@@ -105,8 +105,8 @@ void song_select_dispose(void)
 
 void song_select_input_handle(float delta)
 {
-    int confirm = button_pressed_once(PSP_CTRL_CROSS);
-    int back = button_pressed_once(PSP_CTRL_CIRCLE);
+    int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start) || button_pressed_once(options.keybinds.select);
+    int back = button_pressed_once(options.keybinds.back);
     int down = button_pressed_once(PSP_CTRL_DOWN);
     int up = button_pressed_once(PSP_CTRL_UP);
 
@@ -198,8 +198,8 @@ void song_select_input_handle(float delta)
         }
         if (confirm && difficulty_selected_index < (int)selected_song->difficulties.count)
         {
-            LOGDEBUG(stringf("song{index: %d scroll: %d} difficulty{index: %d scroll: %d}",
-                song_selected_index, song_scroll_offset, difficulty_selected_index, difficulty_scroll_offset));
+            LOGDEBUG("song{index: %d scroll: %d} difficulty{index: %d scroll: %d}",
+                song_selected_index, song_scroll_offset, difficulty_selected_index, difficulty_scroll_offset);
             selected_difficulty = &selected_song->difficulties.data[difficulty_selected_index];
             switch_to_gaming(selected_song->fullname, selected_difficulty->filename);
         }

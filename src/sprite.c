@@ -16,11 +16,11 @@
 
 void print_vertex(vertex_t vert)
 {
-    LOGDEBUG(stringf("vertex{ uv{%2.2f|%2.2f} color: 0x%8.8x pos{%2.2f|%2.2f|%2.2f}}",
+    LOGDEBUG("vertex{ uv{%2.2f|%2.2f} color: 0x%8.8x pos{%2.2f|%2.2f|%2.2f}}",
                           vert.u, vert.v,
                           vert.color,
                           vert.x, vert.y, vert.z
-                        ));
+                        );
 }
 
 void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture)
@@ -67,7 +67,7 @@ void sprite_create(sprite_t* sprite, float x, float y, float width, float height
 
     mesh_update(&sprite->mesh);
 
-    LOGINFO(stringf("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v));
+    LOGINFO("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v);
 }
 
 void sprite_draw(sprite_t* sprite, texture_t* texture)

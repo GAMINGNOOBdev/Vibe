@@ -63,7 +63,7 @@ GLuint compile_shader(const char* src, GLenum type)
         char* message = malloc(length+1);
         memset(message, 0, length+1);
         glGetShaderInfoLog(id, length, &length, message);
-        LOGERROR(stringf("Shader compilation error: %s", message));
+        LOGERROR("Shader compilation error: %s", message);
         free(message);
         return 0;
     }
@@ -89,7 +89,7 @@ GLuint create_shader(const char* vertexShader, const char* fragmentShader)
         char* message = malloc(length+1);
         memset(message, 0, length+1);
         glGetProgramInfoLog(program, length, &length, message);
-        LOGERROR(stringf("Shader linking error: %s", message));
+        LOGERROR("Shader linking error: %s", message);
         free(message);
         return 0;
     }
@@ -180,7 +180,7 @@ void graphicsWindowMouseButtonEvent(GLFWwindow* win, int button, int action, int
         int x = xpos * scaleFactorX;
         int y = ypos * scaleFactorY;
 
-        LOGDEBUG(stringf("pressed mouse at psp position %d|%d (inv y: %d|%d) or windowpos %2.2f|%2.2f", x, y, x, PSP_SCREEN_HEIGHT-y, xpos, ypos));
+        LOGDEBUG("pressed mouse at psp position %d|%d (inv y: %d|%d) or windowpos %2.2f|%2.2f", x, y, x, PSP_SCREEN_HEIGHT-y, xpos, ypos);
     }
 }
 
@@ -197,7 +197,7 @@ void extractZipFileToDest(const char* filepath)
     mz_zip_archive archive;
     if (!mz_zip_reader_init_file(&archive, filepath, 0))
     {
-        LOGERROR(stringf("Unable to extract file '%s'", filepath));
+        LOGERROR("Unable to extract file '%s'", filepath);
         return;
     }
 
@@ -208,7 +208,7 @@ void extractZipFileToDest(const char* filepath)
     memset(outputdir, 0, strlen("Songs/") + size);
     strncpy(outputdir, "Songs/", strlen("Songs/"));
     strncpy(&outputdir[strlen("Songs/")], dir, strlen(dir) - 2);
-    LOGERROR(stringf("outputdir: '%s'", outputdir));
+    LOGERROR("outputdir: '%s'", outputdir);
 
     const int mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
     mkdir(outputdir, mode);
@@ -219,21 +219,21 @@ void extractZipFileToDest(const char* filepath)
         mz_zip_archive_file_stat file;
         if (!mz_zip_reader_file_stat(&archive, i, &file))
         {
-            LOGERROR(stringf("Unable to extract file %d", i));
+            LOGERROR("Unable to extract file %d", i);
             continue;
         }
 
         if (mz_zip_reader_is_file_a_directory(&archive, i))
         {
-            LOGINFO(stringf("DIRECTORY '%s/%s'", outputdir, file.m_filename));
+            LOGINFO("DIRECTORY '%s/%s'", outputdir, file.m_filename);
             mkdir(stringf("%s/%s", outputdir, file.m_filename), mode);
             continue;
         }
 
-        LOGINFO(stringf("extracting '%s/%s'", outputdir, file.m_filename));
+        LOGINFO("extracting '%s/%s'", outputdir, file.m_filename);
         if (!mz_zip_reader_extract_to_file(&archive, i, stringf("%s/%s", outputdir, file.m_filename), 0))
         {
-            LOGERROR(stringf("failed to extract file %s", file.m_filename));
+            LOGERROR("failed to extract file %s", file.m_filename);
         }
     }
 }
@@ -249,7 +249,7 @@ void graphicsWindowFileDropEvent(GLFWwindow* win, int path_count, const char** p
         if (strcmp(&paths[i][idx], ".osz") != 0)
             continue;
 
-        LOGINFO(stringf("Extracting '%s'...", paths[i]));
+        LOGINFO("Extracting '%s'...", paths[i]);
         extractZipFileToDest(paths[i]);
     }
 }
@@ -281,7 +281,7 @@ void graphics_init()
     GLenum error;
     if ((error = glewInit()) != GLEW_OK)
     {
-        LOGERROR(stringf("Couldn't init glew smh: %s", glewGetErrorString(error)));
+        LOGERROR("Couldn't init glew smh: %s", glewGetErrorString(error));
         glfwTerminate();
         stop_running();
         return;
@@ -302,7 +302,7 @@ void graphics_init()
     shaderProjectionID = glGetUniformLocation(globalShader, "u_projection");
     shaderTextureAvailableID = glGetUniformLocation(globalShader, "u_texture_available");
 
-    LOGINFO(stringf("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID));
+    LOGINFO("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID);
 }
 
 void graphics_dispose()

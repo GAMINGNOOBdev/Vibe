@@ -4,6 +4,16 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/**
+ * @brief Like printf but for building a string together
+ * 
+ * @param[in] formatString string which has format information
+ * @param[in] ... any other arguments
+ * 
+ * @returns the new formatted string
+*/
+const char* stringf(const char* formatString, ...);
+
 struct stringvec_entry;
 struct stringvec_entry
 {

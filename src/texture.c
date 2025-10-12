@@ -70,7 +70,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
 {
     if (!texture || !filename)
     {
-        LOGERROR(stringf("could not allocate texture object for file '%s'", filename));
+        LOGERROR("could not allocate texture object for file '%s'", filename);
         return;
     }
 
@@ -80,7 +80,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
 
     if (!imgData)
     {
-        LOGERROR(stringf("could not load texture '%s'", filename));
+        LOGERROR("could not load texture '%s'", filename);
         return;
     }
     texture->width = width;
@@ -99,7 +99,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
     stbi_image_free(imgData);
 
-    LOGDEBUG(stringf("texture id: %d (0x%16.16x)", texture->id, texture->id));
+    LOGDEBUG("texture id: %d (0x%16.16x)", texture->id, texture->id);
     #else
     texture->pWidth = pow2(width);
     texture->pHeight = pow2(height);
@@ -111,7 +111,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     if (!dataBuffer)
     {
         stbi_image_free(imgData);
-        LOGERROR(stringf("could not allocate data for texture '%s'", filename));
+        LOGERROR("could not allocate data for texture '%s'", filename);
         return;
     }
 
@@ -126,7 +126,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
 
     if (!swizzledPixels)
     {
-        LOGERROR(stringf("could not allocate data to swizzle texture '%s'", filename));
+        LOGERROR("could not allocate data to swizzle texture '%s'", filename);
         return;
     }
 
@@ -138,7 +138,7 @@ void texture_load(texture_t* texture, const char* filename, const int flip, cons
     sceKernelDcacheWritebackInvalidateAll();
     #endif
 
-    LOGINFO(stringf("texture '%s' with size '%ld' (%ldx%ld or %ldx%ld) loaded into %cram", filename, size, width, height, texture->pWidth, texture->pHeight, vram ? 'v' : ' '));
+    LOGINFO("texture '%s' with size '%ld' (%ldx%ld or %ldx%ld) loaded into %cram", filename, size, width, height, texture->pWidth, texture->pHeight, vram ? 'v' : ' ');
 }
 
 void texture_bind(texture_t* tex)

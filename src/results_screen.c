@@ -1,8 +1,10 @@
-#include "texture.h"
 #include <results_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
 #include <logging.h>
+#include <strutil.h>
+#include <options.h>
+#include <texture.h>
 #include <sprite.h>
 #include <gaming.h>
 #include <input.h>
@@ -83,7 +85,7 @@ void results_screen_dispose(void)
 
 void results_screen_update(float delta)
 {
-    if (button_pressed(PSP_CTRL_START))
+    if (button_pressed(options.keybinds.back))
         switch_to_song_select();
 }
 

@@ -12,10 +12,10 @@ typedef unsigned char loglevel_t;
 #define LOGLEVEL_WARNING    3
 
 #define LOG log_msg
-#define LOGINFO(msg) log_msg(LOGLEVEL_INFO, msg)
-#define LOGDEBUG(msg) log_msg(LOGLEVEL_DEBUG, msg)
-#define LOGERROR(msg) log_msg(LOGLEVEL_ERROR, msg)
-#define LOGWARNING(msg) log_msg(LOGLEVEL_WARNING, msg)
+#define LOGINFO(...) log_msg(LOGLEVEL_INFO, logstringf(__VA_ARGS__))
+#define LOGDEBUG(...) log_msg(LOGLEVEL_DEBUG, logstringf(__VA_ARGS__))
+#define LOGERROR(...) log_msg(LOGLEVEL_ERROR, logstringf(__VA_ARGS__))
+#define LOGWARNING(...) log_msg(LOGLEVEL_WARNING, logstringf(__VA_ARGS__))
 
 /**
  * @brief Like printf but for building a string together
@@ -25,7 +25,7 @@ typedef unsigned char loglevel_t;
  * 
  * @returns the new formatted string
 */
-const char* stringf(const char* formatString, ...);
+const char* logstringf(const char* formatString, ...);
 
 /**
  * @brief En-/Disable debug messages showing up

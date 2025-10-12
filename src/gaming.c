@@ -1,10 +1,11 @@
-#include "results_screen.h"
+#include <results_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
 #include <options.h>
 #include <texture.h>
 #include <logging.h>
 #include <beatmap.h>
+#include <strutil.h>
 #include <scoring.h>
 #include <easing.h>
 #include <gaming.h>
@@ -33,13 +34,21 @@
 ////////////////
 
 beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
+uint8_t gaming_reached_end_of_beatmap = 0;
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
 float gaming_time = 0;
 
+gaming_soundinfo_t gaming_soundinfo = {
+    .drum_hitclap={0}, .drum_hitnormal={0}, .drum_hitfinish={0}, .drum_hitwhistle={0},
+    .soft_hitclap={0}, .soft_hitnormal={0}, .soft_hitfinish={0}, .soft_hitwhistle={0},
+    .normal_hitclap={0}, .normal_hitnormal={0}, .normal_hitfinish={0}, .normal_hitwhistle={0},
+};
+
 size_t gaming_beatmap_drawlist_index = MAX_OBJECTS_ON_SCREEN;
 beatmap_hitobject_t gaming_drawlist[MAX_OBJECTS_ON_SCREEN];
 beatmap_timing_point_t gaming_current_timing_point;
+beatmap_hitobject_t gaming_last_hitobject;
 size_t gaming_timing_point_index;
 float gaming_scroll_speed_current;
 float gaming_scroll_speed_base;
@@ -60,7 +69,7 @@ float gaming_judgement_visible_timer = 0;
 
 void gaming_audio_end_callback(void)
 {
-    audio_set_stream(NULL);
+    audio_set_music_stream(NULL);
     gaming_show_results_screen = 1;
 }
 
@@ -82,7 +91,7 @@ void gaming_score_judgement_display_callback(scoring_judgement_type_t judgement)
         gaming_maniahit_texture = &gaming_drawinfo.maniahit300g_texture;
 
     if (judgement != JudgementNone)
-        gaming_judgement_visible_timer = time_total();
+        gaming_judgement_visible_timer = (float)time_total();
 }
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
@@ -94,22 +103,17 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     app_set_update_callback(gaming_update);
     app_set_render_callback(gaming_render);
 
-    audio_set_end_callback(gaming_audio_end_callback);
-    
     easing_disable();
 
     beatmap_parse(&gaming_beatmap, beatmap_path);
 
-    LOGDEBUG("beatmap folder:");
-    LOGDEBUG(beatmap_folder);
-    LOGDEBUG("beatmap path:");
-    LOGDEBUG(beatmap_path);
-    LOGDEBUG("audio sub-path/name:");
-    LOGDEBUG(stringf("0x%16.16x", gaming_beatmap.audio_path));
-    LOGDEBUG(gaming_beatmap.audio_path);
-    audio_stream_load(&gaming_audio_stream, stringf("%s/%s", beatmap_folder, gaming_beatmap.audio_path));
+    LOGDEBUG("beatmap folder: '%s'", beatmap_folder);
+    LOGDEBUG("beatmap path: '%s'", beatmap_path);
+    LOGDEBUG("audio sub-path/name: 0x%16.16x ('%s')", gaming_beatmap.audio_path, gaming_beatmap.audio_path);
+    gaming_audio_stream = audio_stream_load(stringf("%s/%s", beatmap_folder, gaming_beatmap.audio_path));
+    gaming_audio_stream.end_callback = gaming_audio_end_callback;
     audio_stream_seek_start(&gaming_audio_stream);
-    audio_set_stream(&gaming_audio_stream);
+    audio_set_music_stream(&gaming_audio_stream);
 
     gaming_audio_stream.volume = options.music_volume;
 
@@ -119,9 +123,38 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
         gaming_drawlist_size = gaming_beatmap.object_count;
 
     for (int i = 0; i < MAX_OBJECTS_ON_SCREEN; i++)
-        gaming_drawlist[i].time = -1;
+    {
+        gaming_drawlist[i] = (beatmap_hitobject_t){
+            .time = -1,
+            .end = 0,
+            .hitsound = 0,
+            .column = 0,
+            .hit = 0,
+            .held = 0,
+            .isLN = 0,
+            .tailHit = 0,
+            .reserved = 0,
+        };
+    }
+    gaming_last_hitobject = (beatmap_hitobject_t){
+        .time = -1,
+        .end = 0,
+        .hitsound = 0,
+        .column = 0,
+        .hit = 0,
+        .held = 0,
+        .isLN = 0,
+        .tailHit = 0,
+        .reserved = 0,
+    };
 
-    memcpy(gaming_drawlist, gaming_beatmap.objects, MAX_OBJECTS_ON_SCREEN * sizeof(beatmap_hitobject_t));
+    int numObjects = MAX_OBJECTS_ON_SCREEN;
+    if (gaming_beatmap.object_count < MAX_OBJECTS_ON_SCREEN)
+        numObjects = gaming_beatmap.object_count;
+
+    memcpy(gaming_drawlist, gaming_beatmap.objects, numObjects * sizeof(beatmap_hitobject_t));
+    gaming_last_hitobject = gaming_drawlist[numObjects-1];
+    gaming_reached_end_of_beatmap = 0;
 
     gaming_scroll_speed_base = 11485.f / (float)options.scroll_speed;
     gaming_scroll_speed_current = 1;
@@ -167,6 +200,19 @@ void gaming_init(void)
     sprite_create(&gaming_drawinfo.maniahit, (PSP_SCREEN_WIDTH-16)/2.f, PSP_SCREEN_HEIGHT - 48, 16, 16, &gaming_drawinfo.maniahit0_texture);
     sprite_create(&gaming_drawinfo.note, 0, 0, 30, 12.5f, &gaming_drawinfo.note1_texture);
 
+    gaming_soundinfo.drum_hitclap = audio_stream_load("Skin/drum-hitclap.wav");
+    gaming_soundinfo.drum_hitnormal = audio_stream_load("Skin/drum-hitnormal.wav");
+    gaming_soundinfo.drum_hitfinish = audio_stream_load("Skin/drum-hitfinish.wav");
+    gaming_soundinfo.drum_hitwhistle = audio_stream_load("Skin/drum-hitwhistle.wav");
+    gaming_soundinfo.soft_hitclap = audio_stream_load("Skin/soft-hitclap.wav");
+    gaming_soundinfo.soft_hitnormal = audio_stream_load("Skin/soft-hitnormal.wav");
+    gaming_soundinfo.soft_hitfinish = audio_stream_load("Skin/soft-hitfinish.wav");
+    gaming_soundinfo.soft_hitwhistle = audio_stream_load("Skin/soft-hitwhistle.wav");
+    gaming_soundinfo.normal_hitclap = audio_stream_load("Skin/normal-hitclap.wav");
+    gaming_soundinfo.normal_hitnormal = audio_stream_load("Skin/normal-hitnormal.wav");
+    gaming_soundinfo.normal_hitfinish = audio_stream_load("Skin/normal-hitfinish.wav");
+    gaming_soundinfo.normal_hitwhistle = audio_stream_load("Skin/normal-hitwhistle.wav");
+
     gaming_initialized = 1;
 }
 
@@ -191,6 +237,19 @@ void gaming_dispose(void)
     sprite_dispose(&gaming_drawinfo.long_note);
     sprite_dispose(&gaming_drawinfo.maniahit);
     sprite_dispose(&gaming_drawinfo.note);
+
+    audio_stream_dispose(&gaming_soundinfo.drum_hitclap);
+    audio_stream_dispose(&gaming_soundinfo.drum_hitnormal);
+    audio_stream_dispose(&gaming_soundinfo.drum_hitfinish);
+    audio_stream_dispose(&gaming_soundinfo.drum_hitwhistle);
+    audio_stream_dispose(&gaming_soundinfo.soft_hitclap);
+    audio_stream_dispose(&gaming_soundinfo.soft_hitnormal);
+    audio_stream_dispose(&gaming_soundinfo.soft_hitfinish);
+    audio_stream_dispose(&gaming_soundinfo.soft_hitwhistle);
+    audio_stream_dispose(&gaming_soundinfo.normal_hitclap);
+    audio_stream_dispose(&gaming_soundinfo.normal_hitnormal);
+    audio_stream_dispose(&gaming_soundinfo.normal_hitfinish);
+    audio_stream_dispose(&gaming_soundinfo.normal_hitwhistle);
 }
 
 void gaming_update(float delta)
@@ -198,7 +257,7 @@ void gaming_update(float delta)
     if (gaming_show_results_screen)
     {
         switch_to_results_screen(&gaming_drawinfo, &gaming_score);
-        audio_set_stream(NULL);
+        audio_set_music_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
     }
@@ -215,15 +274,25 @@ void gaming_update(float delta)
             gaming_scroll_speed_current = -100.f / gaming_current_timing_point.beatLength;
     }
 
-    if (button_pressed_once(PSP_CTRL_SELECT))
+    if (gaming_last_hitobject.time != -1)
+    {
+        float time_diff = gaming_last_hitobject.time - gaming_time;
+        if (gaming_last_hitobject.isLN)
+            time_diff = gaming_last_hitobject.end - gaming_time;
+
+        if (time_diff < -3000.f && gaming_reached_end_of_beatmap)
+            gaming_show_results_screen = 1;
+    }
+
+    if (button_pressed_once(options.keybinds.select))
     {
         gaming_audio_end_callback();
     }
 
-    if (button_pressed_once(PSP_CTRL_START))
+    if (button_pressed_once(options.keybinds.start))
     {
         switch_to_song_select();
-        audio_set_stream(NULL);
+        audio_set_music_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
     }
@@ -243,13 +312,13 @@ void gaming_handle_note_inputs()
 
     for (int i = 0; i < 4; i++)
     {
-        int key = options.keybinds.m4l1;
+        int key = options.game_keybinds.m4l1;
         if (i == 1)
-            key = options.keybinds.m4l2;
+            key = options.game_keybinds.m4l2;
         else if (i == 2)
-            key = options.keybinds.m4l3;
+            key = options.game_keybinds.m4l3;
         else if (i == 3)
-            key = options.keybinds.m4l4;
+            key = options.game_keybinds.m4l4;
 
         columns_hit_once[i] = button_pressed_once(key);
         columns_held[i] = button_pressed(key);
@@ -263,10 +332,20 @@ void gaming_handle_note_inputs()
         if (!score_calculator_should_be_considered(hitobject.time, gaming_time))
             continue;
 
+        uint8_t hitsound = hitobject.hitsound;
+        uint8_t hitnormal = hitsound & 0b1;
+        uint8_t hitwhistle = hitsound & 0b10;
+        uint8_t hitfinish = hitsound & 0b100;
+        uint8_t hitclap = hitsound & 0b1000;
+
         uint8_t column = hitobject.column;
         if (column_occupied[column])
             continue;
         column_occupied[column] = 1;
+
+        // if (columns_hit_once[column])
+        //     LOGDEBUG("HIT");
+        //     audio_play_sfx_stream(&gaming_soundinfo.normal_hitnormal);
 
         if (!hitobject.isLN)
         {
@@ -385,11 +464,14 @@ void gaming_render(void)
                 score_calculator_judge_as(JudgementMiss);
 
             if (gaming_beatmap_drawlist_index + 1 >= gaming_beatmap.object_count)
+            {
                 gaming_drawlist[i].time = -1;
+                gaming_reached_end_of_beatmap = 1;
+            }
             else
             {
                 gaming_beatmap_drawlist_index++;
-                gaming_drawlist[i] = gaming_beatmap.objects[gaming_beatmap_drawlist_index];
+                gaming_last_hitobject = gaming_drawlist[i] = gaming_beatmap.objects[gaming_beatmap_drawlist_index];
             }
 
             continue;
@@ -401,7 +483,7 @@ void gaming_render(void)
     }
 
     // draw hit info (300g, 300, 200, 100, 50, MISS)
-    if (gaming_maniahit_texture != NULL && time_total() - gaming_judgement_visible_timer < GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE)
+    if (gaming_maniahit_texture != NULL && (float)time_total() - gaming_judgement_visible_timer < GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE)
         sprite_draw(&gaming_drawinfo.maniahit, gaming_maniahit_texture);
 
     // handle judgement line positioning
@@ -417,13 +499,13 @@ void gaming_render(void)
     gaming_drawinfo.note.width = 30;
     for (int i = 0; i < 4; i++)
     {
-        int key = options.keybinds.m4l1;
+        int key = options.game_keybinds.m4l1;
         if (i == 1)
-            key = options.keybinds.m4l2;
+            key = options.game_keybinds.m4l2;
         else if (i == 2)
-            key = options.keybinds.m4l3;
+            key = options.game_keybinds.m4l3;
         else if (i == 3)
-            key = options.keybinds.m4l4;
+            key = options.game_keybinds.m4l4;
 
         if(button_pressed(key))
         {
@@ -441,10 +523,6 @@ void gaming_render(void)
         return;
     }
 
-    const char* debug_text = stringf("Timing points: %ld\nObjects: %ld\nTime: %2.2f\nDrawlist index: %d\nTiming point (%d|%2.2f|sv: %2.2f)\nNum of: X/meh/ok/gud/grt/pfct/score\n%d|%d|%d|%d|%d|%d|%d",
-                                     gaming_beatmap.timing_point_count, gaming_beatmap.object_count, gaming_time, gaming_beatmap_drawlist_index,
-                                     gaming_current_timing_point.uninherited,
-                                     gaming_current_timing_point.uninherited ? 1.f / gaming_current_timing_point.beatLength * 1000.f * 60.f : -1, sv,
-                                     gaming_score.numMiss, gaming_score.numMeh, gaming_score.numOk, gaming_score.numGood, gaming_score.numGreat, gaming_score.numPerfect, gaming_score.total_score);
+    const char* debug_text = stringf("gaming_judgement_visible_timer: %2.2f", gaming_judgement_visible_timer);
     text_renderer_draw(debug_text, 5, 264, 8);
 }

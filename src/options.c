@@ -19,11 +19,26 @@ options_t options = {
         .enable_debug_log = 1,
         .reserved = 0,
     },
-    .keybinds = {
+    #ifdef __PSP__
+    .game_keybinds = {
         .m4l1 = PSP_CTRL_LEFT,
         .m4l2 = PSP_CTRL_LTRIGGER,
         .m4l3 = PSP_CTRL_RTRIGGER,
         .m4l4 = PSP_CTRL_CIRCLE,
+    },
+    #else
+    .game_keybinds = {
+        .m4l1 = GLFW_KEY_D,
+        .m4l2 = GLFW_KEY_F,
+        .m4l3 = GLFW_KEY_J,
+        .m4l4 = GLFW_KEY_K,
+    },
+    #endif
+    .keybinds = {
+        .confirm = PSP_CTRL_CROSS,
+        .start = PSP_CTRL_START,
+        .select = PSP_CTRL_SELECT,
+        .back = PSP_CTRL_CIRCLE,
     }
 };
 
@@ -48,7 +63,7 @@ void options_load(void)
 
 void options_apply()
 {
-    LOGDEBUG(stringf("Master volume: %2.2f", options.master_volume));
+    LOGDEBUG("Master volume: %2.2f", options.master_volume);
     audio_set_volume(options.master_volume);
     log_enable_debug_messages(options.flags.enable_debug_log);
 }

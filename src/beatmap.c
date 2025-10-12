@@ -191,7 +191,7 @@ void beatmap_parse_general(beatmap_t* map, const char* line)
         memset(map->audio_path, 0, size);
         memcpy(map->audio_path, &line[15], size);
         LOGDEBUG(&line[15]);
-        LOGDEBUG(stringf("0x%16.16x", map->audio_path));
+        LOGDEBUG("0x%16.16x", map->audio_path);
     }
 }
 
@@ -252,7 +252,7 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
     FILE* file = fopen(filepath, "r");
     if (!file)
     {
-        LOGERROR(stringf("could not open beatmap '%s': no such file", filepath));
+        LOGERROR("could not open beatmap '%s': no such file", filepath);
         return;
     }
 

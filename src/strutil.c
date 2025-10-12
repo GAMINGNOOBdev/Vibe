@@ -2,6 +2,19 @@
 #include <strutil.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
+const char* stringf(const char* formatString, ...)
+{
+    static char mFormattingBuffer[4096];
+
+    va_list args;
+    va_start(args, formatString);
+    int result = vsnprintf(mFormattingBuffer, 4096, formatString, args);
+    va_end(args);
+
+    return mFormattingBuffer;
+}
 
 void stringvec_dispose(stringvec_t* vec)
 {

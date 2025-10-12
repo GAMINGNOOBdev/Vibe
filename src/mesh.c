@@ -42,8 +42,8 @@ void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount)
     glGenBuffers(1, &mesh->vbo);
     glGenBuffers(1, &mesh->ibo);
 
-    LOGDEBUG(stringf("VAO,VBO,IBO: %d,%d,%d (0x%16.16x,0x%16.16x,0x%16.16x)",
-        mesh->vao, mesh->vbo, mesh->ibo, mesh->vao, mesh->vbo, mesh->ibo));
+    LOGDEBUG("VAO,VBO,IBO: %d,%d,%d (0x%16.16x,0x%16.16x,0x%16.16x)",
+        mesh->vao, mesh->vbo, mesh->ibo, mesh->vao, mesh->vbo, mesh->ibo);
 
     mesh->vertices = vertexCount;
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
@@ -62,7 +62,7 @@ void mesh_create(mesh_t* mesh, uint32_t vertexCount, uint32_t indexCount)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     #endif
 
-    LOGINFO(stringf("mesh 0x%x created with %u vertices and %u indices", mesh, vertexCount, indexCount));
+    LOGINFO("mesh 0x%x created with %u vertices and %u indices", mesh, vertexCount, indexCount);
 }
 
 void mesh_update(mesh_t* mesh)

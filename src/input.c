@@ -51,19 +51,11 @@ void input_read()
     #endif
 }
 
-
 #ifndef __PSP__
 void input_write(int key, int value)
 {
     inputData[key].state = value;
     inputData[key].pressed_frame = time_total_frames();
-
-    /*LOGDEBUG(stringf("key,value: { '%s' | '%s' (0x%8.8x) }",
-                     get_psp_button_string(key),
-                     (value == GLFW_PRESS) ? "GLFW_PRESS" :
-                     (value == GLFW_REPEAT) ? "GLFW_REPEAT" :
-                     (value == GLFW_RELEASE) ? "GLFW_RELEASE" :
-                     "UNKNOWN"));*/
 }
 #endif
 
@@ -164,7 +156,31 @@ const char* get_psp_button_string(int button)
     if (button == PSP_CTRL_SQUARE)
         return "O";
     #else
-    const char* name = glfwGetKeyName(button, glfwGetKeyScancode(button));
+    if (button == GLFW_KEY_ESCAPE)
+        return "Escape";
+    if (button == GLFW_KEY_ENTER)
+        return "Enter";
+    if (button == GLFW_KEY_SPACE)
+        return "Space";
+    if (button == GLFW_KEY_LEFT_SHIFT)
+        return "LShift";
+    if (button == GLFW_KEY_RIGHT_SHIFT)
+        return "RShift";
+    if (button == GLFW_KEY_LEFT_ALT)
+        return "LAlt";
+    if (button == GLFW_KEY_RIGHT_ALT)
+        return "RAlt";
+    if (button == PSP_CTRL_UP)
+        return "\x18";
+    if (button == PSP_CTRL_RIGHT)
+        return "\x1A";
+    if (button == PSP_CTRL_DOWN)
+        return "\x19";
+    if (button == PSP_CTRL_LEFT)
+        return "\x1B";
+
+    int scancode = glfwGetKeyScancode(button);
+    const char* name = glfwGetKeyName(button, scancode);
     if (name)
         return name;
     #endif

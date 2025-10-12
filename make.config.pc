@@ -1,2 +1,2 @@
-LIBS += -lm -lGL -lSDL2 -lGLEW -lglfw
+LIBS += -lm -lGL -lopenal -lGLEW -lglfw
 CFLAGS += $(addprefix -I,$(INCDIR))

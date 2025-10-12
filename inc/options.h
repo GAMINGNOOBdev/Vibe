@@ -19,7 +19,12 @@ typedef struct
 {
     // mania 4 key lane x
     int m4l1, m4l2, m4l3, m4l4;
-} options_keybinds_t;
+} options_gaming_keybinds_t;
+
+typedef struct
+{
+    int confirm, start, select, back;
+} options_general_keybinds_t;
 
 typedef struct
 {
@@ -28,7 +33,8 @@ typedef struct
     float hitsound_volume;
     uint8_t scroll_speed;
     options_flags_t flags;
-    options_keybinds_t keybinds;
+    options_gaming_keybinds_t game_keybinds;
+    options_general_keybinds_t keybinds;
 } options_t;
 
 extern options_t options;

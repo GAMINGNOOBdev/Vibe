@@ -35,7 +35,7 @@ void song_list_add_entry(songlist_t* vec, const char* value, const char* parent_
         return;
     }
 
-    LOGDEBUG(stringf("value '%s', firstSpace = '%d', firstHyphen = '%d', len = '%ld'(0x%8.8x), artistSz = '%d', songNameSz = '%d'", value, firstSpace, firstHyphen, length, length, artistSize, songnameSize));
+    LOGDEBUG("value '%s', firstSpace = '%d', firstHyphen = '%d', len = '%ld'(0x%8.8x), artistSz = '%d', songNameSz = '%d'", value, firstSpace, firstHyphen, length, length, artistSize, songnameSize);
 
     entry->fullname = malloc(strlen(parent_dir)+length+2);
     memset(entry->fullname, 0, strlen(parent_dir)+length+2);
@@ -56,9 +56,9 @@ void song_list_add_entry(songlist_t* vec, const char* value, const char* parent_
     memcpy(idStr, value, firstSpace);
 
     entry->id = strtoi(idStr);
-    LOGDEBUG(stringf("id: %lld ('%s')", entry->id, idStr));
+    LOGDEBUG("id: %lld ('%s')", entry->id, idStr);
     free(idStr);
-    LOGDEBUG(stringf("artist '%s', songname = '%s', fullname = '%s'", entry->artist, entry->songname, entry->fullname));
+    LOGDEBUG("artist '%s', songname = '%s', fullname = '%s'", entry->artist, entry->songname, entry->fullname);
 
     stringvec_t songs = file_util_get_directory_contents(stringf("%s/%s", parent_dir, value), FilterMaskFiles);
     entry->difficulties.count = 0;

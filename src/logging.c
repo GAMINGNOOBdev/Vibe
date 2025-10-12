@@ -31,7 +31,7 @@ static const char* LOG_LEVEL_STRINGS[] = {
     "[WARNING]\t"
 };
 
-const char* stringf(const char* formatString, ...)
+const char* logstringf(const char* formatString, ...)
 {
     static char mFormattingBuffer[4096];
 
