@@ -343,9 +343,17 @@ void gaming_handle_note_inputs()
             continue;
         column_occupied[column] = 1;
 
-        // if (columns_hit_once[column])
-        //     LOGDEBUG("HIT");
-        //     audio_play_sfx_stream(&gaming_soundinfo.normal_hitnormal);
+        if (columns_hit_once[column])
+        {
+            if (hitnormal)
+                audio_play_sfx_stream(&gaming_soundinfo.normal_hitnormal);
+            if (hitwhistle)
+                audio_play_sfx_stream(&gaming_soundinfo.normal_hitwhistle);
+            if (hitfinish)
+                audio_play_sfx_stream(&gaming_soundinfo.normal_hitfinish);
+            if (hitclap)
+                audio_play_sfx_stream(&gaming_soundinfo.normal_hitclap);
+        }
 
         if (!hitobject.isLN)
         {
