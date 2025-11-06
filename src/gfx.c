@@ -43,6 +43,7 @@ void graphics_end_frame()
 #include <pctypes.h>
 #include <GLFW/glfw3.h>
 #include <sys/stat.h>
+#include <song_list.h>
 
 GLFWwindow* glfwwindow;
 GLuint globalShader;
@@ -151,7 +152,7 @@ void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 void graphicsWindowResizeEvent(GLFWwindow* win, int width, int height)
 {
-    LOGINFO("Resized window???");
+    LOGINFO("Resized window??? %dx%d", width, height);
 }
 
 extern int last_pressed_key;
@@ -194,7 +195,7 @@ void graphicsWindowMouseScrollEvent(GLFWwindow* win, double xScroll, double yScr
 
 void extractZipFileToDest(const char* filepath)
 {
-    mz_zip_archive archive;
+    mz_zip_archive archive = {};
     if (!mz_zip_reader_init_file(&archive, filepath, 0))
     {
         LOGERROR("Unable to extract file '%s'", filepath);
@@ -220,7 +221,7 @@ void extractZipFileToDest(const char* filepath)
         if (!mz_zip_reader_file_stat(&archive, i, &file))
         {
             LOGERROR("Unable to extract file %d", i);
-            continue;
+            break;
         }
 
         if (mz_zip_reader_is_file_a_directory(&archive, i))
@@ -236,6 +237,8 @@ void extractZipFileToDest(const char* filepath)
             LOGERROR("failed to extract file %s", file.m_filename);
         }
     }
+
+    song_list_initialize("Songs");
 }
 
 void graphicsWindowFileDropEvent(GLFWwindow* win, int path_count, const char** paths)
@@ -302,7 +305,7 @@ void graphics_init()
     shaderProjectionID = glGetUniformLocation(globalShader, "u_projection");
     shaderTextureAvailableID = glGetUniformLocation(globalShader, "u_texture_available");
 
-    LOGINFO("Shader IDs{ .projection=%d, .model=%d, .texture=%d }", shaderProjectionID, shaderModelID, shaderTextureID);
+    LOGINFO("Shader IDs{ .projection=%d, .model=%d, .texture=%d, .textureAvailable=%d }", shaderProjectionID, shaderModelID, shaderTextureID, shaderTextureAvailableID);
 }
 
 void graphics_dispose()

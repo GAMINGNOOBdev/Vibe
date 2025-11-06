@@ -8,6 +8,9 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Actual accuracy&scoring&combo gaming
 - Actual results screen
 
+## Known issues
+- Audio engine on PC is borked (very experimental, 100% needs rewrite) ((maybe a custom library perhaps with openal/psp compat...  :3))
+
 ## Work in progress areas of the project
 - Hitsounds
 - Ingame pause menu (perhaps, idk, maybe)

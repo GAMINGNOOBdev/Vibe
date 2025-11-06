@@ -2,6 +2,7 @@
 #include <song_select.h>
 #include <song_list.h>
 #include <main_menu.h>
+#include <time_util.h>
 #include <options.h>
 #include <texture.h>
 #include <strutil.h>
@@ -11,7 +12,6 @@
 #include <sprite.h>
 #include <audio.h>
 #include <input.h>
-#include <time.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else

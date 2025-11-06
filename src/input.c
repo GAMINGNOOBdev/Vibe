@@ -1,4 +1,3 @@
-#include "time.h"
 #ifdef __PSP__
 #include <pspctrl.h>
 #else
@@ -8,6 +7,7 @@
 #include <input.h>
 #include <logging.h>
 #include <callback.h>
+#include <time_util.h>
 
 #ifdef __PSP__
 SceCtrlData mInputData;

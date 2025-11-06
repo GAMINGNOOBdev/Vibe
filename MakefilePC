@@ -13,7 +13,10 @@ OBJS += $(CGLMSRCFILES:.c=.o)
 OBJS += \
 		lib/stb_vorbis.o \
 		libwave/src/wave.o \
-		miniz/miniz.o
+		miniz/miniz.o \
+		miniz/miniz_zip.o \
+		miniz/miniz_tdef.o \
+		miniz/miniz_tinfl.o
 
 CFLAGS = -DTINYWAV_USE_MALLOC -mcmodel=large -g -O0 -ggdb -DMINIZ_NO_TIME
 

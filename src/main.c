@@ -9,6 +9,7 @@
 #include <text_renderer.h>
 #include <song_select.h>
 #include <main_menu.h>
+#include <time_util.h>
 #include <callback.h>
 #include <options.h>
 #include <logging.h>
@@ -16,7 +17,6 @@
 #include <gaming.h>
 #include <audio.h>
 #include <input.h>
-#include <time.h>
 #include <gfx.h>
 #include <app.h>
 

@@ -11,11 +11,11 @@ typedef unsigned char loglevel_t;
 #define LOGLEVEL_ERROR      2
 #define LOGLEVEL_WARNING    3
 
-#define LOG log_msg
-#define LOGINFO(...) log_msg(LOGLEVEL_INFO, logstringf(__VA_ARGS__))
-#define LOGDEBUG(...) log_msg(LOGLEVEL_DEBUG, logstringf(__VA_ARGS__))
-#define LOGERROR(...) log_msg(LOGLEVEL_ERROR, logstringf(__VA_ARGS__))
-#define LOGWARNING(...) log_msg(LOGLEVEL_WARNING, logstringf(__VA_ARGS__))
+#define LOG(level, ...) log_msg(level, logstringf(__VA_ARGS__), __FILE_NAME__, __LINE__)
+#define LOGINFO(...) log_msg(LOGLEVEL_INFO, logstringf(__VA_ARGS__), __FILE_NAME__, __LINE__)
+#define LOGDEBUG(...) log_msg(LOGLEVEL_DEBUG, logstringf(__VA_ARGS__), __FILE_NAME__, __LINE__)
+#define LOGERROR(...) log_msg(LOGLEVEL_ERROR, logstringf(__VA_ARGS__), __FILE_NAME__, __LINE__)
+#define LOGWARNING(...) log_msg(LOGLEVEL_WARNING, logstringf(__VA_ARGS__), __FILE_NAME__, __LINE__)
 
 /**
  * @brief Like printf but for building a string together
@@ -50,7 +50,9 @@ void log_set_stream(FILE* stream);
  * 
  * @param lvl Logging level
  * @param msg Log message
+ * @param file File
+ * @param line Line
  */
-void log_msg(loglevel_t lvl, const char* msg);
+void log_msg(loglevel_t lvl, const char* msg, const char* file, int line);
 
 #endif

@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 
 #define LOG_COLOR_COUNT     5
 #define LOG_COLOR_NONE      "\033[0m"
@@ -25,9 +26,9 @@ static uint8_t logging_debug_messages_enabled = 0;
 static FILE* logging_log_messages_output_stream = NULL;
 
 static const char* LOG_LEVEL_STRINGS[] = {
-    "[INFO]\t\t",
-    "[DEBUG]\t\t",
-    "[ERROR]\t\t",
+    "[ INFO ] \t",
+    "[ DEBUG ]\t",
+    "[ ERROR ]\t",
     "[WARNING]\t"
 };
 
@@ -53,18 +54,21 @@ void log_set_stream(FILE* stream)
     logging_log_messages_output_stream = stream;
 }
 
-void log_msg(loglevel_t lvl, const char* msg)
+void log_msg(loglevel_t lvl, const char* msg, const char* file, int line)
 {
     if (lvl >= LOG_COLOR_COUNT - 1 || msg == NULL) return;
     if (logging_log_messages_output_stream == NULL) return;
     if (!logging_debug_messages_enabled && lvl == LOGLEVEL_DEBUG) return;
 
-    fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
+    time_t local_time = time(NULL);
+    struct tm* tm = localtime(&local_time);
+
+    fprintf(logging_log_messages_output_stream, "[%02d:%02d:%02d] %s(%s:%d): %s\n", tm->tm_hour, tm->tm_min, tm->tm_sec, LOG_LEVEL_STRINGS[lvl], file, line, msg);
 
     #ifndef __PSP__
-    fprintf(stdout, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
+    fprintf(stdout, "[%02d:%02d:%02d] %s(%s:%d): %s\n", tm->tm_hour, tm->tm_min, tm->tm_sec, LOG_LEVEL_STRINGS[lvl], file, line, msg);
     #endif
 
-    if (logging_log_messages_output_stream != stdout || logging_log_messages_output_stream != stderr)
+    if (logging_log_messages_output_stream != stdout && logging_log_messages_output_stream != stderr)
         fflush(logging_log_messages_output_stream);
 }

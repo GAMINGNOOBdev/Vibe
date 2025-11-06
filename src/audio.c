@@ -46,8 +46,9 @@ static const char* alGetErrorString(ALenum error)
     return "AL_UNKNOWN";
 }
 
-#define ALCALL(call, ...) alError = alGetError(); call(__VA_ARGS__); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s:%d: %s: %s", __FILE__, __LINE__, #call, alGetErrorString(alError));}
-#define ALBUFFERDATA(buffer, format, data, size, samplerate) alError = alGetError(); alBufferData(buffer, format, data, size, samplerate); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s:%d: alBufferData( 0x%x, %d, 0x%x, %d, %d ): %s", __FILE__, __LINE__, buffer, format, data, size, samplerate, alGetErrorString(alError));}
+#define ALCALL(call, ...) alError = alGetError(); call(__VA_ARGS__); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("%s: %s", #call, alGetErrorString(alError));}
+#define ALSOURCEUNQUEUEBUFFERS(source, nb, buffers) alError = alGetError(); alSourceUnqueueBuffers(source, nb, buffers); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("alSourceUnqueueBuffers( 0x%x, %d, 0x%x ): %s", source, nb, buffers, alGetErrorString(alError));}
+#define ALBUFFERDATA(buffer, format, data, size, samplerate) alError = alGetError(); alBufferData(buffer, format, data, size, samplerate); if ((alError = alGetError()) != AL_NO_ERROR) {LOGERROR("alBufferData( 0x%x, %d, 0x%x, %d, %d ): %s", buffer, format, data, size, samplerate, alGetErrorString(alError));}
 #endif
 
 ////////////////////////
@@ -438,6 +439,9 @@ void audio_fill_source_data(int index, int numBuffers, ALuint buffers[])
     if (index != 0)
         astream = sfx_audio_streams[index-1];
 
+    if (!astream)
+        return;
+
     if (numBuffers == 0)
         numBuffers = AUDIO_BUFFERS_PER_SOURCE;
 
@@ -453,17 +457,6 @@ void audio_fill_source_data(int index, int numBuffers, ALuint buffers[])
             sfx_audio_callback((void*)stream, frames, (void*)((size_t)index-1));
 
         ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, stream, bytes, astream->freq);
-        if (alError != AL_NO_ERROR)
-        {
-            ALint processed_buffer_count = 0;
-            ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
-            if (processed_buffer_count > 0)
-            {
-                static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-                ALCALL(alSourceUnqueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
-            }
-            break;
-        }
         ALCALL(alSourceQueueBuffers, source, 1, &buffer);
     }
 
@@ -474,6 +467,8 @@ void audio_fill_source_data(int index, int numBuffers, ALuint buffers[])
         ALCALL(alSourcePlay, source);
     }
 }
+
+static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
 #endif
 
 void audio_update_source(int index)
@@ -502,8 +497,8 @@ void audio_update_source(int index)
     if (processed_buffer_count <= 0)
         return;
 
-    static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-    ALCALL(alSourceUnqueueBuffers, source, processed_buffer_count, processed_buffers);
+    memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+    ALSOURCEUNQUEUEBUFFERS(source, processed_buffer_count, processed_buffers);
 
     audio_fill_source_data(index, processed_buffer_count, processed_buffers);
     #endif
@@ -546,8 +541,8 @@ void audio_set_music_stream(audio_stream_t* astream)
     ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
     if (processed_buffer_count > 0)
     {
-        static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-        ALCALL(alSourceUnqueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
+        memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+        ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
     }
     ALCALL(alSourceStop, source);
 
@@ -562,9 +557,6 @@ void audio_set_music_stream(audio_stream_t* astream)
 
 void audio_play_sfx_stream(audio_stream_t* astream)
 {
-    ///FIXME: sfx still cause segfaults
-    return;
-
     for (uint8_t i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
     {
         if (sfx_audio_streams[i] != NULL)
@@ -579,8 +571,9 @@ void audio_play_sfx_stream(audio_stream_t* astream)
         ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
         if (processed_buffer_count > 0)
         {
-            static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-            ALCALL(alSourceUnqueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
+            memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+            ALSOURCEUNQUEUEBUFFERS(source, 1, processed_buffers);
+            return;
         }
         ALCALL(alSourceStop, source);
 

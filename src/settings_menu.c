@@ -1,10 +1,10 @@
 #include <gfx.h>
 #include <app.h>
-#include <time.h>
 #include <audio.h>
 #include <input.h>
 #include <options.h>
 #include <strutil.h>
+#include <time_util.h>
 #include <text_renderer.h>
 #ifdef __PSP__
 #include <gu2gl.h>

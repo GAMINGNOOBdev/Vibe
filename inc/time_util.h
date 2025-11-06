@@ -1,5 +1,5 @@
-#ifndef __TIME_H_
-#define __TIME_H_ 1
+#ifndef __TIME_UTIL_H_
+#define __TIME_UTIL_H_ 1
 
 #include <stdint.h>
 

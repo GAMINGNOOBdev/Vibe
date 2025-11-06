@@ -1,6 +1,6 @@
-#include <time.h>
 #include <memory.h>
 #include <sys/types.h>
+#include <time_util.h>
 
 ///
 /// These defines are for the psprtc.h header file because it requires them
