@@ -37,21 +37,16 @@ You can change these keybinds in the settings.
 The non-modifyable keys are the "shoulder buttons" and the directional buttons (mapped to arrow keys).
 
 ## How to build
-### PSP
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
+> Currently building only works for the psp and linux/macos (no windows support because f*ck microsoft).
 After that just run
 ```bash
 bash compile.sh
 ```
+You should see a `build` folder appear, inside will be a folder called `psp` and a folder called `desktop`.
+Both folders will contain the assets copied over, and should be run from within the build directory.
 > [!NOTE]
-> `compile.sh` clean builds the entire project for the psp
-
-
-### Desktop (linux/mac)
-If you want to build for linux/macos (no windows support because f*ck microsoft) run
-```bash
-make -f MakefilePC
-```
+> `compile.sh` clean builds the entire project
 
 ## How to game
 Set your preferred keybinds, volumes and scroll speed in the settings menu while on the settings screen.
