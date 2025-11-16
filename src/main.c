@@ -30,6 +30,9 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
+#define MINIMP3_IMPLEMENTATION
+#include <minimp3.h>
+#include <minimp3_ex.h>
 
 FILE* logFile;
 
@@ -46,7 +49,7 @@ void app_set_update_callback(app_update_callback_t update)
     if (update_callback == NULL)
         update_callback = empty_update;
 }
-app_update_callback_t app_get_update_callback() { return update_callback; }
+app_update_callback_t app_get_update_callback(void) { return update_callback; }
 
 void app_set_render_callback(app_render_callback_t render)
 {
@@ -55,12 +58,12 @@ void app_set_render_callback(app_render_callback_t render)
     if (render_callback == NULL)
         render_callback = empty_render;
 }
-app_render_callback_t app_get_render_callback() { return render_callback; }
+app_render_callback_t app_get_render_callback(void) { return render_callback; }
 
 #ifndef __PSP__
 #include <pthread.h>
 
-void* audio_thread(void* arg)
+void* audio_thread(void* _)
 {
     while (is_running())
     {
@@ -70,13 +73,13 @@ void* audio_thread(void* arg)
 }
 
 pthread_t audio_thread_id;
-void setup_audio_thread()
+void setup_audio_thread(void)
 {
     pthread_create(&audio_thread_id, NULL, audio_thread, NULL);
 }
 #endif
 
-int main()
+int main(void)
 {
     setup_callbacks();
     remove("game.log");

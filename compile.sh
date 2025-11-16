@@ -14,11 +14,11 @@ cp Songs build/desktop/ -r
 
 cd build/psp
 PSPPREFIX=$(psp-config -d)/bin
-$PSPPREFIX/psp-cmake ../..
+$PSPPREFIX/psp-cmake ../.. -D CMAKE_BUILD_TYPE=Debug
 make -j $(nproc)
 
 cd ../desktop
-cmake ../..
+cmake ../.. -D CMAKE_BUILD_TYPE=Debug
 make -j $(nproc)
 
 cd ../..

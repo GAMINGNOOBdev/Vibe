@@ -1,6 +1,7 @@
 #include <logging.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 
 #define LOG_COLOR_COUNT     5
@@ -67,11 +68,33 @@ static const char* lgprintf(const char* fmt, ...)
     return lgprintfBuffer;
 }
 
+static char mLastLogMessage[4096];
+static char mLastLogMessageRepeats = 0;
 void log_msg(loglevel_t lvl, const char* msg, const char* file, int line)
 {
     if (lvl >= LOG_COLOR_COUNT - 1 || msg == NULL) return;
     if (logging_log_messages_output_stream == NULL) return;
     if (!logging_debug_messages_enabled && lvl == LOGLEVEL_DEBUG) return;
+
+    if (strcmp(mLastLogMessage, msg) == 0)
+    {
+        if (mLastLogMessageRepeats < 4)
+            mLastLogMessageRepeats++;
+        else if (mLastLogMessageRepeats == 4)
+        {
+            LOGINFO("Last message repeated 5 times, skipping repeats...");
+            strcpy(mLastLogMessage, msg);
+            mLastLogMessageRepeats = 5;
+            return;
+        }
+        else
+            return;
+    }
+    else
+    {
+        strcpy(mLastLogMessage, msg);
+        mLastLogMessageRepeats = 0;
+    }
 
     time_t local_time = time(NULL);
     struct tm* tm = localtime(&local_time);

@@ -1,4 +1,4 @@
-#include "logging.h"
+#include <logging.h>
 #include <options.h>
 #include <input.h>
 #include <stdio.h>
@@ -61,7 +61,7 @@ void options_load(void)
     fclose(in);
 }
 
-void options_apply()
+void options_apply(void)
 {
     LOGDEBUG("Master volume: %2.2f", options.master_volume);
     audio_set_volume(options.master_volume);

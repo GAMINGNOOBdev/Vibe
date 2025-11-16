@@ -1,7 +1,6 @@
 #include <audio.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
-#define MINIMP3_IMPLEMENTATION
 #include <minimp3.h>
 #include <minimp3_ex.h>
 
@@ -233,7 +232,7 @@ void audio_stream_dispose(audio_stream_t* astream)
     memset(astream, 0, sizeof(audio_stream_t));
 }
 
-void music_audio_callback(void* buffer, unsigned int length, void* userdata)
+void music_audio_callback(void* buffer, unsigned int length, void* _)
 {
     audio_stream_t* astream = music_audio_stream;
     memset(buffer, 0, sizeof(short) * length * 2);
@@ -262,7 +261,6 @@ void music_audio_callback(void* buffer, unsigned int length, void* userdata)
     else if (astream->format == AUDIO_FORMAT_MP3)
     {
         numFrames *= astream->mp3.info.channels;
-        mp3dec_frame_info_t frameInfo;
         frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
 
         if (astream->volume != 1)
@@ -324,7 +322,6 @@ void sfx_audio_callback(void* buffer, unsigned int length, void* userdata)
     else if (astream->format == AUDIO_FORMAT_MP3)
     {
         numFrames *= astream->mp3.info.channels;
-        mp3dec_frame_info_t frameInfo;
         frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
 
         if (astream->volume != 1)

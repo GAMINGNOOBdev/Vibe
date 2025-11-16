@@ -3,7 +3,6 @@
 
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
-#define MINIMP3_NO_SIMD
 #include <minimp3.h>
 #include <minimp3_ex.h>
 #include <wave.h>

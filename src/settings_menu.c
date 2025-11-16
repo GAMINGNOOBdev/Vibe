@@ -1,6 +1,5 @@
 #include <gfx.h>
 #include <app.h>
-#include <audio.h>
 #include <input.h>
 #include <options.h>
 #include <strutil.h>

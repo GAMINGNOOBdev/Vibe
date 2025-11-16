@@ -10,7 +10,6 @@
 #include <easing.h>
 #include <gaming.h>
 #include <sprite.h>
-#include <audio.h>
 #include <input.h>
 #ifdef __PSP__
 #include <gu2gl.h>
@@ -65,8 +64,6 @@ void switch_to_song_select(void)
     app_set_update_callback(song_select_update);
     app_set_render_callback(song_select_render);
 
-    audio_set_music_stream(NULL);
-
     easing_enable();
     easing_reset_timer();
     easing_set_duration(0.5f);
@@ -103,7 +100,7 @@ void song_select_dispose(void)
     sprite_dispose(&song_select_selector);
 }
 
-void song_select_input_handle(float delta)
+void song_select_input_handle(float _)
 {
     int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start) || button_pressed_once(options.keybinds.select);
     int back = button_pressed_once(options.keybinds.back);

@@ -1,6 +1,5 @@
 #include <gfx.h>
 #include <app.h>
-#include <audio.h>
 #include <input.h>
 #include <strutil.h>
 #include <options.h>
@@ -85,7 +84,7 @@ void main_menu_dispose(void)
     sprite_dispose(&main_menu_background);
 }
 
-void main_menu_input_handle(float delta)
+void main_menu_input_handle(float _)
 {
     if (button_pressed_once(options.keybinds.start))
         switch_to_song_select();

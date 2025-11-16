@@ -200,19 +200,6 @@ void gaming_init(void)
     sprite_create(&gaming_drawinfo.maniahit, (PSP_SCREEN_WIDTH-16)/2.f, PSP_SCREEN_HEIGHT - 48, 16, 16, &gaming_drawinfo.maniahit0_texture);
     sprite_create(&gaming_drawinfo.note, 0, 0, 30, 12.5f, &gaming_drawinfo.note1_texture);
 
-    gaming_soundinfo.drum_hitclap = audio_stream_load("Skin/drum-hitclap.wav");
-    gaming_soundinfo.drum_hitnormal = audio_stream_load("Skin/drum-hitnormal.wav");
-    gaming_soundinfo.drum_hitfinish = audio_stream_load("Skin/drum-hitfinish.wav");
-    gaming_soundinfo.drum_hitwhistle = audio_stream_load("Skin/drum-hitwhistle.wav");
-    gaming_soundinfo.soft_hitclap = audio_stream_load("Skin/soft-hitclap.wav");
-    gaming_soundinfo.soft_hitnormal = audio_stream_load("Skin/soft-hitnormal.wav");
-    gaming_soundinfo.soft_hitfinish = audio_stream_load("Skin/soft-hitfinish.wav");
-    gaming_soundinfo.soft_hitwhistle = audio_stream_load("Skin/soft-hitwhistle.wav");
-    gaming_soundinfo.normal_hitclap = audio_stream_load("Skin/normal-hitclap.wav");
-    gaming_soundinfo.normal_hitnormal = audio_stream_load("Skin/normal-hitnormal.wav");
-    gaming_soundinfo.normal_hitfinish = audio_stream_load("Skin/normal-hitfinish.wav");
-    gaming_soundinfo.normal_hitwhistle = audio_stream_load("Skin/normal-hitwhistle.wav");
-
     gaming_initialized = 1;
 }
 
@@ -220,6 +207,8 @@ void gaming_dispose(void)
 {
     if (!gaming_initialized)
         return;
+
+    gaming_initialized = 0;
 
     texture_dispose(&gaming_drawinfo.judgementline_texture);
     texture_dispose(&gaming_drawinfo.long_note_texture);
@@ -237,22 +226,9 @@ void gaming_dispose(void)
     sprite_dispose(&gaming_drawinfo.long_note);
     sprite_dispose(&gaming_drawinfo.maniahit);
     sprite_dispose(&gaming_drawinfo.note);
-
-    audio_stream_dispose(&gaming_soundinfo.drum_hitclap);
-    audio_stream_dispose(&gaming_soundinfo.drum_hitnormal);
-    audio_stream_dispose(&gaming_soundinfo.drum_hitfinish);
-    audio_stream_dispose(&gaming_soundinfo.drum_hitwhistle);
-    audio_stream_dispose(&gaming_soundinfo.soft_hitclap);
-    audio_stream_dispose(&gaming_soundinfo.soft_hitnormal);
-    audio_stream_dispose(&gaming_soundinfo.soft_hitfinish);
-    audio_stream_dispose(&gaming_soundinfo.soft_hitwhistle);
-    audio_stream_dispose(&gaming_soundinfo.normal_hitclap);
-    audio_stream_dispose(&gaming_soundinfo.normal_hitnormal);
-    audio_stream_dispose(&gaming_soundinfo.normal_hitfinish);
-    audio_stream_dispose(&gaming_soundinfo.normal_hitwhistle);
 }
 
-void gaming_update(float delta)
+void gaming_update(float _)
 {
     if (gaming_show_results_screen)
     {
@@ -285,9 +261,7 @@ void gaming_update(float delta)
     }
 
     if ((button_pressed_once(options.keybinds.select) || button_pressed_once(options.keybinds.back)) && gaming_time > 1000.0f)
-    {
         gaming_audio_end_callback();
-    }
 
     if (button_pressed_once(options.keybinds.start))
     {
@@ -343,17 +317,17 @@ void gaming_handle_note_inputs()
             continue;
         column_occupied[column] = 1;
 
-        if (columns_hit_once[column])
-        {
-            if (hitnormal)
-                audio_play_sfx_stream(&gaming_soundinfo.normal_hitnormal);
-            if (hitwhistle)
-                audio_play_sfx_stream(&gaming_soundinfo.normal_hitwhistle);
-            if (hitfinish)
-                audio_play_sfx_stream(&gaming_soundinfo.normal_hitfinish);
-            if (hitclap)
-                audio_play_sfx_stream(&gaming_soundinfo.normal_hitclap);
-        }
+        // if (columns_hit_once[column])
+        // {
+        //     if (hitnormal)
+        //         audio_play_sfx_stream(&gaming_soundinfo.normal_hitnormal);
+        //     if (hitwhistle)
+        //         audio_play_sfx_stream(&gaming_soundinfo.normal_hitwhistle);
+        //     if (hitfinish)
+        //         audio_play_sfx_stream(&gaming_soundinfo.normal_hitfinish);
+        //     if (hitclap)
+        //         audio_play_sfx_stream(&gaming_soundinfo.normal_hitclap);
+        // }
 
         if (!hitobject.isLN)
         {

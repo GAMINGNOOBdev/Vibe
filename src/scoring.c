@@ -9,7 +9,7 @@ scoring_criteria_t score_criteria = {
     .ok = {.max=127.f, .avg=112.f, .min=97.f, .value=112.f},
     .meh = {.max=151.f, .avg=136.f, .min=121.f, .value=136.f},
     .miss = {.max=188.f, .avg=173.f, .min=158.f, .value=173.f},
-    0
+    .total_objects=0
 };
 score_t* score_object = NULL;
 scoring_judgement_set_callback_t score_judgement_callback = NULL;
