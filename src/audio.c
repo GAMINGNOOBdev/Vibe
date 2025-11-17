@@ -59,19 +59,16 @@ static const char* alGetErrorString(ALenum error)
 typedef struct
 {
     uint8_t initialized;
+    audio_stream_t* music;
+    audio_stream_t* sfx[AUDIO_SFX_STREAMS_MAX];
     #ifndef __PSP__
     ALCdevice* device;
     ALCcontext* context;
-    ALuint sources[AUDIO_STREAMS_MAX];
-    ALuint buffers[AUDIO_STREAMS_MAX][AUDIO_BUFFERS_PER_SOURCE];
-    short data_buffers[AUDIO_STREAMS_MAX][AUDIO_FRAME_SIZE];
     ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
     #endif
 } audio_data_t;
 
-audio_stream_t* sfx_audio_streams[AUDIO_SFX_STREAMS_MAX];
-audio_stream_t* music_audio_stream = NULL;
-audio_data_t audio_data = {0};
+audio_data_t audio_data = {0, NULL, {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}};
 float audio_volume = 1.0f;
 
 ////////////////////////
@@ -160,6 +157,12 @@ audio_stream_t audio_stream_load(const char* path)
     sceKernelDcacheWritebackInvalidateAll();
     #endif
 
+    #ifndef __PSP__
+    ALCALL(alGenSources, 1, &stream.source);
+    ALCALL(alGenBuffers, AUDIO_BUFFERS_PER_SOURCE, stream.buffers);
+    #endif
+
+    stream.playing = 1;
     return stream;
 }
 
@@ -171,9 +174,9 @@ uint8_t audio_stream_is_valid(audio_stream_t* astream)
     return astream->format != AUDIO_FORMAT_INVALID;
 }
 
-void audio_stream_update(audio_stream_t* astream, int index)
+void audio_stream_update(audio_stream_t* astream)
 {
-    if (astream == NULL || !audio_stream_is_valid(astream))
+    if (astream == NULL || !audio_stream_is_valid(astream) || !astream->playing)
         return;
 
     if (astream->processed_frames >= astream->samples)
@@ -181,15 +184,12 @@ void audio_stream_update(audio_stream_t* astream, int index)
         if (astream->end_callback != NULL)
             astream->end_callback();
 
+        astream->playing = 0;
         return;
     }
 
     #ifndef __PSP__
-    ALint source_state = 0;
-    ALuint source = audio_data.sources[index];
-    ALCALL(alGetSourcei, source, AL_SOURCE_STATE, &source_state);
-    astream->playing = source_state == AL_PLAYING;
-
+    ALuint source = astream->source;
     ALint processed_buffer_count = 0;
     ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
     if (processed_buffer_count <= 0)
@@ -200,9 +200,11 @@ void audio_stream_update(audio_stream_t* astream, int index)
 
     for (int i = 0; i < processed_buffer_count; i++)
     {
+        if (astream == NULL || !audio_stream_is_valid(astream) || !astream->playing)
+            return;
         ALuint buffer = audio_data.processed_buffers[i];
-        audio_stream_update_buffer(astream, audio_data.data_buffers[index], AUDIO_FRAME_SIZE);
-        ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[index], AUDIO_FRAME_SIZE, astream->freq);
+        audio_stream_update_buffer(astream, astream->data, AUDIO_FRAME_SIZE);
+        ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, astream->data, AUDIO_FRAME_SIZE, astream->freq);
     }
 
     alSourceQueueBuffers(source, processed_buffer_count, audio_data.processed_buffers);
@@ -213,7 +215,15 @@ void audio_stream_update(audio_stream_t* astream, int index)
 
 void audio_stream_update_buffer(audio_stream_t* astream, void* buffer, int bytes)
 {
+    if (buffer == NULL || bytes == 0)
+        return;
     memset(buffer, 0, bytes);
+
+    if (astream == NULL)
+        return;
+    if (!audio_stream_is_valid(astream))
+        return;
+
     if (astream->processed_frames >= astream->samples)
     {
         if (astream->end_callback != NULL)
@@ -253,6 +263,45 @@ void audio_stream_update_buffer(audio_stream_t* astream, void* buffer, int bytes
     }
 }
 
+void audio_stream_pause(audio_stream_t* astream)
+{
+    if (!astream || !audio_stream_is_valid(astream))
+        return;
+
+    astream->playing = 0;
+    #ifndef __PSP__
+    ALCALL(alSourcePause,astream->source);
+    ALuint source = astream->source;
+    ALint processed_buffer_count = 0;
+    ALint queued_buffer_count = 0;
+    ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+    ALCALL(alGetSourcei, source, AL_BUFFERS_QUEUED, &queued_buffer_count);
+    if (processed_buffer_count > 0)
+    {
+        memset(audio_data.processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+        ALSOURCEUNQUEUEBUFFERS(source, processed_buffer_count, audio_data.processed_buffers);
+    }
+    LOGDEBUG("paused audio with %d processed and %d queued buffers", processed_buffer_count, queued_buffer_count);
+    #endif
+}
+
+void audio_stream_resume(audio_stream_t* astream)
+{
+    if (!astream || !audio_stream_is_valid(astream))
+        return;
+
+    astream->playing = 1;
+    #ifndef __PSP__
+    ALuint source = astream->source;
+    ALint processed_buffer_count = 0;
+    ALint queued_buffer_count = 0;
+    ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+    ALCALL(alGetSourcei, source, AL_BUFFERS_QUEUED, &queued_buffer_count);
+    LOGDEBUG("resuming audio with %d processed and %d queued buffers", processed_buffer_count, queued_buffer_count);
+    ALCALL(alSourcePlay,astream->source);
+    #endif
+}
+
 void audio_stream_seek_start(audio_stream_t* astream)
 {
     if (!astream)
@@ -283,8 +332,25 @@ void audio_stream_dispose(audio_stream_t* astream)
     if (!astream)
         return;
 
-    if (music_audio_stream == astream)
-        music_audio_stream = NULL;
+    astream->playing = 0;
+    #ifndef __PSP__
+    ALCALL(alSourceStop, astream->source);
+    ALint processed_buffer_count = 0;
+    ALCALL(alGetSourcei, astream->source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+    if (processed_buffer_count > 0)
+    {
+        memset(audio_data.processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+        ALSOURCEUNQUEUEBUFFERS(astream->source, processed_buffer_count, audio_data.processed_buffers);
+    }
+    ALCALL(alDeleteBuffers, AUDIO_BUFFERS_PER_SOURCE, astream->buffers);
+    ALCALL(alDeleteSources, 1, &astream->source);
+    #endif
+
+    if (audio_data.music == astream)
+        audio_data.music = NULL;
+    for (int i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
+        if (audio_data.sfx[i] == astream)
+            audio_data.sfx[i] = NULL;
 
     if (astream->format == AUDIO_FORMAT_VORBIS)
         stb_vorbis_close(astream->stream);
@@ -300,15 +366,15 @@ static void psp_audio_fill_buffer_callback(void* buffer, unsigned int samples, v
 {
     uint32_t bytes = sizeof(short) * samples * 2;
     memset(buffer, 0, bytes);
-    int index = (int)userdata;
-    audio_stream_t* astream = music_audio_stream;
-    if (index != 0)
-        astream = sfx_audio_streams[index - 1];
+    audio_stream_t* astream = *(audio_stream_t**)userdata;
     if (astream == NULL)
         return;
 
+    if (!astream->playing)
+        return;
+
     audio_stream_update_buffer(astream, buffer, bytes);
-    audio_stream_update(astream, index);
+    audio_stream_update(astream);
 }
 
 #ifndef __PSP__
@@ -346,8 +412,9 @@ void audio_init(void)
 
     #ifdef __PSP__
     pspAudioInit();
-    for (size_t i = 0; i < AUDIO_STREAMS_MAX; i++)
-        pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)i);
+    pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)&audio_data.music);
+    for (size_t i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
+        pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)&audio_data.sfx[i-1]);
     #else
     audio_data.device = audio_choose_device();
     if (!audio_data.device)
@@ -367,12 +434,6 @@ void audio_init(void)
     };
     ALCALL(alListenerfv, AL_ORIENTATION, listenerOrientation);
 
-    ALCALL(alGenSources, AUDIO_STREAMS_MAX, audio_data.sources);
-    for (int i = 0; i < AUDIO_STREAMS_MAX; i++)
-    {
-        ALuint* bufferptr = audio_data.buffers[i];
-        ALCALL(alGenBuffers, AUDIO_BUFFERS_PER_SOURCE, bufferptr);
-    }
     #endif
     audio_set_volume(1.0f);
 
@@ -383,11 +444,11 @@ void audio_update(void)
 {
     for (int i = 0; i < AUDIO_STREAMS_MAX; i++)
     {
-        audio_stream_t* stream = music_audio_stream;
+        audio_stream_t* stream = audio_data.music;
         if (i != 0)
-            stream = sfx_audio_streams[i-1];
+            stream = audio_data.sfx[i-1];
 
-        audio_stream_update(stream, i);
+        audio_stream_update(stream);
     }
 }
 
@@ -403,7 +464,7 @@ void audio_set_volume(float volume)
     int vol = (int)(volume * (float)PSP_VOLUME_MAX);
     pspAudioSetVolume(0, vol, vol);
     #else
-    ALCALL(alListenerf, AL_GAIN, 1.0f);
+    ALCALL(alListenerf, AL_GAIN, volume);
     #endif
     audio_volume = volume;
 }
@@ -415,45 +476,51 @@ float audio_get_volume(void)
 
 void audio_set_music_stream(audio_stream_t* astream)
 {
-    music_audio_stream = astream;
     #ifndef __PSP__
-    ALuint source = audio_data.sources[0];
-    ALint processed_buffer_count = 0;
-    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
-    if (processed_buffer_count > 0)
+    if (audio_data.music)
     {
-        ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, audio_data.processed_buffers);
+        ALuint source = audio_data.music->source;
+        ALint processed_buffer_count = 0;
+        alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+        if (processed_buffer_count > 0)
+        {
+            ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, audio_data.processed_buffers);
+        }
+        ALCALL(alSourceStop, source);
     }
-    ALCALL(alSourceStop, source);
+    #endif
 
+    audio_data.music = astream;
     if (astream == NULL)
         return;
 
+    #ifndef __PSP__
+    ALuint source = astream->source;
     for (int i = 0; i < AUDIO_BUFFERS_PER_SOURCE; i++)
     {
-        ALuint buffer = audio_data.buffers[0][i];
-        audio_stream_update_buffer(astream, audio_data.data_buffers[0], AUDIO_FRAME_SIZE);
-        ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[0], AUDIO_FRAME_SIZE, astream->freq);
+        ALuint buffer = astream->buffers[i];
+        audio_stream_update_buffer(astream, astream->data, AUDIO_FRAME_SIZE);
+        ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, astream->data, AUDIO_FRAME_SIZE, astream->freq);
     }
 
-    ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, audio_data.buffers[0]);
+    ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, astream->buffers);
 
     alSourcePlay(source);
     #endif
+    astream->playing = 1;
 }
 
 void audio_play_sfx_stream(audio_stream_t* astream)
 {
     for (uint8_t i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
     {
-        if (sfx_audio_streams[i] != NULL)
+        if (audio_data.sfx[i] != NULL)
             continue;
 
         audio_stream_seek_start(astream);
-        sfx_audio_streams[i] = astream;
+        audio_data.sfx[i] = astream;
         #ifndef __PSP__
-        int idx = i + 1;
-        ALuint source = audio_data.sources[idx];
+        ALuint source = astream->source;
         ALint processed_buffer_count = 0;
         alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
         if (processed_buffer_count > 0)
@@ -467,12 +534,12 @@ void audio_play_sfx_stream(audio_stream_t* astream)
 
         for (int j = 0; j < AUDIO_BUFFERS_PER_SOURCE; j++)
         {
-            ALuint buffer = audio_data.buffers[i][j];
-            audio_stream_update_buffer(astream, audio_data.data_buffers[i], AUDIO_FRAME_SIZE);
-            ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[i], AUDIO_FRAME_SIZE, astream->freq);
+            ALuint buffer = astream->buffers[j];
+            audio_stream_update_buffer(astream, astream->data, AUDIO_FRAME_SIZE);
+            ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, astream->data, AUDIO_FRAME_SIZE, astream->freq);
         }
 
-        ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, audio_data.buffers[i]);
+        ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, astream->buffers);
         alSourcePlay(source);
         #endif
 
@@ -486,15 +553,10 @@ void audio_dispose(void)
     if (!audio_data.initialized)
         return;
 
+    LOGINFO("closing audio engine");
     #ifdef __PSP__
     pspAudioEnd();
     #else
-    for (int i = 0; i < AUDIO_STREAMS_MAX; i++)
-    {
-        ALCALL(alDeleteBuffers, AUDIO_BUFFERS_PER_SOURCE, audio_data.buffers[i]);
-    }
-    ALCALL(alDeleteSources, AUDIO_STREAMS_MAX, audio_data.sources);
-
     alcMakeContextCurrent(NULL);
     alcDestroyContext(audio_data.context);
     alcCloseDevice(audio_data.device);

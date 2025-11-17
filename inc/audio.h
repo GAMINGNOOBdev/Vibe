@@ -19,6 +19,15 @@
 #define AUDIO_SFX_STREAMS_MAX 7
 #define AUDIO_BUFFERS_PER_SOURCE 4
 
+#ifdef __PSP__
+#include <pspaudiolib.h>
+#include <pspkernel.h>
+#include <pspaudio.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
+
 typedef void(*audio_end_callback_t)(void);
 
 typedef enum
@@ -48,12 +57,19 @@ typedef struct
 
     audio_format_t format;
     audio_end_callback_t end_callback;
+    #ifndef __PSP__
+    ALuint source;
+    ALuint buffers[AUDIO_BUFFERS_PER_SOURCE];
+    short data[AUDIO_FRAME_SIZE];
+    #endif
 } audio_stream_t;
 
 audio_stream_t audio_stream_load(const char* path);
 uint8_t audio_stream_is_valid(audio_stream_t* astream);
-void audio_stream_update(audio_stream_t* astream, int index);
+void audio_stream_update(audio_stream_t* astream);
 void audio_stream_update_buffer(audio_stream_t* astream, void* buffer, int bytes);
+void audio_stream_pause(audio_stream_t* astream);
+void audio_stream_resume(audio_stream_t* astream);
 void audio_stream_seek_start(audio_stream_t* astream);
 void audio_stream_dispose(audio_stream_t* astream);
 

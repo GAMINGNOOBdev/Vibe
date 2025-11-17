@@ -287,14 +287,19 @@ void gaming_update(float _)
     }
 
     if ((button_pressed_once(options.keybinds.select) || button_pressed_once(options.keybinds.back)) && gaming_time > 1000.0f)
-        gaming_audio_end_callback();
+    {
+        if (gaming_audio_stream.playing)
+            audio_stream_pause(&gaming_audio_stream);
+        else
+            audio_stream_resume(&gaming_audio_stream);
+    }
 
     if (button_pressed_once(options.keybinds.start))
     {
-        switch_to_song_select();
-        audio_set_music_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
+        audio_set_music_stream(NULL);
+        switch_to_song_select();
     }
 }
 

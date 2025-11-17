@@ -191,9 +191,6 @@ void score_calculator_judge_as(scoring_judgement_type_t judgement)
     if (judgement == JudgementMiss)
     {
         score_object->numMiss++;
-        if (score_object->max_combo < score_object->combo)
-            score_object->max_combo = score_object->combo;
-
         score_object->combo = 0;
         score_calculator_calc_score();
         return;
@@ -211,5 +208,8 @@ void score_calculator_judge_as(scoring_judgement_type_t judgement)
         score_object->numPerfect++;
 
     score_object->combo++;
+    if (score_object->max_combo < score_object->combo)
+        score_object->max_combo = score_object->combo;
+
     score_calculator_calc_score();
 }

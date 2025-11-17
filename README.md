@@ -10,9 +10,9 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 
 ## Work in progress areas of the project
 - Ingame pause menu (perhaps, idk, maybe)
-- Combo effecting accuracy and score
 - Replays/Saving scores (and displaying best)
 - Health system
+- Combo effecting accuracy and score
 - Text rendering system improvements (batch rendering perhaps?)
 - Scroll direction change (optional setting) + judgement line
 - Performance optimizations for running the game at default clock speed on psp
