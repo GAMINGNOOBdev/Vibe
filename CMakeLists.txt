@@ -74,8 +74,8 @@ add_compile_definitions(
 
 set(C_STANDARD "99")
 
-set(CMAKE_C_FLAGS_DEBUG "-fsanitize=address -g -ggdb")
-set(CMAKE_C_FLAGS_RELEASE "-fsanitize=address -g")
+set(CMAKE_C_FLAGS_DEBUG "-g -ggdb")
+set(CMAKE_C_FLAGS_RELEASE "-g")
 
 if(PSP)
     add_executable(${PROJECT_NAME} ${project_sources} ${library_sources})

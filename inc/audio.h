@@ -1,3 +1,4 @@
+#include <stdint.h>
 #ifndef __AUDIO_H_
 #define __AUDIO_H_ 1
 
@@ -32,28 +33,28 @@ typedef struct
 {
     float volume;
 
-    int freq;
+    uint32_t freq;
     float length;
     int length_ms;
+    float seconds; // current position in seconds
+    uint8_t playing;
+    uint32_t samples;
     int processed_frames;
-    unsigned int samples;
 
     stb_vorbis* stream;
     stb_vorbis_info info;
     mp3dec_ex_t mp3;
     WaveFile* wav;
 
-    uint8_t ready;
-
     audio_format_t format;
-
     audio_end_callback_t end_callback;
 } audio_stream_t;
 
 audio_stream_t audio_stream_load(const char* path);
 uint8_t audio_stream_is_valid(audio_stream_t* astream);
+void audio_stream_update(audio_stream_t* astream, int index);
+void audio_stream_update_buffer(audio_stream_t* astream, void* buffer, int bytes);
 void audio_stream_seek_start(audio_stream_t* astream);
-float audio_stream_get_position(audio_stream_t* astream);
 void audio_stream_dispose(audio_stream_t* astream);
 
 void audio_init(void);

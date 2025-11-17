@@ -8,22 +8,24 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Actual accuracy&scoring&combo gaming
 - Actual results screen
 
-## Known issues
-- Audio engine on PC is borked (very experimental, 100% needs rewrite) ((maybe a custom library perhaps with openal/psp compat...  :3))
-
 ## Work in progress areas of the project
-- Hitsounds
 - Ingame pause menu (perhaps, idk, maybe)
 - Combo effecting accuracy and score
-- Better emulation fo SV changes in osu!mania
+- Replays/Saving scores (and displaying best)
 - Health system
 - Text rendering system improvements (batch rendering perhaps?)
 - Scroll direction change (optional setting) + judgement line
-- Performance optimizations for running the game at default clock speed
+- Performance optimizations for running the game at default clock speed on psp
+- Better emulation of SV changes in osu!mania
 - Actual hit effects
 - Better LN Skinning
 - Skin system
-- Replays (?)
+
+## Known issues
+- Audio engine on PC is borked (very experimental, 100% needs rewrite) ((maybe a custom library perhaps with openal/psp compat...  :3))
+
+## Cancelled features
+- Hitsounds (cannot get working consistently across psp and desktop, openal causes too many issues for no apparent reason)
 
 ## Default Keybinds
 The default keybinds on the "desktop" version are as follows:

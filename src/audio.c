@@ -65,6 +65,7 @@ typedef struct
     ALuint sources[AUDIO_STREAMS_MAX];
     ALuint buffers[AUDIO_STREAMS_MAX][AUDIO_BUFFERS_PER_SOURCE];
     short data_buffers[AUDIO_STREAMS_MAX][AUDIO_FRAME_SIZE];
+    ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
     #endif
 } audio_data_t;
 
@@ -123,7 +124,7 @@ audio_stream_t audio_stream_load(const char* path)
 
         stream.samples = stream.mp3.samples;
         stream.freq = stream.mp3.info.hz;
-        stream.length = (float)stream.samples / (float)stream.freq;
+        stream.length = (float)stream.samples / (float)stream.freq / 2.0f;
 
         LOGINFO("sample rate: '%d' | channels: '%d' | frame_bytes: '%d' | length: '%f' | samples: '%d'", stream.freq, stream.mp3.info.channels, stream.mp3.info.frame_bytes, stream.length, stream.samples);
 
@@ -170,6 +171,88 @@ uint8_t audio_stream_is_valid(audio_stream_t* astream)
     return astream->format != AUDIO_FORMAT_INVALID;
 }
 
+void audio_stream_update(audio_stream_t* astream, int index)
+{
+    if (astream == NULL || !audio_stream_is_valid(astream))
+        return;
+
+    if (astream->processed_frames >= astream->samples)
+    {
+        if (astream->end_callback != NULL)
+            astream->end_callback();
+
+        return;
+    }
+
+    #ifndef __PSP__
+    ALint source_state = 0;
+    ALuint source = audio_data.sources[index];
+    ALCALL(alGetSourcei, source, AL_SOURCE_STATE, &source_state);
+    astream->playing = source_state == AL_PLAYING;
+
+    ALint processed_buffer_count = 0;
+    ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+    if (processed_buffer_count <= 0)
+        return;
+
+    memset(audio_data.processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
+    ALSOURCEUNQUEUEBUFFERS(source, processed_buffer_count, audio_data.processed_buffers);
+
+    for (int i = 0; i < processed_buffer_count; i++)
+    {
+        ALuint buffer = audio_data.processed_buffers[i];
+        audio_stream_update_buffer(astream, audio_data.data_buffers[index], AUDIO_FRAME_SIZE);
+        ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[index], AUDIO_FRAME_SIZE, astream->freq);
+    }
+
+    alSourceQueueBuffers(source, processed_buffer_count, audio_data.processed_buffers);
+    #endif
+
+    astream->seconds = (float)astream->processed_frames / (float)astream->samples * 1000.f * astream->length;
+}
+
+void audio_stream_update_buffer(audio_stream_t* astream, void* buffer, int bytes)
+{
+    memset(buffer, 0, bytes);
+    if (astream->processed_frames >= astream->samples)
+    {
+        if (astream->end_callback != NULL)
+            astream->end_callback();
+
+        astream->playing = 0;
+        return;
+    }
+
+    int frames = 0;
+    int expectedFrames = bytes / sizeof(short);
+    if (astream->format == AUDIO_FORMAT_VORBIS)
+    {
+        expectedFrames /= astream->info.channels;
+        frames = stb_vorbis_get_samples_short_interleaved(astream->stream, astream->info.channels, (short*)buffer, expectedFrames*sizeof(short));
+    }
+    else if (astream->format == AUDIO_FORMAT_WAV)
+    {
+        expectedFrames /= wave_get_sample_size(astream->wav);
+        frames = wave_read(astream->wav, buffer, expectedFrames);
+    }
+    else if (astream->format == AUDIO_FORMAT_MP3)
+        frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, expectedFrames);
+
+    for (int i = 0; i < expectedFrames; i++)
+        ((short*)buffer)[i] *= astream->volume;
+
+    astream->processed_frames += frames;
+
+    if (frames < expectedFrames)
+    {
+        if(astream->end_callback != NULL)
+            astream->end_callback();
+
+        astream->playing = 0;
+        return;
+    }
+}
+
 void audio_stream_seek_start(audio_stream_t* astream)
 {
     if (!astream)
@@ -192,26 +275,7 @@ void audio_stream_seek_start(audio_stream_t* astream)
     }
     
     astream->processed_frames = 0;
-}
-
-float audio_stream_get_position(audio_stream_t* astream)
-{
-    if (!astream)
-        return 0;
-
-    if (astream->format == AUDIO_FORMAT_INVALID)
-        return 0;
-
-    if (astream->format == AUDIO_FORMAT_VORBIS)
-    {
-        return (float)stb_vorbis_get_sample_offset(astream->stream) / (float)astream->samples * 1000.f * astream->length;
-    }
-    else if (astream->format == AUDIO_FORMAT_MP3)
-    {
-        return (float)astream->processed_frames / (float)astream->samples * 1000.f * astream->length;
-    }
-
-    return (float)astream->processed_frames / (float)astream->samples * 1000.f;
+    astream->seconds = 0;
 }
 
 void audio_stream_dispose(audio_stream_t* astream)
@@ -232,123 +296,19 @@ void audio_stream_dispose(audio_stream_t* astream)
     memset(astream, 0, sizeof(audio_stream_t));
 }
 
-void music_audio_callback(void* buffer, unsigned int length, void* _)
+static void psp_audio_fill_buffer_callback(void* buffer, unsigned int samples, void* userdata)
 {
+    uint32_t bytes = sizeof(short) * samples * 2;
+    memset(buffer, 0, bytes);
+    int index = (int)userdata;
     audio_stream_t* astream = music_audio_stream;
-    memset(buffer, 0, sizeof(short) * length * 2);
-
-    if (!astream)
+    if (index != 0)
+        astream = sfx_audio_streams[index - 1];
+    if (astream == NULL)
         return;
 
-    if (astream->processed_frames >= astream->samples)
-        return;
-
-    int frames = 0;
-    int numFrames = length;
-
-    if (astream->format == AUDIO_FORMAT_VORBIS)
-    {
-        short* buf = (short*)buffer;
-        numFrames *= astream->info.channels;
-        frames = stb_vorbis_get_samples_short_interleaved(astream->stream, astream->info.channels, buf, numFrames);
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                buf[i] *= astream->volume;
-        }
-    }
-    else if (astream->format == AUDIO_FORMAT_MP3)
-    {
-        numFrames *= astream->mp3.info.channels;
-        frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                ((mp3d_sample_t*)buffer)[i] *= astream->volume;
-        }
-    }
-    else if (astream->format == AUDIO_FORMAT_WAV)
-    {
-        frames = wave_read(astream->wav, buffer, numFrames);
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                ((WaveI16*)buffer)[i] *= astream->volume;
-        }
-    }
-
-    astream->processed_frames += frames;
-
-    if (frames < length)
-    {
-        if (astream->end_callback != NULL)
-            astream->end_callback();
-
-        music_audio_stream = NULL;
-        astream->ready = 0;
-    }
-}
-
-void sfx_audio_callback(void* buffer, unsigned int length, void* userdata)
-{
-    size_t stream_index = (size_t)userdata;
-    audio_stream_t* astream = sfx_audio_streams[stream_index];
-    memset(buffer, 0, sizeof(short) * length * 2);
-
-    if (!astream)
-        return;
-
-    if (astream->processed_frames >= astream->samples)
-        return;
-
-    int frames = 0;
-    int numFrames = length;
-
-    if (astream->format == AUDIO_FORMAT_VORBIS)
-    {
-        short* buf = (short*)buffer;
-        numFrames *= astream->info.channels;
-        frames = stb_vorbis_get_samples_short_interleaved(astream->stream, astream->info.channels, buf, numFrames);
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                buf[i] *= astream->volume;
-        }
-    }
-    else if (astream->format == AUDIO_FORMAT_MP3)
-    {
-        numFrames *= astream->mp3.info.channels;
-        frames = mp3dec_ex_read(&astream->mp3, (mp3d_sample_t*)buffer, numFrames) / astream->mp3.info.channels;
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                ((mp3d_sample_t*)buffer)[i] *= astream->volume;
-        }
-    }
-    else if (astream->format == AUDIO_FORMAT_WAV)
-    {
-        frames = wave_read(astream->wav, buffer, numFrames);
-
-        if (astream->volume != 1)
-        {
-            for (int i = 0; i < numFrames; i++)
-                ((WaveI16*)buffer)[i] *= astream->volume;
-        }
-    }
-
-    astream->processed_frames += frames;
-
-    if (frames < length)
-    {
-        sfx_audio_streams[stream_index] = NULL;
-        if (astream->end_callback != NULL)
-            astream->end_callback();
-    }
+    audio_stream_update_buffer(astream, buffer, bytes);
+    audio_stream_update(astream, index);
 }
 
 #ifndef __PSP__
@@ -386,9 +346,8 @@ void audio_init(void)
 
     #ifdef __PSP__
     pspAudioInit();
-    pspAudioSetChannelCallback(0, music_audio_callback, NULL);
-    for (size_t i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
-        pspAudioSetChannelCallback(1 + i, sfx_audio_callback, (void*)i);
+    for (size_t i = 0; i < AUDIO_STREAMS_MAX; i++)
+        pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)i);
     #else
     audio_data.device = audio_choose_device();
     if (!audio_data.device)
@@ -407,7 +366,7 @@ void audio_init(void)
         0, 0, 1, 1, 1, 0
     };
     ALCALL(alListenerfv, AL_ORIENTATION, listenerOrientation);
-    
+
     ALCALL(alGenSources, AUDIO_STREAMS_MAX, audio_data.sources);
     for (int i = 0; i < AUDIO_STREAMS_MAX; i++)
     {
@@ -420,91 +379,16 @@ void audio_init(void)
     audio_data.initialized = 1;
 }
 
-#ifndef __PSP__
-void audio_fill_source_data(int index, int numBuffers, ALuint buffers[])
-{
-    short* stream = audio_data.data_buffers[index];
-    int frames = AUDIO_FRAME_SIZE;
-    int bytes = frames * sizeof(short) * AUDIO_CHANNELS;
-    memset(stream, 0, bytes);
-    ALuint source = audio_data.sources[index];
-
-    audio_stream_t* astream = music_audio_stream;
-    if (!astream)
-        return;
-
-    if (index != 0)
-        astream = sfx_audio_streams[index-1];
-
-    if (!astream)
-        return;
-
-    if (numBuffers == 0)
-        numBuffers = AUDIO_BUFFERS_PER_SOURCE;
-
-    if (buffers == NULL)
-        buffers = audio_data.buffers[index];
-
-    for (int i = 0; i < numBuffers; i++)
-    {
-        ALuint buffer = buffers[i];
-        if (index == 0)
-            music_audio_callback((void*)stream, frames, 0);
-        else
-            sfx_audio_callback((void*)stream, frames, (void*)((size_t)index-1));
-
-        ALBUFFERDATA(buffer, AL_FORMAT_STEREO16, stream, bytes, astream->freq);
-        ALCALL(alSourceQueueBuffers, source, 1, &buffer);
-    }
-
-    ALint source_state = 0;
-    ALCALL(alGetSourcei, source, AL_SOURCE_STATE, &source_state);
-    if (source_state != AL_PLAYING)
-    {
-        ALCALL(alSourcePlay, source);
-    }
-}
-
-static ALuint processed_buffers[AUDIO_BUFFERS_PER_SOURCE];
-#endif
-
-void audio_update_source(int index)
-{
-    if ((index == 0 && music_audio_stream == NULL) || (index != 0 && sfx_audio_streams[index-1] == NULL))
-        return;
-
-    audio_stream_t* astream = music_audio_stream;
-    if (index != 0)
-        astream = sfx_audio_streams[index-1];
-
-    #ifndef __PSP__
-    ALuint source = audio_data.sources[index];
-    ALint source_state = 0;
-    ALCALL(alGetSourcei, source, AL_SOURCE_STATE, &source_state);
-    if (source_state != AL_PLAYING)
-    {
-        if (astream->processed_frames >= astream->samples)
-            return;
-
-        ALCALL(alSourcePlay, source);
-    }
-
-    ALint processed_buffer_count = 0;
-    ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
-    if (processed_buffer_count <= 0)
-        return;
-
-    memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
-    ALSOURCEUNQUEUEBUFFERS(source, processed_buffer_count, processed_buffers);
-
-    audio_fill_source_data(index, processed_buffer_count, processed_buffers);
-    #endif
-}
-
 void audio_update(void)
 {
     for (int i = 0; i < AUDIO_STREAMS_MAX; i++)
-        audio_update_source(i);
+    {
+        audio_stream_t* stream = music_audio_stream;
+        if (i != 0)
+            stream = sfx_audio_streams[i-1];
+
+        audio_stream_update(stream, i);
+    }
 }
 
 void audio_set_volume(float volume)
@@ -535,20 +419,26 @@ void audio_set_music_stream(audio_stream_t* astream)
     #ifndef __PSP__
     ALuint source = audio_data.sources[0];
     ALint processed_buffer_count = 0;
-    ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
     if (processed_buffer_count > 0)
     {
-        memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
-        ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, processed_buffers);
+        ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, audio_data.processed_buffers);
     }
     ALCALL(alSourceStop, source);
 
     if (astream == NULL)
         return;
 
-    audio_fill_source_data(0, 0, NULL);
-    ALCALL(alSourcePlay, source);
+    for (int i = 0; i < AUDIO_BUFFERS_PER_SOURCE; i++)
+    {
+        ALuint buffer = audio_data.buffers[0][i];
+        audio_stream_update_buffer(astream, audio_data.data_buffers[0], AUDIO_FRAME_SIZE);
+        ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[0], AUDIO_FRAME_SIZE, astream->freq);
+    }
 
+    ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, audio_data.buffers[0]);
+
+    alSourcePlay(source);
     #endif
 }
 
@@ -565,20 +455,25 @@ void audio_play_sfx_stream(audio_stream_t* astream)
         int idx = i + 1;
         ALuint source = audio_data.sources[idx];
         ALint processed_buffer_count = 0;
-        ALCALL(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
+        alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed_buffer_count);
         if (processed_buffer_count > 0)
         {
-            memset(processed_buffers, 0, sizeof(ALuint)*AUDIO_BUFFERS_PER_SOURCE);
-            ALSOURCEUNQUEUEBUFFERS(source, 1, processed_buffers);
-            return;
+            ALSOURCEUNQUEUEBUFFERS(source, AUDIO_BUFFERS_PER_SOURCE, audio_data.processed_buffers);
         }
         ALCALL(alSourceStop, source);
 
         if (astream == NULL)
             return;
 
-        audio_fill_source_data(idx, 0, NULL);
-        ALCALL(alSourcePlay, source);
+        for (int j = 0; j < AUDIO_BUFFERS_PER_SOURCE; j++)
+        {
+            ALuint buffer = audio_data.buffers[i][j];
+            audio_stream_update_buffer(astream, audio_data.data_buffers[i], AUDIO_FRAME_SIZE);
+            ALCALL(alBufferData, buffer, AL_FORMAT_STEREO16, audio_data.data_buffers[i], AUDIO_FRAME_SIZE, astream->freq);
+        }
+
+        ALCALL(alSourceQueueBuffers, source, AUDIO_BUFFERS_PER_SOURCE, audio_data.buffers[i]);
+        alSourcePlay(source);
         #endif
 
         return;
