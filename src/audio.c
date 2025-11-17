@@ -412,9 +412,9 @@ void audio_init(void)
 
     #ifdef __PSP__
     pspAudioInit();
-    pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)&audio_data.music);
+    pspAudioSetChannelCallback(0, psp_audio_fill_buffer_callback, (void*)&audio_data.music);
     for (size_t i = 0; i < AUDIO_SFX_STREAMS_MAX; i++)
-        pspAudioSetChannelCallback(i, psp_audio_fill_buffer_callback, (void*)&audio_data.sfx[i-1]);
+        pspAudioSetChannelCallback(1+i, psp_audio_fill_buffer_callback, (void*)&audio_data.sfx[i]);
     #else
     audio_data.device = audio_choose_device();
     if (!audio_data.device)
