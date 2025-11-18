@@ -51,6 +51,7 @@ beatmap_timing_point_t gaming_current_timing_point;
 beatmap_hitobject_t gaming_last_hitobject;
 size_t gaming_timing_point_index;
 float gaming_scroll_speed_current;
+float gaming_beatmap_wait_timer = 0;
 float gaming_scroll_speed_base;
 float gaming_beat_length;
 
@@ -60,6 +61,12 @@ texture_t* gaming_maniahit_texture = NULL;
 score_t gaming_score;
 const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
 float gaming_judgement_visible_timer = 0;
+
+gaming_state_t gaming_state = GAMING_STATE_PAUSED;
+int gaming_pause_menu_selected_option = 0;
+
+const char* gaming_last_beatmap_path = NULL;
+const char* gaming_last_beatmap_folder = NULL;
 
 /////////////////////
 ///               ///
@@ -96,6 +103,8 @@ void gaming_score_judgement_display_callback(scoring_judgement_type_t judgement)
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
 {
+    gaming_last_beatmap_folder = beatmap_folder;
+    gaming_last_beatmap_path = beatmap_path;
     gaming_init();
 
     gaming_show_results_screen = 0;
@@ -114,6 +123,9 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     gaming_audio_stream.end_callback = gaming_audio_end_callback;
     audio_stream_seek_start(&gaming_audio_stream);
     audio_set_music_stream(&gaming_audio_stream);
+    audio_stream_pause(&gaming_audio_stream);
+
+    gaming_state = GAMING_STATE_PAUSED;
 
     gaming_audio_stream.volume = options.music_volume;
 
@@ -173,6 +185,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     score_calculator_set_judgement_callback(gaming_score_judgement_display_callback);
 
     gaming_time = gaming_audio_stream.seconds;
+    gaming_beatmap_wait_timer = 1;
 
     LOGINFO("loaded REAL gaming");
 }
@@ -254,8 +267,47 @@ void gaming_dispose(void)
     // audio_stream_dispose(&gaming_soundinfo.normal_hitwhistle);
 }
 
-void gaming_update(float _)
+void gaming_update(float delta)
 {
+    if (gaming_beatmap_wait_timer > 0 && !gaming_audio_stream.playing)
+        gaming_beatmap_wait_timer -= delta;
+
+    if (gaming_beatmap_wait_timer < 0 && !gaming_audio_stream.playing)
+    {
+        gaming_beatmap_wait_timer = 0;
+        audio_stream_resume(&gaming_audio_stream);
+        gaming_state = GAMING_STATE_PLAYING;
+    }
+
+    if (gaming_state == GAMING_STATE_PAUSED)
+    {
+        int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start);
+
+        if (button_pressed_once(options.keybinds.back))
+            gaming_beatmap_wait_timer = 2;
+
+        if (button_pressed_once(PSP_CTRL_UP) && gaming_pause_menu_selected_option > 0)
+            gaming_pause_menu_selected_option--;
+
+        if (button_pressed_once(PSP_CTRL_DOWN) && gaming_pause_menu_selected_option < 2) // max 3 options
+            gaming_pause_menu_selected_option++;
+
+        if (confirm)
+        {
+            if (gaming_pause_menu_selected_option == 0)
+                gaming_beatmap_wait_timer = 2;
+            else if (gaming_pause_menu_selected_option == 1)
+                switch_to_gaming(gaming_last_beatmap_folder, gaming_last_beatmap_path);
+            else if (gaming_pause_menu_selected_option == 2)
+            {
+                audio_stream_dispose(&gaming_audio_stream);
+                beatmap_dispose(&gaming_beatmap);
+                audio_set_music_stream(NULL);
+                switch_to_song_select();
+            }
+        }
+    }
+
     if (gaming_show_results_screen)
     {
         switch_to_results_screen(&gaming_drawinfo, &gaming_score);
@@ -286,25 +338,19 @@ void gaming_update(float _)
             gaming_show_results_screen = 1;
     }
 
-    if ((button_pressed_once(options.keybinds.select) || button_pressed_once(options.keybinds.back)) && gaming_time > 1000.0f)
+    if ((button_pressed_once(options.keybinds.start) || button_pressed_once(options.keybinds.back)) && gaming_audio_stream.playing)
     {
-        if (gaming_audio_stream.playing)
-            audio_stream_pause(&gaming_audio_stream);
-        else
-            audio_stream_resume(&gaming_audio_stream);
-    }
-
-    if (button_pressed_once(options.keybinds.start))
-    {
-        audio_stream_dispose(&gaming_audio_stream);
-        beatmap_dispose(&gaming_beatmap);
-        audio_set_music_stream(NULL);
-        switch_to_song_select();
+        audio_stream_pause(&gaming_audio_stream);
+        gaming_pause_menu_selected_option = 0;
+        gaming_state = GAMING_STATE_PAUSED;
     }
 }
 
 void gaming_handle_note_inputs()
 {
+    if (gaming_state == GAMING_STATE_PAUSED)
+        return;
+
     uint8_t columns_hit_once[] = {
         0, 0, 0, 0
     };
@@ -428,9 +474,9 @@ void gaming_render(void)
     #endif
 
     if (options.flags.show_fps)
-        text_renderer_draw(stringf("%d combo gaming at %d fps.", gaming_score.combo, time_fps()), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming at %d fps.", gaming_score.combo, time_fps()), 5, 0, 8);
     else
-        text_renderer_draw(stringf("%d combo gaming.", gaming_score.combo), 0, 0, 8);
+        text_renderer_draw(stringf("%d combo gaming.", gaming_score.combo), 5, 0, 8);
 
     if (!gaming_beatmap.is_pure_4k)
         text_renderer_draw("NOT 4K", 192, 0, 8);
@@ -510,7 +556,7 @@ void gaming_render(void)
     sprite_draw(&gaming_drawinfo.note, &gaming_drawinfo.judgementline_texture);
     gaming_drawinfo.note.height = 20;
     gaming_drawinfo.note.width = 30;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4 && gaming_state == GAMING_STATE_PLAYING; i++)
     {
         int key = options.game_keybinds.m4l1;
         if (i == 1)
@@ -528,6 +574,14 @@ void gaming_render(void)
         }
     }
     gaming_drawinfo.note.height = old_height;
+
+    if (!gaming_audio_stream.playing && gaming_beatmap_wait_timer > 0)
+        text_renderer_draw(stringf("resuming in %f", gaming_beatmap_wait_timer), 10, 64, 8);
+    else if (!gaming_audio_stream.playing)
+    {
+        text_renderer_draw("paused\nresume\nrestart\nexit", 10, 136, 8);
+        text_renderer_draw_color(">", 5, 128 - gaming_pause_menu_selected_option*8, 8, 0xFF0000FF);
+    }
 
     if (!options.flags.show_debug_info)
     {

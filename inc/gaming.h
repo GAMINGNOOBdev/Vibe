@@ -5,6 +5,10 @@
 #include <sprite.h>
 #include <audio.h>
 
+#define GAMING_STATE_PAUSED (gaming_state_t)0
+#define GAMING_STATE_PLAYING (gaming_state_t)1
+typedef int gaming_state_t;
+
 typedef struct
 {
     texture_t judgementline_texture;

@@ -7,9 +7,9 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Scroll velocity application
 - Actual accuracy&scoring&combo gaming
 - Actual results screen
+- Ingame pause menu
 
 ## Work in progress areas of the project
-- Ingame pause menu (perhaps, idk, maybe)
 - Replays/Saving scores (and displaying best)
 - Health system
 - Combo effecting accuracy and score
@@ -22,7 +22,7 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Skin system
 
 ## Known issues
-- Audio engine on PC is borked (very experimental, 100% needs rewrite) ((maybe a custom library perhaps with openal/psp compat...  :3))
+- Audio engine on PC is borked for hitsounds, psp likely too. No real fix found so far (i tried :/)
 
 ## Cancelled features
 - Hitsounds (cannot get working consistently across psp and desktop, openal causes too many issues for no apparent reason)
