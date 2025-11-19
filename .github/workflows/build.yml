@@ -7,6 +7,14 @@ on:
       branches: [ "main" ]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update packages
+      run: sudo apt-get update
+    - name: Install packages
+      run: sudo apt-get install --fix-missing libgl1-mesa-dev
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -53,6 +61,11 @@ jobs:
       shell: bash
       run: |
         git submodule update --init --recursive
+    - name: Update packages
+      if: runner.os == ''
+      run: sudo apt-get update
+    - name: Install packages
+      run: sudo apt-get install --fix-missing libgl1-mesa-dev
     - name: Configure CMake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
