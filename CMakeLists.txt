@@ -159,13 +159,23 @@ else()
     add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${linux_library_sources})
     add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        ${OPENGL_LIBRARIES}
-        libglew_static
-        alsoft.common
-        OpenAL
-        glfw
-        m
-    )
+    if (UNIX)
+        target_link_libraries(${PROJECT_NAME} PRIVATE
+            ${OPENGL_LIBRARIES}
+            libglew_static
+            alsoft.common
+            OpenAL
+            glfw
+            m
+        )
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE
+            ${OPENGL_LIBRARIES}
+            libglew_static
+            alsoft.common
+            OpenAL
+            glfw
+        )
+    endif()
 
 endif()
