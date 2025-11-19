@@ -15,7 +15,6 @@
 
 #include <logging.h>
 #include <strutil.h>
-#include <malloc.h>
 #include <memory.h>
 
 ////////////////////////////////
