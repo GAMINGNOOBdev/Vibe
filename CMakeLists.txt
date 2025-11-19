@@ -16,7 +16,6 @@ add_compile_definitions(__MONTH__=${MONTH})
 add_compile_definitions(__DAY__=${DAY})
 
 if(NOT PSP)
-    find_package(OpenGL REQUIRED)
     find_package(GLEW REQUIRED)
 
     # glfw options
@@ -33,15 +32,20 @@ if(NOT PSP)
     set(ALSOFT_INSTALL_EXAMPLES off)
     set(ALSOFT_INSTALL_HRTF_DATA off)
     set(ALSOFT_INSTALL_AMBDEC_PRESETS off)
+    #glew options
+    set(glew-cmake_BUILD_SHARED off)
+    set(ONLY_LIBS on)
 
     set(os_specific_includes
         ${OPENGL_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
         openal-soft/include
         glfw/include
+        glew/include
     )
 
     add_subdirectory(openal-soft)
+    add_subdirectory(glew-cmake)
     add_subdirectory(glfw)
 
 else()
@@ -56,7 +60,7 @@ include_directories(
     miniz
     minimp3
     libwave/include
-    ${OPENGL_INCLUDE_DIRS}
+    ${os_specific_includes}
 )
 
 set(library_sources
@@ -159,10 +163,9 @@ else()
     add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
+        libglew_static
         alsoft.common
         OpenAL
-        ${GLEW_LIBRARIES}
-        ${OPENGL_LIBRARIES}
         glfw
         m
     )

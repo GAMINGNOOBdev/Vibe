@@ -19,3 +19,6 @@
 [submodule "openal-soft"]
 	path = openal-soft
 	url = https://github.com/kcat/openal-soft
+[submodule "glew-cmake"]
+	path = glew-cmake
+	url = https://github.com/Perlmint/glew-cmake
