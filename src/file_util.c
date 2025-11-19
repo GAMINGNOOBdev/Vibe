@@ -264,7 +264,7 @@ void file_util_create_directory(const char* path)
 #ifdef _WIN32
     _mkdir(path);
 #else
-    mkdir(path, 0700);
+    mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
 }
 

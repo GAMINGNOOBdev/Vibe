@@ -34,9 +34,10 @@ if(NOT PSP)
     set(glew-cmake_BUILD_SHARED off)
     set(ONLY_LIBS on)
 
+    find_package(OpenGL REQUIRED)
+
     set(os_specific_includes
         ${OPENGL_INCLUDE_DIRS}
-        ${GLEW_INCLUDE_DIRS}
         openal-soft/include
         glfw/include
         glew/include
@@ -155,12 +156,11 @@ if(PSP)
 
 else()
 
-    find_package( OpenGL REQUIRED )
-
     add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${linux_library_sources})
     add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${OPENGL_LIBRARIES}
         libglew_static
         alsoft.common
         OpenAL

@@ -215,8 +215,7 @@ void extractZipFileToDest(const char* filepath)
     strncpy(&outputdir[strlen("Songs/")], dir, strlen(dir) - 2);
     LOGERROR("outputdir: '%s'", outputdir);
 
-    const int mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
-    mkdir(outputdir, mode);
+    file_util_create_directory(outputdir);
 
     int file_count = mz_zip_reader_get_num_files(&archive);
     for (int i = 0; i < file_count; i++)
@@ -231,7 +230,7 @@ void extractZipFileToDest(const char* filepath)
         if (mz_zip_reader_is_file_a_directory(&archive, i))
         {
             LOGINFO("DIRECTORY '%s/%s'", outputdir, file.m_filename);
-            mkdir(stringf("%s/%s", outputdir, file.m_filename), mode);
+            file_util_create_directory(stringf("%s/%s", outputdir, file.m_filename));
             continue;
         }
 
