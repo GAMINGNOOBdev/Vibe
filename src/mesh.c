@@ -1,7 +1,6 @@
 #include <mesh.h>
 #include <memory.h>
 #include <stdlib.h>
-#include <malloc.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else

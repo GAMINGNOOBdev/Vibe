@@ -14,7 +14,6 @@
 #include <callback.h>
 #include <options.h>
 #include <logging.h>
-#include <malloc.h>
 #include <gaming.h>
 #include <audio.h>
 #include <input.h>
@@ -61,7 +60,26 @@ void app_set_render_callback(app_render_callback_t render)
 }
 app_render_callback_t app_get_render_callback(void) { return render_callback; }
 
-#ifndef __PSP__
+#ifdef __PSP__
+#elif defined(_WIN32)
+#include <windows.h>
+
+DWORD WINAPI audio_thread(LPVOID _)
+{
+    while (is_running())
+    {
+        audio_update();
+    }
+    return 0;
+}
+
+HANDLE audio_thread_handle;
+DWORD audio_thread_id;
+void setup_audio_thread(void)
+{
+    audio_thread_handle = CreateThread(NULL, 0, audio_thread, NULL, 0, &audio_thread_id);
+}
+#else
 #include <pthread.h>
 
 void* audio_thread(void* _)
@@ -133,7 +151,10 @@ int main(void)
     gaming_dispose();
     results_screen_dispose();
 
-    #ifndef __PSP__
+    #ifdef __PSP__
+    #elif defined(_WIN32)
+    CloseHandle(audio_thread_handle);
+    #else
     pthread_join(audio_thread_id, NULL);
     #endif
 

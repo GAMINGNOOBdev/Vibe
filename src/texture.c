@@ -7,7 +7,7 @@
 #include <stb_image.h>
 #include <logging.h>
 #include <memory.h>
-#include <malloc.h>
+#include <stdlib.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else

@@ -2,8 +2,8 @@
 #include <logging.h>
 #include <strutil.h>
 #include <memory.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <stdio.h>
 
 #ifdef _WIN32

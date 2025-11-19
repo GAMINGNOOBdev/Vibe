@@ -12,7 +12,8 @@
 #include <gfx.h>
 #include <pctypes.h>
 #endif
-#include <malloc.h>
+#include <stdlib.h>
+#include <memory.h>
 
 void print_vertex(vertex_t vert)
 {

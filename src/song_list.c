@@ -3,7 +3,8 @@
 #include <logging.h>
 #include <strutil.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
+#include <memory.h>
 #include <stdio.h>
 
 #ifdef __PSP__
