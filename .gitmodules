@@ -13,3 +13,9 @@
 [submodule "miniz"]
 	path = miniz
 	url = https://github.com/richgel999/miniz.git
+[submodule "glfw"]
+	path = glfw
+	url = https://github.com/glfw/glfw
+[submodule "openal-soft"]
+	path = openal-soft
+	url = https://github.com/kcat/openal-soft

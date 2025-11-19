@@ -15,6 +15,39 @@ add_compile_definitions(__YEAR__=${YEAR})
 add_compile_definitions(__MONTH__=${MONTH})
 add_compile_definitions(__DAY__=${DAY})
 
+if(NOT PSP)
+    find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
+
+    # glfw options
+    set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
+    set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+    # OpenAL Options
+    set(LIBTYPE STATIC)
+    set(ALSOFT_UTILS off)
+    set(ALSOFT_RTKIT off)
+    set(ALSOFT_INSTALL off)
+    set(ALSOFT_EXAMPLES off)
+    set(ALSOFT_INSTALL_UTILS off)
+    set(ALSOFT_INSTALL_CONFIG off)
+    set(ALSOFT_INSTALL_EXAMPLES off)
+    set(ALSOFT_INSTALL_HRTF_DATA off)
+    set(ALSOFT_INSTALL_AMBDEC_PRESETS off)
+
+    set(os_specific_includes
+        ${OPENGL_INCLUDE_DIRS}
+        ${GLEW_INCLUDE_DIRS}
+        openal-soft/include
+        glfw/include
+    )
+
+    add_subdirectory(openal-soft)
+    add_subdirectory(glfw)
+
+else()
+    set(os_specific_includes)
+endif()
+
 include_directories(
     inc
     lib
@@ -23,6 +56,7 @@ include_directories(
     miniz
     minimp3
     libwave/include
+    ${OPENGL_INCLUDE_DIRS}
 )
 
 set(library_sources
@@ -82,8 +116,10 @@ add_custom_target(copy_skin
 
 set(C_STANDARD "99")
 
-set(CMAKE_C_FLAGS_DEBUG "-g -ggdb")
-set(CMAKE_C_FLAGS_RELEASE "-g")
+if (UNIX)
+    set(CMAKE_C_FLAGS_DEBUG "-g -ggdb")
+    set(CMAKE_C_FLAGS_RELEASE "-g")
+endif()
 
 if(PSP)
     add_executable(${PROJECT_NAME} ${project_sources} ${library_sources})
@@ -117,14 +153,17 @@ if(PSP)
 
 else()
 
+    find_package( OpenGL REQUIRED )
+
     add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${linux_library_sources})
     add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        openal
-        GLEW
+        alsoft.common
+        OpenAL
+        ${GLEW_LIBRARIES}
+        ${OPENGL_LIBRARIES}
         glfw
-        GL
         m
     )
 
