@@ -16,8 +16,6 @@ add_compile_definitions(__MONTH__=${MONTH})
 add_compile_definitions(__DAY__=${DAY})
 
 if(NOT PSP)
-    find_package(GLEW REQUIRED)
-
     # glfw options
     set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
     set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
