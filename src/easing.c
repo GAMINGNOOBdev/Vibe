@@ -1,6 +1,10 @@
 #include <logging.h>
 #include <easing.h>
 #include <stdint.h>
+#ifdef _WIN32
+// billy gates can suck on this pi >:3
+# define M_PI 3.14159265358979323846
+#endif
 #include <math.h>
 
 uint8_t easing_enabled = 0;
