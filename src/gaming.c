@@ -18,7 +18,6 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
-#include <GL/gl.h>
 #include <pctypes.h>
 #include <cglm/cglm.h>
 #endif

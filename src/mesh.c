@@ -6,7 +6,6 @@
 #include <gu2gl.h>
 #else
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <pctypes.h>
 #endif
 #include <logging.h>

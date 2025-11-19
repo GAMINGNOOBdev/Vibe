@@ -4,7 +4,6 @@
 #include <gu2gl.h>
 #else
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <input.h>
 #include <memory.h>
 #include <pctypes.h>
