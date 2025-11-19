@@ -37,6 +37,7 @@ typedef enum
 {
     beatmapSectionNone,
     beatmapSectionGeneral,
+    beatmapSectionMetadata,
     beatmapSectionDifficulty,
     beatmapSectionTimingPoints,
     beatmapSectionHitObjects,
@@ -47,6 +48,8 @@ typedef struct
     float ar, od, hp;
     float slider_tickrate;
     float slider_multiplier;
+    uint64_t set_id;
+    uint64_t id;
 
     uint8_t is_pure_4k;
 

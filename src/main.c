@@ -1,3 +1,4 @@
+#include "file_util.h"
 #ifdef __PSP__
 #include <pspdisplay.h>
 #include <pspkernel.h>
@@ -88,6 +89,11 @@ int main(void)
     log_enable_debug_messages(1);
 
     options_load();
+
+    if (!file_util_directory_exists("Replays"))
+        file_util_create_directory("Replays");
+    if (!file_util_directory_exists("Songs"))
+        file_util_create_directory("Songs");
 
     audio_init();
     graphics_init();

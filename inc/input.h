@@ -14,6 +14,21 @@
 void input_enable(int mode);
 
 /**
+ * @brief Lock inputs (used for replays)
+ * 
+ * @param value true/1 if locked, false/0 if not
+ */
+void input_lock(uint8_t value);
+
+/**
+ * @brief Send a custom button input
+ * 
+ * @param action Button action
+ * @param button Button
+ */
+void input_send_button(uint8_t action, int button);
+
+/**
  * @brief Read the input buffer
  */
 void input_read();

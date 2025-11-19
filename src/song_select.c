@@ -102,7 +102,7 @@ void song_select_dispose(void)
 
 void song_select_input_handle(float _)
 {
-    int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start) || button_pressed_once(options.keybinds.select);
+    int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start);
     int back = button_pressed_once(options.keybinds.back);
     int down = button_pressed_once(PSP_CTRL_DOWN);
     int up = button_pressed_once(PSP_CTRL_UP);

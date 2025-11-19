@@ -156,8 +156,12 @@ void graphicsWindowResizeEvent(GLFWwindow* win, int width, int height)
 }
 
 extern int last_pressed_key;
+extern uint8_t input_locked;
 void graphicsWindowKeyboardEvent(GLFWwindow* win, int key, int scancode, int action, int _)
 {
+    if (input_locked)
+        return;
+
     last_pressed_key = -1;
     if (action == GLFW_PRESS)
         last_pressed_key = key;

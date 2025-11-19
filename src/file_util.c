@@ -1,11 +1,18 @@
 #include <file_util.h>
 #include <logging.h>
 #include <strutil.h>
-#include <dirent.h>
 #include <memory.h>
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
+
+#ifdef _WIN32
+#   include <windows.h>
+#   include <stdlib.h>
+#else
+#   include <dirent.h>
+#   include <sys/stat.h>
+#endif
 
 #define MAX_OF(a, b) a > b ? a : b
 
@@ -66,6 +73,83 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
 {
     stringvec_t result;
     stringvec_initialize(result);
+
+#if _WIN32
+    WIN32_FIND_DATAA fdFile;
+    HANDLE hFind = NULL;
+
+    if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
+    {
+        return result;
+    }
+
+    do
+    {
+        if (fdFile.cFileName[0] == '.')
+            continue;
+        const char* filename = (const char*)fdFile.cFileName;
+
+        if (mask == FilterMaskAllFilesAndFolders)
+        {
+            if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                stringvec_t subResult = file_util_get_directory_contents(stringf("%s/%s", path, filename), mask);
+                if (subResult.start != NULL)
+                    fileUtilConcatPathVectors(&result, &subdir_result, stringf("%s/", filename));
+
+                stringvec_dispose(&subResult);
+            }
+
+            stringvec_push_back(&result, filename);
+            continue;
+        }
+
+        if (mask == FilterMaskFilesAndFolders)
+        {
+            stringvec_push_back(&result, filename);
+            continue;
+        }
+
+        if (mask == FilterMaskFiles && !(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            stringvec_push_back(&result, filename);
+            continue;
+        }
+
+        if (mask == FilterMaskFolders && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            stringvec_push_back(&result, filename);
+            continue;
+        }
+
+        if (mask == FilterMaskAllFiles)
+        {
+            if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                stringvec_t subResult = file_util_get_directory_contents(stringf("%s/%s", path, filename), mask);
+                if (subResult.start != NULL)
+                    fileUtilConcatPathVectors(&result, &subdir_result, stringf("%s/", filename));
+
+                stringvec_dispose(&subResult);
+            }
+            else
+                stringvec_push_back(&result, entry->d_name);
+        }
+
+        if (mask == FilterMaskAllFolders && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            stringvec_t subResult = file_util_get_directory_contents(stringf("%s/%s", path, filename), mask);
+            if (subResult.start != NULL)
+                fileUtilConcatPathVectors(&result, &subResult, stringf("%s/", filename));
+
+            stringvec_push_back(&result, filename);
+            stringvec_dispose(&subResult);
+        }
+    }
+    while (FindNextFileA(hFind, &fdFile));
+
+    FindClose(hFind);
+#else
     DIR* directory = opendir(path);
     if (directory == NULL)
     {
@@ -88,7 +172,7 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
                 stringvec_t subResult = file_util_get_directory_contents(stringf("%s/%s", path, entry->d_name), mask);
                 if (subResult.start != NULL)
                     fileUtilConcatPathVectors(&result, &subResult, stringf("%s/", entry->d_name));
-                
+
                 stringvec_dispose(&subResult);
             }
 
@@ -121,12 +205,12 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
                 stringvec_t subResult = file_util_get_directory_contents(stringf("%s/%s", path, entry->d_name), mask);
                 if (subResult.start != NULL)
                     fileUtilConcatPathVectors(&result, &subResult, stringf("%s/", entry->d_name));
-                
+
                 stringvec_dispose(&subResult);
             }
             else
                 stringvec_push_back(&result, entry->d_name);
-            
+
             continue;
         }
 
@@ -139,6 +223,7 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
                     fileUtilConcatPathVectors(&result, &subResult, stringf("%s/", entry->d_name));
 
                 stringvec_push_back(&result, entry->d_name);
+                stringvec_dispose(&subResult);
             }
 
             continue;
@@ -146,8 +231,41 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
     }
 
     closedir(directory);
+    #endif
 
     return result;
+}
+
+uint8_t file_util_directory_exists(const char* path)
+{
+    #ifndef _WIN32
+    DIR* directory = opendir(path);
+    if (directory == NULL)
+        return 0;
+
+    closedir(directory);
+    return 1;
+    #else
+    WIN32_FIND_DATAA fdFile;
+    HANDLE hFind = NULL;
+
+    if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
+    {
+        free(path);
+        return 0;
+    }
+
+    FindClose(hFind);
+    #endif
+}
+
+void file_util_create_directory(const char* path)
+{
+#ifdef _WIN32
+    _mkdir(path);
+#else
+    mkdir(path, 0700);
+#endif
 }
 
 const char* file_util_get_file_name(const char* str)

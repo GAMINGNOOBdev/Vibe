@@ -9,6 +9,7 @@
 #include <callback.h>
 #include <time_util.h>
 
+uint8_t input_locked = 0;
 #ifdef __PSP__
 SceCtrlData mInputData;
 SceCtrlData mInputLastData;
@@ -36,8 +37,31 @@ void input_enable(int mode)
     #endif
 }
 
+void input_lock(uint8_t value)
+{
+    input_locked = value;
+}
+
+void input_send_button(uint8_t action, int button)
+{
+    #ifdef __PSP__
+    mInputLastData = mInputData;
+    if (action)
+        mInputData.Buttons |= button;
+    else
+        mInputData.Buttons &= ~button;
+    #else
+    if (action == 1)
+        last_pressed_key = button;
+    input_write(button, action);
+    #endif
+}
+
 void input_read()
 {
+    if (input_locked)
+        return;
+
     #ifdef __PSP__
     mInputLastData = mInputData;
     sceCtrlReadBufferPositive(&mInputData,1);
@@ -144,9 +168,9 @@ const char* get_psp_button_string(int button)
     if (button == PSP_CTRL_LEFT)
         return "\x1B";
     if (button == PSP_CTRL_LTRIGGER)
-        return "L";
+        return "\x1BL";
     if (button == PSP_CTRL_RTRIGGER)
-        return "R";
+        return "R\x1A";
     if (button == PSP_CTRL_TRIANGLE)
         return "\x1E";
     if (button == PSP_CTRL_CIRCLE)

@@ -195,6 +195,14 @@ void beatmap_parse_general(beatmap_t* map, const char* line)
     }
 }
 
+void beatmap_parse_metadata(beatmap_t* map, const char* line)
+{
+    if (strncmp(line, "BeatmapID:", 10) == 0)
+        sscanf(&line[10], "%lu", &map->id);
+    else if (strncmp(line, "BeatmapSetID:", 13) == 0)
+        sscanf(&line[13], "%lu", &map->set_id);
+}
+
 void beatmap_parse_difficulty(beatmap_t* map, const char* line)
 {
     if (strncmp(line, "HPDrainRate:", 12) == 0)
@@ -296,6 +304,11 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
                 section = beatmapSectionTimingPoints;
                 continue;
             }
+            else if (strcmp(line, "[Metadata]") == 0)
+            {
+                section = beatmapSectionMetadata;
+                continue;
+            }
             else if (strcmp(line, "[HitObjects]") == 0)
             {
                 section = beatmapSectionHitObjects;
@@ -310,6 +323,8 @@ void beatmap_parse(beatmap_t* map, const char* filepath)
 
         if (section == beatmapSectionGeneral)
             beatmap_parse_general(map, line);
+        else if (section == beatmapSectionMetadata)
+            beatmap_parse_metadata(map, line);
         else if (section == beatmapSectionDifficulty)
             beatmap_parse_difficulty(map, line);
         else if (section == beatmapSectionTimingPoints)

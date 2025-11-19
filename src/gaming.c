@@ -11,6 +11,7 @@
 #include <easing.h>
 #include <gaming.h>
 #include <sprite.h>
+#include <replay.h>
 #include <memory.h>
 #include <audio.h>
 #include <input.h>
@@ -33,7 +34,7 @@
 ///          ///
 ////////////////
 
-beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
+beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
 uint8_t gaming_reached_end_of_beatmap = 0;
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
@@ -59,6 +60,7 @@ gaming_drawinfo_t gaming_drawinfo;
 texture_t* gaming_maniahit_texture = NULL;
 
 score_t gaming_score;
+replay_t gaming_replay;
 const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
 float gaming_judgement_visible_timer = 0;
 
@@ -183,6 +185,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     score_calculator_set_difficulty(gaming_beatmap.od);
     score_calculator_set_total_objects(gaming_beatmap.hit_count);
     score_calculator_set_judgement_callback(gaming_score_judgement_display_callback);
+    replay_clear(&gaming_replay);
 
     gaming_time = gaming_audio_stream.seconds;
     gaming_beatmap_wait_timer = 1;
@@ -195,6 +198,8 @@ void gaming_init(void)
 {
     if (gaming_initialized)
         return;
+
+    replay_initialize(&gaming_replay);
 
     texture_load(&gaming_drawinfo.judgementline_texture, "Skin/mania-stage-hint.png", GL_TRUE, GL_TRUE);
     texture_load(&gaming_drawinfo.lanehit_texture, "Skin/mania-lanehit.png", GL_TRUE, GL_TRUE);
@@ -235,6 +240,8 @@ void gaming_dispose(void)
         return;
 
     gaming_initialized = 0;
+
+    replay_dispose(&gaming_replay);
 
     texture_dispose(&gaming_drawinfo.judgementline_texture);
     texture_dispose(&gaming_drawinfo.long_note_texture);
@@ -310,7 +317,7 @@ void gaming_update(float delta)
 
     if (gaming_show_results_screen)
     {
-        switch_to_results_screen(&gaming_drawinfo, &gaming_score);
+        switch_to_results_screen(&gaming_drawinfo, &gaming_score, &gaming_replay, gaming_beatmap.set_id, gaming_beatmap.id);
         audio_set_music_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
@@ -350,6 +357,8 @@ void gaming_handle_note_inputs()
 {
     if (gaming_state == GAMING_STATE_PAUSED)
         return;
+
+    replay_record_inputs(&gaming_replay, gaming_time);
 
     uint8_t columns_hit_once[] = {
         0, 0, 0, 0

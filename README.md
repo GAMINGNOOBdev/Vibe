@@ -8,11 +8,14 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Actual accuracy&scoring&combo gaming
 - Actual results screen
 - Ingame pause menu
+- Replay and score saving
 
 ## Work in progress areas of the project
-- Replays/Saving scores (and displaying best)
+- Displaying replays and scores (displaying options when pressing select on beatmap mayhaps?)
 - Health system
+- Beatmap Search?
 - Combo effecting accuracy and score
+- Star rating display
 - Text rendering system improvements (batch rendering perhaps?)
 - Scroll direction change (optional setting) + judgement line
 - Performance optimizations for running the game at default clock speed on psp
@@ -20,6 +23,7 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 - Actual hit effects
 - Better LN Skinning
 - Skin system
+- Mods (very unlikely with current audio engine and psp hardware limitations)
 
 ## Known issues
 - Audio engine on PC is borked for hitsounds, psp likely too. No real fix found so far (i tried :/)
@@ -35,13 +39,13 @@ The default keybinds on the "desktop" version are as follows:
 |Start|Enter|
 |Select|Space|
 |Back|Escape|
+
 You can change these keybinds in the settings.
-The non-modifyable keys are the "shoulder buttons" and the directional buttons (mapped to arrow keys).
+The non-modifyable keys are the emulated "shoulder buttons" and the directional buttons (mapped to arrow keys).
 
 ## How to build
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
-> Currently building only works for the psp and linux/macos (no windows support because f*ck microsoft).
-After that just run
+To build for both the psp and linux/macos just run
 ```bash
 bash compile.sh
 ```
@@ -49,6 +53,10 @@ You should see a `build` folder appear, inside will be a folder called `psp` and
 Both folders will contain the assets copied over, and should be run from within the build directory.
 > [!NOTE]
 > `compile.sh` clean builds the entire project
+
+If you are using windows:
+a) why.
+b) make a build directory, open a command promp in that directory, run `cmake ..` then `cmake --build .` and enjoy your game executable.
 
 ## How to game
 Set your preferred keybinds, volumes and scroll speed in the settings menu while on the settings screen.

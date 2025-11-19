@@ -41,6 +41,16 @@ void* file_util_file_contents(const char* filename);
 stringvec_t file_util_get_directory_contents(const char* path, int mask);
 
 /**
+ * @brief Check whether a directory exists or not
+ */
+uint8_t file_util_directory_exists(const char* path);
+
+/**
+ * @brief Create a directory
+ */
+void file_util_create_directory(const char* path);
+
+/**
  * Gets the file name (with extension) without the leading path
  * @param filePath File path
  * @returns The file name without the prepending path

@@ -4,6 +4,7 @@
 #include <texture.h>
 #include <scoring.h>
 #include <gaming.h>
+#include <replay.h>
 #include <sprite.h>
 
 typedef struct
@@ -14,7 +15,7 @@ typedef struct
     sprite_t rank;
 } results_screen_drawinfo_t;
 
-void switch_to_results_screen(gaming_drawinfo_t* drawinfo, score_t* scoreptr);
+void switch_to_results_screen(gaming_drawinfo_t* drawinfo, score_t* scoreptr, replay_t* replayptr, uint64_t map_id, uint64_t set_id);
 
 void results_screen_init(void);
 void results_screen_dispose(void);
