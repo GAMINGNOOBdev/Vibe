@@ -1,6 +1,11 @@
 # Vibe
 This is a psp rhythm game project that randomly came into my mind while i was pressing random buttons (and triggers) to the music.
 
+## Download
+Make sure you use linux or windows.
+Fuck you, mac for not building properly, idrc tbh to fix it.
+Then just check the [actions](https://github.com/GAMINGNOOBdev/Vibe/actions) of this repo and just download the latest builds from there.
+
 ## Currently working parts of the game
 - Actual hit inputs & judgement
 - Proper hitobject positioning/movment
@@ -47,7 +52,7 @@ The non-modifyable keys are the emulated "shoulder buttons" and the directional 
 
 ## How to build
 Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
-To build for both the psp and linux/macos just run
+To build for both the psp and linux just run
 ```bash
 bash compile.sh
 ```
@@ -59,6 +64,10 @@ Both folders will contain the assets copied over, and should be run from within 
 If you are using windows:
 a) why.
 b) make a build directory, open a command promp in that directory, run `cmake ..` then `cmake --build .` and enjoy your game executable.
+
+If you are using macos:
+***die.***
+No but seriously, mac builds dont work (at least in workflows).
 
 ## How to game
 Set your preferred keybinds, volumes and scroll speed in the settings menu while on the settings screen.

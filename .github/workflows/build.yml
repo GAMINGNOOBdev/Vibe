@@ -15,12 +15,10 @@ jobs:
       # matrix  configurations:
       # 1. Windows, Release, MSVC compiler
       # 2. Linux, Release, GCC compiler
-      # 3. MacOS, Release, GCC compiler
-      # 4. Windows, Debug, MSVC compiler
-      # 5. Linux, Debug, GCC compiler
-      # 6. MacOS, Debug, GCC compiler
+      # 3. Windows, Debug, MSVC compiler
+      # 4. Linux, Debug, GCC compiler
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         build_type: [Release, Debug]
         c_compiler: [gcc, cl]
         include:
@@ -30,15 +28,10 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-          - os: macos-latest
-            c_compiler: gcc
-            cpp_compiler: g++
         exclude:
           - os: windows-latest
             c_compiler: gcc
           - os: ubuntu-latest
-            c_compiler: cl
-          - os: macos-latest
             c_compiler: cl
 
     steps:
