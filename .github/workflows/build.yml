@@ -71,7 +71,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Vibe-${{ matrix.os }}-${{ matrix.build_type }}
-        path: ${{ steps.strings.outputs.build-output-dir }}
+        path: ${{ steps.strings.outputs.build-output-dir }}/bin
 
   download:
     needs: build
@@ -88,6 +88,15 @@ jobs:
     - name: Get current date
       id: date
       run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+    - name: Rename ubuntu to linux for convenience (release)
+      id: renamestuff1
+      run: mv "${{ github.workspace }}/Vibe/Vibe-ubuntu-latest-Release/" "${{ github.workspace }}/Vibe/Vibe-linux-latest-Release/"
+    - name: Rename ubuntu to linux for convenience (debug)
+      id: renamestuff2
+      run: mv "${{ github.workspace }}/Vibe/Vibe-ubuntu-latest-Debug/" "${{ github.workspace }}/Vibe/Vibe-linux-latest-Debug/"
+    - name: Remove latest from names because its annoying
+      id: removelatestfromnames
+      run: for filename in $(ls ${{ github.workspace }}/Vibe/); do mv "${{ github.workspace }}/Vibe/$filename" "${{ github.workspace }}/Vibe/${filename//latest-/}"; done
     - name: Upload to a single artifact
       uses: actions/upload-artifact@v4
       with:

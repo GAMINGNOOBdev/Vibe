@@ -240,7 +240,7 @@ void settings_menu_render(void)
     if (options.flags.show_fps)
         text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
 
-    text_renderer_draw_color("X -> Select option, O -> Go back\n\x18/\x19 -> Change selection/value", 5, 264, 8, 0xFF00FF00);
+    text_renderer_draw_color(stringf("%s -> Select option, %s -> Go back\n\x18/\x19 -> Change selection/value", get_psp_button_string(options.keybinds.confirm), get_psp_button_string(options.keybinds.back)), 5, 264, 8, 0xFF00FF00);
 
     int y = 248;
     text_renderer_draw_color(">", 5, y - selected_option*8, 8, selected_color);

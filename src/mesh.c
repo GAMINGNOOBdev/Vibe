@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #ifdef __PSP__
 #include <gu2gl.h>
+#include <malloc.h>
 #else
 #include <GL/glew.h>
 #include <pctypes.h>

@@ -140,13 +140,13 @@ void results_screen_render(void)
 
     sprite_draw(&results_drawinfo.rankingPanel, &results_drawinfo.rankingPanelTexture);
 
-    const char* hitinfotextleft = stringf("%dx\n\n\n%dx\n\n\n%dx",
+    const char* hitinfotextleft = stringf("%ix\n\n\n%ix\n\n\n%ix",
                                       results_score.numGreat,
                                       results_score.numGood,
                                       results_score.numMeh);
     text_renderer_draw(hitinfotextleft, 50, 180, 16);
 
-    const char* hitinfotextright = stringf("%dx\n\n\n%dx\n\n\n%dx",
+    const char* hitinfotextright = stringf("%ix\n\n\n%ix\n\n\n%ix",
                                       results_score.numPerfect,
                                       results_score.numOk,
                                       results_score.numMiss);
@@ -172,11 +172,11 @@ void results_screen_render(void)
     results_gaming_drawinfo.maniahit.y = 86;
     sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit0_texture);
 
-    const char* scoreinfotext = stringf("%7.7d",
+    const char* scoreinfotext = stringf("%7.7i",
                                         results_score.total_score);
     text_renderer_draw(scoreinfotext, 90, PSP_SCREEN_HEIGHT-35, 16);
     text_renderer_draw(stringf("%2.2f%%", results_score.accuracy * 100.f), 165, 20, 16);
-    text_renderer_draw(stringf("%dx", results_score.max_combo), 15, 20, 16);
+    text_renderer_draw(stringf("%ix", results_score.max_combo), 15, 20, 16);
 
     if (results_saved_replay_data)
         text_renderer_draw("Replay saved", 280, 60, 16);

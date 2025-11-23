@@ -344,7 +344,7 @@ void gaming_update(float delta)
             gaming_show_results_screen = 1;
     }
 
-    if ((button_pressed_once(options.keybinds.start) || button_pressed_once(options.keybinds.back)) && gaming_audio_stream.playing)
+    if (button_pressed_once(options.keybinds.start) && gaming_audio_stream.playing)
     {
         audio_stream_pause(&gaming_audio_stream);
         gaming_pause_menu_selected_option = 0;

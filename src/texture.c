@@ -1,5 +1,6 @@
 #ifdef __PSP__
 #include <pspkernel.h>
+#include <malloc.h>
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
