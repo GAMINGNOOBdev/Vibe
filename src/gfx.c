@@ -286,6 +286,7 @@ void graphics_init()
     glfwSetScrollCallback(glfwwindow, graphicsWindowMouseScrollEvent);
     glfwSetDropCallback(glfwwindow, graphicsWindowFileDropEvent);
 
+    #ifndef __APPLE__
     GLenum error;
     if ((error = glewInit()) != GLEW_OK)
     {
@@ -294,6 +295,7 @@ void graphics_init()
         stop_running();
         return;
     }
+    #endif
 
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
