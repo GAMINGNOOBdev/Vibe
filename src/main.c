@@ -25,7 +25,6 @@ PSP_MODULE_INFO("VIBE", 0, 0, 0);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 #else
 #include <pctypes.h>
-#include <GL/glew.h>
 #endif
 
 #define STB_VORBIS_HEADER_ONLY

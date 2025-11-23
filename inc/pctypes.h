@@ -3,7 +3,11 @@
 
 #ifndef __PSP__
 
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <GLFW/glfw3.h>
 
 #define GL_MODEL GL_MODELVIEW

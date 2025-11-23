@@ -3,7 +3,11 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <input.h>
 #include <memory.h>
 #include <pctypes.h>
@@ -38,7 +42,6 @@ void graphics_end_frame()
 #include <file_util.h>
 #include <callback.h>
 #include <logging.h>
-#include <GL/glew.h>
 #include <pctypes.h>
 #include <GLFW/glfw3.h>
 #include <sys/stat.h>

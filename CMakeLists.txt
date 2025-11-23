@@ -36,15 +36,19 @@ if(NOT PSP)
 
     find_package(OpenGL REQUIRED)
 
+    if(NOT UNIX)
+        link_directories(glew-windows-2.1.0/lib/Release/x64)
+        set(os_specific_glew_include glew-windows-2.1.0/include)
+    else()
+        set(os_specific_glew_include)
+    endif()
+
     set(os_specific_includes
+        ${os_specific_glew_include}
         ${OPENGL_INCLUDE_DIRS}
         openal-soft/include
         glfw/include
     )
-
-    if(NOT UNIX)
-        link_directories(glew-windows-2.1.0/lib/Release/x64)
-    endif()
 
     add_subdirectory(openal-soft)
     add_subdirectory(glfw)

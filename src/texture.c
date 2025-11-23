@@ -13,7 +13,6 @@
 #include <gu2gl.h>
 #else
 #include <gfx.h>
-#include <GL/glew.h>
 #include <pctypes.h>
 #endif
 

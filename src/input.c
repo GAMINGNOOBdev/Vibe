@@ -1,7 +1,11 @@
 #ifdef __PSP__
 #include <pspctrl.h>
 #else
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <GLFW/glfw3.h>
 #endif
 #include <input.h>

@@ -5,7 +5,6 @@
 #include <gu2gl.h>
 #include <malloc.h>
 #else
-#include <GL/glew.h>
 #include <pctypes.h>
 #endif
 #include <logging.h>

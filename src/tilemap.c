@@ -9,7 +9,6 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
-#include <GL/glew.h>
 #include <gfx.h>
 #include <pctypes.h>
 #include <cglm/mat4.h>

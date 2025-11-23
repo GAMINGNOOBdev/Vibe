@@ -6,7 +6,6 @@
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
-#include <GL/glew.h>
 #include <pctypes.h>
 #endif
 #include <mesh.h>

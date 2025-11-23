@@ -4,7 +4,11 @@
 #include <stdint.h>
 
 #ifndef __PSP__
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #endif
 
 typedef struct

@@ -6,7 +6,11 @@
 #include <pspgum.h>
 #include <pspgu.h>
 #else
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <cglm/cglm.h>
 #endif
 

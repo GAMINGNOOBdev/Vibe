@@ -12,11 +12,13 @@ This is a psp rhythm game project that randomly came into my mind while i was pr
 
 ## Work in progress areas of the project
 - Displaying replays and scores (displaying options when pressing select on beatmap mayhaps?)
+- Playing replays
 - Health system
-- Beatmap Search?
-- Combo effecting accuracy and score
-- Star rating display
+- Key overlay
 - Text rendering system improvements (batch rendering perhaps?)
+- Combo effecting accuracy and score
+- Beatmap Search?
+- Star rating display
 - Scroll direction change (optional setting) + judgement line
 - Performance optimizations for running the game at default clock speed on psp
 - Better emulation of SV changes in osu!mania

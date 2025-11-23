@@ -17,7 +17,11 @@
 #ifdef __PSP__
 #include <psprtc.h>
 #else
+#ifndef __APPLE__
 #include <GL/glew.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <GLFW/glfw3.h>
 #endif
 
