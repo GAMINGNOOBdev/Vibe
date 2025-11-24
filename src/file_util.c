@@ -248,10 +248,7 @@ uint8_t file_util_directory_exists(const char* path)
     HANDLE hFind = NULL;
 
     if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
-    {
-        free(path);
         return 0;
-    }
 
     FindClose(hFind);
     #endif

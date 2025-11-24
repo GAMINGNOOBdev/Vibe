@@ -1,4 +1,5 @@
 #include <audio.h>
+#include <callback.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 #include <minimp3.h>
@@ -423,6 +424,7 @@ void audio_init(void)
     if (!audio_data.device)
     {
         LOGERROR("Unable to find a suitable audio device");
+        stop_running();
         return;
     }
 

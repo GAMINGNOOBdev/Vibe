@@ -275,6 +275,15 @@ void graphics_init()
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwwindow = glfwCreateWindow(PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, "psp-game-desktop-client", NULL, NULL);
+    LOGDEBUG("GL version: %s", glGetString(GL_VERSION));
+
+    if (glfwwindow == NULL)
+    {
+        LOGERROR("Cannot create a window, wtf.");
+        stop_running();
+        return;
+    }
+
     glfwMakeContextCurrent(glfwwindow);
     glfwFocusWindow(glfwwindow);
     glfwSwapInterval(1); // 1 = vsync, 0 = no vsync

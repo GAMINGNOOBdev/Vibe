@@ -97,6 +97,7 @@ void setup_audio_thread(void)
 }
 #endif
 
+extern int ExitRequest;
 int main(void)
 {
     setup_callbacks();
@@ -113,7 +114,18 @@ int main(void)
         file_util_create_directory("Songs");
 
     audio_init();
+    if (ExitRequest)
+    {
+        LOGERROR("Failed to initialize audio.");
+        return -1;
+    }
+
     graphics_init();
+    if (ExitRequest)
+    {
+        LOGERROR("Failed to initialize graphics.");
+        return -1;
+    }
     input_enable(PSP_CTRL_MODE_ANALOG);
     time_init();
     text_renderer_initialize();

@@ -21,8 +21,12 @@ add_compile_definitions(__DAY__=${DAY})
 
 if(NOT PSP)
     # glfw options
-    set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
-    set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+    set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "GLFW lib only")
+    set( GLFW_BUILD_TESTS OFF CACHE BOOL "GLFW lib only" )
+    set( GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only" )
+    set( GLFW_INSTALL OFF CACHE BOOL "GLFW lib only" )
+    set( GLFW_LIBRARY_TYPE "SHARED" )
+    set( BUILD_SHARED_LIBS ON )
     # OpenAL Options
     set(ALSOFT_UTILS off)
     set(ALSOFT_RTKIT off)
