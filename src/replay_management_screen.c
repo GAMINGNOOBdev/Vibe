@@ -17,18 +17,7 @@
 #   include <cglm/cglm.h>
 #endif
 #include <gfx.h>
-
-replay_manager_return_result_t* replay_manager_data;
-void switch_to_replay_management_screen(uint64_t map_id, uint64_t set_id)
-{
-    replay_manager_search_for_map(set_id, map_id);
-    replay_management_screen_init();
-
-    easing_enable();
-    easing_reset_timer();
-    easing_set_duration(0.5f);
-    easing_set_type(easeOutCubic);
-}
+#include <app.h>
 
 extern sprite_t song_select_background;
 extern sprite_t song_select_selector;
@@ -41,17 +30,20 @@ extern texture_t song_select_selector_texture;
 int replay_selected_index = 0;
 int replay_scroll_offset = 0;
 
-uint8_t replay_management_screen_initialized = 0;
-void replay_management_screen_init(void)
+replay_manager_return_result_t* replay_manager_data = NULL;
+void switch_to_replay_management_screen(uint64_t map_id, uint64_t set_id)
 {
-    if (replay_management_screen_initialized)
-        return;
-}
+    replay_manager_data = replay_manager_search_for_map(set_id, map_id);
+    app_set_update_callback(replay_management_screen_update);
+    app_set_render_callback(replay_management_screen_render);
 
-void replay_management_screen_dispose(void)
-{
-    if (!replay_management_screen_initialized)
-        return;
+    replay_selected_index = 0;
+    replay_scroll_offset = 0;
+
+    easing_enable();
+    easing_reset_timer();
+    easing_set_duration(0.5f);
+    easing_set_type(easeOutCubic);
 }
 
 void replay_management_screen_update(float _)
@@ -63,6 +55,9 @@ void replay_management_screen_update(float _)
 
     if (back)
         switch_to_song_select();
+
+    if (!replay_manager_data || replay_manager_data->count == 0)
+        return;
 
     if (up && replay_selected_index > 0)
     {
@@ -144,6 +139,12 @@ void replay_management_screen_render(void)
 
     if (options.flags.show_fps)
         text_renderer_draw(stringf("%d fps", time_fps()), 0, 0, 8);
+
+    if (!replay_manager_data || replay_manager_data->count == 0)
+    {
+        text_renderer_draw("No replays for this map", 5, 242, 8);
+        return;
+    }
 
     float y_start = 242;
     for (int i = 0; i < REPLAYS_ON_SCREEN; i++)

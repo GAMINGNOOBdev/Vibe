@@ -179,7 +179,7 @@ replay_manager_return_result_t replay_manager_return_result;
 void replay_manager_file_iterator_callback(const char* _, const char* filename, void* userdata)
 {
     struct { uint64_t map, set; }* data = userdata;
-    const char* filename_start = stringf("%lld-%lld", data->set, data->map);
+    const char* filename_start = stringf("%lld_%lld", data->set, data->map);
     if (strlen(filename) < strlen(filename_start))
         return;
     if (strncmp(filename, filename_start, strlen(filename_start)) != 0)
@@ -196,7 +196,7 @@ replay_manager_return_result_t* replay_manager_search_for_map(uint64_t set, uint
 {
     memset(&replay_manager_return_result, 0, sizeof(replay_manager_return_result_t));
 
-    if (!file_util_directory_exists("Replay"))
+    if (!file_util_directory_exists("Replays"))
     {
         LOGERROR("Cannot find any replays");
         return NULL;
