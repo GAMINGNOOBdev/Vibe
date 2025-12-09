@@ -92,6 +92,7 @@ set(project_sources
     src/input.c
     src/main.c
     src/mesh.c
+    src/replay_management_screen.c
     src/replay.c
     src/results_screen.c
     src/settings_menu.c

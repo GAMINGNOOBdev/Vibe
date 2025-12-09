@@ -14,10 +14,11 @@ Then just check the [actions](https://github.com/GAMINGNOOBdev/Vibe/actions) of 
 - Actual results screen
 - Ingame pause menu
 - Replay and score saving
+- Displaying replays and scores
 
 ## Work in progress areas of the project
-- Displaying replays and scores (displaying options when pressing select on beatmap mayhaps?)
 - Playing replays
+- displaying options when pressing select on beatmap mayhaps?
 - Health system
 - Key overlay
 - Text rendering system improvements (batch rendering perhaps?)

@@ -70,4 +70,34 @@ void replay_load(replay_t* replay, score_t* score, const char* filepath);
  */
 void replay_dispose(replay_t* replay);
 
+//////////////////////////
+///                    ///
+///   Replay manager   ///
+///                    ///
+//////////////////////////
+
+#ifdef __PSP__
+#   define REPLAY_MANAGER_MAX_COUNT 0x80
+#else
+#   define REPLAY_MANAGER_MAX_COUNT 0x100
+#endif
+
+typedef struct
+{
+    replay_t replays[REPLAY_MANAGER_MAX_COUNT];
+    score_t scores[REPLAY_MANAGER_MAX_COUNT];
+    uint16_t count;
+} replay_manager_return_result_t;
+
+/**
+ * @brief Search for replays of a map inside a set
+ *
+ * @param set Beatmap set ID
+ * @param map Beatmap ID
+ * @param count Amount of replays that are found
+ *
+ * @returns The replays inside a buffer (pointer to a stack allocated array, do not free the returned address)
+ */
+replay_manager_return_result_t* replay_manager_search_for_map(uint64_t set, uint64_t map);
+
 #endif

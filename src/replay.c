@@ -1,3 +1,6 @@
+#include <file_util.h>
+#include <stdint.h>
+#include <strutil.h>
 #include <logging.h>
 #include <options.h>
 #include <replay.h>
@@ -164,3 +167,48 @@ void replay_dispose(replay_t* replay)
     sceKernelDcacheWritebackInvalidateAll();
     #endif
 }
+
+//////////////////////////
+///                    ///
+///   Replay manager   ///
+///                    ///
+//////////////////////////
+
+replay_manager_return_result_t replay_manager_return_result;
+
+void replay_manager_file_iterator_callback(const char* _, const char* filename, void* userdata)
+{
+    struct { uint64_t map, set; }* data = userdata;
+    const char* filename_start = stringf("%lld-%lld", data->set, data->map);
+    if (strlen(filename) < strlen(filename_start))
+        return;
+    if (strncmp(filename, filename_start, strlen(filename_start)) != 0)
+        return;
+
+    uint16_t* count = &replay_manager_return_result.count;
+    replay_t* replay = &replay_manager_return_result.replays[*count];
+    score_t* score = &replay_manager_return_result.scores[*count];
+    replay_load(replay, score, stringf("Replays/%s", filename));
+    (*count)++;
+}
+
+replay_manager_return_result_t* replay_manager_search_for_map(uint64_t set, uint64_t map)
+{
+    memset(&replay_manager_return_result, 0, sizeof(replay_manager_return_result_t));
+
+    if (!file_util_directory_exists("Replay"))
+    {
+        LOGERROR("Cannot find any replays");
+        return NULL;
+    }
+    struct {
+        uint64_t map, set;
+    } data = {map, set};
+
+    LOGDEBUG("TODO: --- implement ---");
+
+    file_util_iterate_directory("Replays", FilterMaskFiles, replay_manager_file_iterator_callback, &data);
+
+    return &replay_manager_return_result;
+}
+

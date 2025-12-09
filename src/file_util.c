@@ -23,7 +23,7 @@ size_t file_util_file_size(const char* filename)
     FILE* file = fopen(filename, "rb");
     if (file == NULL)
         return 0;
-    
+
     fseek(file, 0, SEEK_END);
     result = ftell(file);
     rewind(file);
@@ -67,6 +67,134 @@ void fileUtilConcatPathVectors(stringvec_t* output, stringvec_t* input, const ch
         const char* string = entry->contents;
         stringvec_push_back(output, stringf("%s%s", prefix, string));
     }
+}
+
+void file_util_iterate_directory(const char *path, int mask, file_util_iteration_callback_t callback, void* userdata)
+{
+#if _WIN32
+    WIN32_FIND_DATAA fdFile;
+    HANDLE hFind = NULL;
+
+    if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
+        return;
+
+    do
+    {
+        if (fdFile.cFileName[0] == '.')
+            continue;
+        const char* filename = (const char*)fdFile.cFileName;
+
+        if (mask == FilterMaskAllFilesAndFolders)
+        {
+            if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                file_util_iterate_directory(stringf("%s/%s", path, filename), mask, callback, userdata);
+
+            callback(path, filename, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFilesAndFolders)
+        {
+            callback(path, filename, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFiles && !(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            callback(path, filename, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFolders && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            callback(path, filename, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskAllFiles)
+        {
+            if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                file_util_iterate_directory(stringf("%s/%s", path, filename), mask, callback, userdata);
+            else
+                callback(path, filename, userdata);
+        }
+
+        if (mask == FilterMaskAllFolders && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            file_util_iterate_directory(stringf("%s/%s", path, filename), mask, callback, userdata);
+            callback(path, filename, userdata);
+        }
+    }
+    while (FindNextFileA(hFind, &fdFile));
+
+    FindClose(hFind);
+#else
+    DIR* directory = opendir(path);
+    if (directory == NULL)
+    {
+        LOGERROR("could not find folder '%s'", path);
+        return;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(directory)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0)
+            continue;
+
+        if (mask == FilterMaskAllFilesAndFolders)
+        {
+            if (entry->d_type == DT_DIR)
+                file_util_iterate_directory(stringf("%s/%s", path, entry->d_name), mask, callback, userdata);
+
+            callback(path, entry->d_name, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFilesAndFolders)
+        {
+            callback(path, entry->d_name, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFiles && entry->d_type != DT_DIR)
+        {
+            callback(path, entry->d_name, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskFolders && entry->d_type == DT_DIR)
+        {
+            callback(path, entry->d_name, userdata);
+            continue;
+        }
+
+        if (mask == FilterMaskAllFiles)
+        {
+            if (entry->d_type == DT_DIR)
+                file_util_iterate_directory(stringf("%s/%s", path, entry->d_name), mask, callback, userdata);
+            else
+                callback(path, entry->d_name, userdata);
+
+            continue;
+        }
+
+        if (mask == FilterMaskAllFolders)
+        {
+            if (entry->d_type == DT_DIR)
+            {
+                file_util_iterate_directory(stringf("%s/%s", path, entry->d_name), mask, callback, userdata);
+
+                callback(path, entry->d_name, userdata);
+            }
+
+            continue;
+        }
+    }
+
+    closedir(directory);
+    #endif
 }
 
 stringvec_t file_util_get_directory_contents(const char* path, int mask)

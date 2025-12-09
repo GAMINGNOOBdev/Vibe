@@ -1,3 +1,4 @@
+#include <replay_management_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
 #include <song_list.h>
@@ -7,6 +8,8 @@
 #include <texture.h>
 #include <strutil.h>
 #include <logging.h>
+#include <beatmap.h>
+#include <memory.h>
 #include <easing.h>
 #include <gaming.h>
 #include <sprite.h>
@@ -102,6 +105,7 @@ void song_select_dispose(void)
 void song_select_input_handle(float _)
 {
     int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start);
+    int select = button_pressed_once(options.keybinds.select);
     int back = button_pressed_once(options.keybinds.back);
     int down = button_pressed_once(PSP_CTRL_DOWN);
     int up = button_pressed_once(PSP_CTRL_UP);
@@ -191,6 +195,18 @@ void song_select_input_handle(float _)
         {
             difficulty_selected_index = 0;
             difficulty_scroll_offset = 0;
+        }
+        if (select && difficulty_selected_index < (int)selected_song->difficulties.count)
+        {
+            LOGDEBUG("song{index: %d scroll: %d} difficulty{index: %d scroll: %d}",
+                song_selected_index, song_scroll_offset, difficulty_selected_index, difficulty_scroll_offset);
+            selected_difficulty = &selected_song->difficulties.data[difficulty_selected_index];
+            beatmap_t beatmap;
+            memset(&beatmap, 0, sizeof(beatmap_t));
+            beatmap_parse(&beatmap, selected_difficulty->filename);
+            uint64_t id = beatmap.id;
+            beatmap_dispose(&beatmap);
+            switch_to_replay_management_screen(id, selected_song->id);
         }
         if (confirm && difficulty_selected_index < (int)selected_song->difficulties.count)
         {

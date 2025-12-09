@@ -11,6 +11,8 @@
 #define FilterMaskFilesAndFolders       0x04 // Only files and folders inside the given directory
 #define FilterMaskAllFilesAndFolders    0x05 // All files and folders including those in subdirectories
 
+typedef void (*file_util_iteration_callback_t)(const char* path, const char* filename, void* userdata);
+
 /**
  * Calculates the filesize of a given file
  * 
@@ -39,6 +41,17 @@ void* file_util_file_contents(const char* filename);
  * @returns A list of files inside the given directory
 */
 stringvec_t file_util_get_directory_contents(const char* path, int mask);
+
+/**
+ * @brief Iterate over the contents of the given directory
+ * 
+ * @note This function may take a while to complete since it will retrieve all files from subfolders as well if requested
+ * 
+ * @param path Path to the directory
+ * @param mask A filter which decides how a directories' contents shall be gotten
+ * @param callback Function which will be called on each iteration/entry
+*/
+void file_util_iterate_directory(const char* path, int mask, file_util_iteration_callback_t callback, void* userdata);
 
 /**
  * @brief Check whether a directory exists or not
