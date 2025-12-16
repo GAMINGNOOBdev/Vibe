@@ -25,6 +25,9 @@ void print_vertex(vertex_t vert)
 
 void sprite_create(sprite_t* sprite, float x, float y, float width, float height, texture_t* texture)
 {
+    if (sprite == NULL)
+        return;
+
     float u = 1;
     float v = 1;
 
@@ -68,6 +71,29 @@ void sprite_create(sprite_t* sprite, float x, float y, float width, float height
     mesh_update(&sprite->mesh);
 
     LOGINFO("sprite 0x%x created with size (%2.2f|%2.2f) at xy (%2.2f|%2.2f) with uv (%2.2f|%2.2f)", sprite, width, height, x, y, u, v);
+}
+
+void sprite_change_uv(sprite_t* sprite, texture_t* texture, uint32_t i_u0, uint32_t i_v0, uint32_t i_u1, uint32_t i_v1)
+{
+    if (sprite == NULL || sprite->mesh.indexCount == 0)
+        return;
+
+    float u0 = (float)i_u0 / (float)texture->pWidth;
+    float u1 = (float)i_u1 / (float)texture->pWidth;
+    float v0 = (float)i_v0 / (float)texture->pHeight;
+    float v1 = (float)i_v1 / (float)texture->pHeight;
+
+    vertex_t* meshdata = (vertex_t*)sprite->mesh.data;
+    meshdata[0] = VERTEX(u0, v0, 0xFFFFFFFF,  0.f,  0.f, 0.0f);
+    meshdata[1] = VERTEX(u0, v1, 0xFFFFFFFF,  0.f,  1.f, 0.0f);
+    meshdata[2] = VERTEX(u1, v1, 0xFFFFFFFF,  1.f,  1.f, 0.0f);
+    meshdata[3] = VERTEX(u1, v0, 0xFFFFFFFF,  1.f,  0.f, 0.0f);
+
+    #ifdef __PSP__
+    sceKernelDcacheWritebackInvalidateAll();
+    #endif
+
+    mesh_update(&sprite->mesh);
 }
 
 void sprite_draw(sprite_t* sprite, texture_t* texture)

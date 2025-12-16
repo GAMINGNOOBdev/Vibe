@@ -20,7 +20,6 @@
 
 results_screen_drawinfo_t results_drawinfo;
 gaming_drawinfo_t results_gaming_drawinfo;
-texture_t* results_ranking_texture;
 replay_t* results_replay;
 score_t results_score;
 uint64_t results_map, results_set;
@@ -44,21 +43,24 @@ void switch_to_results_screen(gaming_drawinfo_t* drawinfo, score_t* scoreptr, re
     time_t local_time = time(NULL);
     replay_time = localtime(&local_time);
 
-    const char* filename = stringf("Replays/%lld_%lld_%02d-%02d-%02d_%04d-%02d-%02d", map_id, set_id, replay_time->tm_hour, replay_time->tm_min, replay_time->tm_sec, replay_time->tm_year+1900, replay_time->tm_mon, replay_time->tm_mday);
-    replay_save(NULL, scoreptr, 0, filename);
+    if (replayptr != NULL)
+    {
+        const char* filename = stringf("Replays/%lld_%lld_%02d-%02d-%02d_%04d-%02d-%02d", map_id, set_id, replay_time->tm_hour, replay_time->tm_min, replay_time->tm_sec, replay_time->tm_year+1900, replay_time->tm_mon, replay_time->tm_mday);
+        replay_save(NULL, scoreptr, 0, filename);
+    }
 
     if (results_score.accuracy == 1.f)
-        results_ranking_texture = &results_drawinfo.rankX;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 0, 0, 27, 29);
     else if (results_score.accuracy > 0.95f)
-        results_ranking_texture = &results_drawinfo.rankS;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 27, 0, 54, 29);
     else if (results_score.accuracy > 0.9f)
-        results_ranking_texture = &results_drawinfo.rankA;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 54, 0, 81, 29);
     else if (results_score.accuracy > 0.8f)
-        results_ranking_texture = &results_drawinfo.rankB;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 81, 0, 108, 29);
     else if (results_score.accuracy > 0.7f)
-        results_ranking_texture = &results_drawinfo.rankC;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 108, 0, 135, 29);
     else
-        results_ranking_texture = &results_drawinfo.rankD;
+        sprite_change_uv(&results_drawinfo.rank, &results_drawinfo.ranksTexture, 135, 0, 162, 29);
 }
 
 uint8_t results_screen_initialized = 0;
@@ -70,13 +72,8 @@ void results_screen_init(void)
     texture_load(&results_drawinfo.rankingPanelTexture, "Skin/ranking-panel.png", GL_TRUE, GL_FALSE);
     sprite_create(&results_drawinfo.rankingPanel, 0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, &results_drawinfo.rankingPanelTexture);
 
-    texture_load(&results_drawinfo.rankA, "Skin/ranking-A-small.png", GL_TRUE, GL_FALSE);
-    texture_load(&results_drawinfo.rankB, "Skin/ranking-B-small.png", GL_TRUE, GL_FALSE);
-    texture_load(&results_drawinfo.rankC, "Skin/ranking-C-small.png", GL_TRUE, GL_FALSE);
-    texture_load(&results_drawinfo.rankD, "Skin/ranking-D-small.png", GL_TRUE, GL_FALSE);
-    texture_load(&results_drawinfo.rankS, "Skin/ranking-S-small.png", GL_TRUE, GL_FALSE);
-    texture_load(&results_drawinfo.rankX, "Skin/ranking-X-small.png", GL_TRUE, GL_FALSE);
-    sprite_create(&results_drawinfo.rank, 0, 0, 64, 64, &results_drawinfo.rankX);
+    texture_load(&results_drawinfo.ranksTexture, "Skin/rankings.png", GL_TRUE, GL_FALSE);
+    sprite_create(&results_drawinfo.rank, 0, 0, 64, 64, &results_drawinfo.ranksTexture);
 
     results_screen_initialized = 1;
 }
@@ -86,12 +83,7 @@ void results_screen_dispose(void)
     if (!results_screen_initialized)
         return;
 
-    texture_dispose(&results_drawinfo.rankA);
-    texture_dispose(&results_drawinfo.rankB);
-    texture_dispose(&results_drawinfo.rankC);
-    texture_dispose(&results_drawinfo.rankD);
-    texture_dispose(&results_drawinfo.rankS);
-    texture_dispose(&results_drawinfo.rankX);
+    texture_dispose(&results_drawinfo.ranksTexture);
     sprite_dispose(&results_drawinfo.rank);
 
     texture_dispose(&results_drawinfo.rankingPanelTexture);
@@ -186,5 +178,5 @@ void results_screen_render(void)
 
     results_drawinfo.rank.x = 380;
     results_drawinfo.rank.y = 172;
-    sprite_draw(&results_drawinfo.rank, results_ranking_texture);
+    sprite_draw(&results_drawinfo.rank, &results_drawinfo.ranksTexture);
 }

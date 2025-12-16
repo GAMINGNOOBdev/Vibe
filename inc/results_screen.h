@@ -9,8 +9,8 @@
 
 typedef struct
 {
-    texture_t rankA, rankB, rankC, rankD, rankS, rankX;
     texture_t rankingPanelTexture;
+    texture_t ranksTexture;
     sprite_t rankingPanel;
     sprite_t rank;
 } results_screen_drawinfo_t;

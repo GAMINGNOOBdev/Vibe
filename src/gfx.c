@@ -214,7 +214,12 @@ void extractZipFileToDest(const char* filepath)
     }
 
     char* outputdir = "Songs/";
+
+    #ifdef _WIN32
+    const char* dir = &filepath[strlpos(filepath, '\\')+1];
+    #else
     const char* dir = &filepath[strlpos(filepath, '/')+1];
+    #endif
     size_t size =  strlen(dir) - 3;
     outputdir = malloc(strlen("Songs/") + size);
     memset(outputdir, 0, strlen("Songs/") + size);
