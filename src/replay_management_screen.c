@@ -6,6 +6,7 @@
 #include <options.h>
 #include <strutil.h>
 #include <logging.h>
+#include <gaming.h>
 #include <sprite.h>
 #include <replay.h>
 #include <easing.h>
@@ -30,10 +31,14 @@ extern texture_t song_select_selector_texture;
 int replay_selected_index = 0;
 int replay_scroll_offset = 0;
 
+songlist_entry_t* replay_manager_current_set = NULL;
+song_difficulty_t* replay_manager_current_difficulty = NULL;
 replay_manager_return_result_t* replay_manager_data = NULL;
-void switch_to_replay_management_screen(uint64_t map_id, uint64_t set_id)
+void switch_to_replay_management_screen(uint64_t map_id, songlist_entry_t* set, song_difficulty_t* difficulty)
 {
-    replay_manager_data = replay_manager_search_for_map(set_id, map_id);
+    replay_manager_current_set = set;
+    replay_manager_current_difficulty = difficulty;
+    replay_manager_data = replay_manager_search_for_map(set->id, map_id);
     app_set_update_callback(replay_management_screen_update);
     app_set_render_callback(replay_management_screen_render);
 
@@ -46,8 +51,10 @@ void switch_to_replay_management_screen(uint64_t map_id, uint64_t set_id)
     easing_set_type(easeOutCubic);
 }
 
-void replay_management_screen_update(float _)
+void replay_management_screen_update(float delta)
 {
+    easing_update(delta);
+
     int confirm = button_pressed_once(options.keybinds.confirm) || button_pressed_once(options.keybinds.start);
     int back = button_pressed_once(options.keybinds.back);
     int down = button_pressed_once(PSP_CTRL_DOWN);
@@ -100,10 +107,15 @@ void replay_management_screen_update(float _)
     }
     if (confirm && replay_selected_index < (int)replay_manager_data->count)
     {
+        if (replay_manager_data->replays[replay_selected_index].count == 0)
+            return;
+
         easing_reset_timer();
-        easing_set_duration(1.5f);
+        easing_set_duration(0.5f);
         easing_set_type(easeOutCubic);
-        LOGDEBUG("TOOD: --- implement playback ---");
+        switch_to_gaming(replay_manager_current_set->fullname, replay_manager_current_difficulty->filename);
+        gaming_play_replay(&replay_manager_data->replays[replay_selected_index], &replay_manager_data->scores[replay_selected_index]);
+        input_lock(1);
     }
 }
 
@@ -130,9 +142,7 @@ void replay_management_screen_render(void)
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
     #else
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
-    graphics_projection_matrix(projection);
+    graphics_projection_matrix(graphics_get_projection());
     #endif
 
     sprite_draw(&song_select_background, &song_select_background_texture);
@@ -155,6 +165,7 @@ void replay_management_screen_render(void)
             break;
 
         score_t entry = replay_manager_data->scores[replay_index];
+        replay_t replay = replay_manager_data->replays[replay_index];
         float y = y_start - i * 40;
         float x = 50;
         if (replay_index == replay_selected_index)
@@ -165,13 +176,14 @@ void replay_management_screen_render(void)
 
         sprite_draw(&song_select_selector, &song_select_selector_texture);
 
-        text_renderer_draw(stringf("Score|Acc|Combo|Hit|Miss\n%d|%2.2f%%|%d|%d|%d",
+        text_renderer_draw_color(stringf("Score|Acc|Combo|Hit|Miss\n%d|%2.2f%%|%d|%d|%d",
                 entry.total_score,
                 entry.accuracy * 100.0f,
                 entry.max_combo,
                 entry.numPerfect + entry.numGreat + entry.numGood + entry.numOk + entry.numMeh,
                 entry.numMiss),
-            x+5, y+16, 8
+            x+5, y+16, 8,
+            replay.count == 0 ? 0xFF0000FF : 0xFFFFFFFF
         );
     }
 }

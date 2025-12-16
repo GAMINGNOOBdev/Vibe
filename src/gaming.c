@@ -13,6 +13,7 @@
 #include <sprite.h>
 #include <replay.h>
 #include <memory.h>
+#include <assert.h>
 #include <audio.h>
 #include <input.h>
 #ifdef __PSP__
@@ -37,6 +38,7 @@ beatmap_t gaming_beatmap = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL};
 uint8_t gaming_reached_end_of_beatmap = 0;
 audio_stream_t gaming_audio_stream = {0};
 uint8_t gaming_show_results_screen = 0;
+uint8_t gaming_playing_replay = 0;
 float gaming_time = 0;
 
 gaming_soundinfo_t gaming_soundinfo = {
@@ -60,6 +62,8 @@ texture_t* gaming_maniahit_texture = NULL;
 
 score_t gaming_score;
 replay_t gaming_replay;
+replay_t* gaming_playback_replay = NULL;
+score_t* gaming_playback_replay_score = NULL;
 const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
 float gaming_judgement_visible_timer = 0;
 
@@ -99,7 +103,12 @@ void gaming_score_judgement_display_callback(scoring_judgement_type_t judgement)
         gaming_maniahit_texture = &gaming_drawinfo.maniahit300g_texture;
 
     if (judgement != JudgementNone)
+    {
         gaming_judgement_visible_timer = (float)time_total();
+        easing_reset_timer();
+        easing_set_duration(2.f);
+        easing_set_type(easeOutExpo);
+    }
 }
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
@@ -107,6 +116,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     gaming_last_beatmap_folder = beatmap_folder;
     gaming_last_beatmap_path = beatmap_path;
     gaming_init();
+    gaming_playing_replay = 0;
 
     gaming_show_results_screen = 0;
 
@@ -273,6 +283,13 @@ void gaming_dispose(void)
     // audio_stream_dispose(&gaming_soundinfo.normal_hitwhistle);
 }
 
+void gaming_play_replay(replay_t* replay, score_t* replay_score)
+{
+    gaming_playing_replay = 1;
+    gaming_playback_replay = replay;
+    gaming_playback_replay_score = replay_score;
+}
+
 void gaming_update(float delta)
 {
     if (gaming_beatmap_wait_timer > 0 && !gaming_audio_stream.playing)
@@ -302,13 +319,14 @@ void gaming_update(float delta)
         {
             if (gaming_pause_menu_selected_option == 0)
                 gaming_beatmap_wait_timer = 2;
-            else if (gaming_pause_menu_selected_option == 1)
+            else if (gaming_pause_menu_selected_option == 1 && !gaming_playing_replay)
                 switch_to_gaming(gaming_last_beatmap_folder, gaming_last_beatmap_path);
             else if (gaming_pause_menu_selected_option == 2)
             {
                 audio_stream_dispose(&gaming_audio_stream);
                 beatmap_dispose(&gaming_beatmap);
                 audio_set_music_stream(NULL);
+                input_lock(0);
                 switch_to_song_select();
             }
         }
@@ -316,13 +334,25 @@ void gaming_update(float delta)
 
     if (gaming_show_results_screen)
     {
-        switch_to_results_screen(&gaming_drawinfo, &gaming_score, &gaming_replay, gaming_beatmap.set_id, gaming_beatmap.id);
+        replay_t* replay = &gaming_replay;
+        if (gaming_playing_replay)
+        {
+            replay = NULL;
+            if (memcmp(gaming_playback_replay_score, &gaming_score, sizeof(score_t)) != 0)
+                LOGERROR("REPLAY DEVIATES FROM ACTUAL SCORE");
+        }
+        switch_to_results_screen(&gaming_drawinfo, &gaming_score, replay, gaming_beatmap.set_id, gaming_beatmap.id);
+        input_lock(0);
         audio_set_music_stream(NULL);
         audio_stream_dispose(&gaming_audio_stream);
         beatmap_dispose(&gaming_beatmap);
     }
 
     gaming_time = gaming_audio_stream.seconds;
+
+    if (gaming_playing_replay)
+        replay_playback(gaming_playback_replay, gaming_time);
+
     if (gaming_current_timing_point.time < gaming_time && gaming_timing_point_index < gaming_beatmap.timing_point_count)
     {
         gaming_current_timing_point = gaming_beatmap.timing_points[gaming_timing_point_index];
@@ -357,7 +387,8 @@ void gaming_handle_note_inputs()
     if (gaming_state == GAMING_STATE_PAUSED)
         return;
 
-    replay_record_inputs(&gaming_replay, gaming_time);
+    if (!gaming_playing_replay)
+        replay_record_inputs(&gaming_replay, gaming_time);
 
     uint8_t columns_hit_once[] = {
         0, 0, 0, 0
@@ -476,9 +507,7 @@ void gaming_render(void)
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
     #else
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
-    graphics_projection_matrix(projection);
+    graphics_projection_matrix(graphics_get_projection());
     #endif
 
     if (options.flags.show_fps)
@@ -551,7 +580,10 @@ void gaming_render(void)
 
     // draw hit info (300g, 300, 200, 100, 50, MISS)
     if (gaming_maniahit_texture != NULL && (float)time_total() - gaming_judgement_visible_timer < GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE)
+    {
+        gaming_drawinfo.maniahit.width = 16*easing_get_factor();
         sprite_draw(&gaming_drawinfo.maniahit, gaming_maniahit_texture);
+    }
 
     // handle judgement line positioning
     gaming_drawinfo.note.x = 165;

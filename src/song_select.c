@@ -206,7 +206,7 @@ void song_select_input_handle(float _)
             beatmap_parse(&beatmap, selected_difficulty->filename);
             uint64_t id = beatmap.id;
             beatmap_dispose(&beatmap);
-            switch_to_replay_management_screen(id, selected_song->id);
+            switch_to_replay_management_screen(id, selected_song, selected_difficulty);
         }
         if (confirm && difficulty_selected_index < (int)selected_song->difficulties.count)
         {
@@ -247,9 +247,7 @@ void song_select_render(void)
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
     #else
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
-    graphics_projection_matrix(projection);
+    graphics_projection_matrix(graphics_get_projection());
     #endif
 
     sprite_draw(&song_select_background, &song_select_background_texture);

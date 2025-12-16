@@ -33,7 +33,6 @@ void input_send_button(uint8_t action, int button);
  */
 void input_read();
 
-#ifndef __PSP__
 /**
  * @brief Write a button's state
  * 
@@ -41,7 +40,6 @@ void input_read();
  * @param value Value
  */
 void input_write(int key, int value);
-#endif
 
 uint8_t analog_x();
 uint8_t analog_y();

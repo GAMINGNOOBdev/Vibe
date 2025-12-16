@@ -103,9 +103,9 @@ void results_screen_update(float delta)
     if (button_pressed(options.keybinds.back))
         switch_to_song_select();
 
-    if (button_pressed_once(options.keybinds.start) && !results_saved_replay_data)
+    if (button_pressed_once(options.keybinds.start) && !results_saved_replay_data && results_replay != NULL)
     {
-        const char* filename = stringf("Replays/%lld_%lld_%02d-%02d-%02d_%04d-%02d-%02d", results_set, results_map, replay_time->tm_hour, replay_time->tm_min, replay_time->tm_sec, replay_time->tm_year+1900, replay_time->tm_mon, replay_time->tm_mday);
+        const char* filename = stringf("Replays/%lld_%lld_%02d-%02d-%02d_%04d-%02d-%02d", results_map, results_set, replay_time->tm_hour, replay_time->tm_min, replay_time->tm_sec, replay_time->tm_year+1900, replay_time->tm_mon, replay_time->tm_mday);
         replay_save(results_replay, &results_score, 1, filename);
         results_saved_replay_data = 1;
     }
@@ -133,9 +133,7 @@ void results_screen_render(void)
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
     #else
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
-    graphics_projection_matrix(projection);
+    graphics_projection_matrix(graphics_get_projection());
     #endif
 
     sprite_draw(&results_drawinfo.rankingPanel, &results_drawinfo.rankingPanelTexture);
@@ -178,10 +176,13 @@ void results_screen_render(void)
     text_renderer_draw(stringf("%2.2f%%", results_score.accuracy * 100.f), 165, 20, 16);
     text_renderer_draw(stringf("%ix", results_score.max_combo), 15, 20, 16);
 
-    if (results_saved_replay_data)
-        text_renderer_draw("Replay saved", 280, 60, 16);
-    else
-        text_renderer_draw("Save replay", 280, 60, 16);
+    if (results_replay != NULL)
+    {
+        if (results_saved_replay_data)
+            text_renderer_draw("Replay saved", 280, 60, 16);
+        else
+            text_renderer_draw("Save replay", 280, 60, 16);
+    }
 
     results_drawinfo.rank.x = 380;
     results_drawinfo.rank.y = 172;

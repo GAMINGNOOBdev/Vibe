@@ -15,9 +15,13 @@ Then just check the [actions](https://github.com/GAMINGNOOBdev/Vibe/actions) of 
 - Ingame pause menu
 - Replay and score saving
 - Displaying replays and scores
+- Playing replays
 
 ## Work in progress areas of the project
-- Playing replays
+- Optimizing textures/skins (and added skin template/sheet for how skin image files should be layed out)
+- Better input and visuals/skins on desktop
+- Better font
+- Fixing inaccuracy of replay playback
 - displaying options when pressing select on beatmap mayhaps?
 - Health system
 - Key overlay
@@ -52,23 +56,28 @@ You can change these keybinds in the settings.
 The non-modifyable keys are the emulated "shoulder buttons" and the directional buttons (mapped to arrow keys).
 
 ## How to build
-Ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed.<br>
-To build for both the psp and linux just run
+To build for linux just run
 ```bash
 bash compile.sh
 ```
-You should see a `build` folder appear, inside will be a folder called `psp` and a folder called `desktop`.
-Both folders will contain the assets copied over, and should be run from within the build directory.
+
+Now ensure you have the [pspdev toolchain](https://pspdev.github.io/installation.html) installed, and then proceed to build the project for the psp by running:
+```bash
+bash compile.sh psp
+```
+
+You should now see a `build` folder appear.<br/>
+Inside it will be a folder called `psp` and a folder called `desktop`.<br/>
+Both folders will contain the assets and the game should be run from within the respective target build directory.
 > [!NOTE]
 > `compile.sh` clean builds the entire project
 
-If you are using windows:
-a) why.
-b) make a build directory, open a command promp in that directory, run `cmake ..` then `cmake --build .` and enjoy your game executable.
+If you are using windows:<br/>
+a) why.<br/>
+b) make a build directory, open a command promp in that directory, run `cmake ..` then `cmake --build .` and enjoy your game executable.<br/>
 
-If you are using macos:
-***die.***
-No but seriously, mac builds dont work (at least in workflows).
+If you are using macos:<br/>
+¯\\\_(ツ)\_/¯
 
 ## How to game
 Set your preferred keybinds, volumes and scroll speed in the settings menu while on the settings screen.
@@ -85,5 +94,5 @@ It should theoretically be possible to just copy your osu beatmaps folder into t
 If you are using the desktop version, you can drag and drop the .osz files onto the game window to add them to the game.
 
 ## How to contribute
-message me on my [discord server](https://discord.gg/8R5YyM3MEn) (or dm me: `__bocchi_chan__`) and suggest stuff
+message me on discord (`__bocchi_chan__`) or [twitter](https://x.com/gamingnoobdev) and suggest stuff
 or make a pull request/issue and tell me stuff

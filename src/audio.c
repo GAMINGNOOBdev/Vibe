@@ -68,11 +68,7 @@ typedef struct
     #endif
 } audio_data_t;
 
-#ifndef _WIN32
-audio_data_t audio_data = {0, NULL, {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}};
-#else
 audio_data_t audio_data = {0};
-#endif
 float audio_volume = 1.0f;
 
 ////////////////////////

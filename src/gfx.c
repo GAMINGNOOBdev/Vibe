@@ -1,5 +1,6 @@
 #define GUGL_IMPLEMENTATION
 #include <gfx.h>
+#include <options.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
@@ -50,6 +51,7 @@ void graphics_end_frame()
 GLFWwindow* glfwwindow;
 GLuint globalShader;
 GLint shaderProjectionID, shaderModelID, shaderTextureID, shaderTextureAvailableID;
+mat4 graphics_projection;
 
 GLuint compile_shader(const char* src, GLenum type)
 {
@@ -162,7 +164,10 @@ extern uint8_t input_locked;
 void graphicsWindowKeyboardEvent(GLFWwindow* win, int key, int scancode, int action, int _)
 {
     if (input_locked)
-        return;
+    {
+        if (key == options.game_keybinds.m4l1 || key == options.game_keybinds.m4l2 || key == options.game_keybinds.m4l3 || key == options.game_keybinds.m4l4)
+            return;
+    }
 
     last_pressed_key = -1;
     if (action == GLFW_PRESS)
@@ -273,7 +278,7 @@ void graphics_init()
     }
 
     glfwDefaultWindowHints();
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwwindow = glfwCreateWindow(PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, "psp-game-desktop-client", NULL, NULL);
     LOGDEBUG("GL version: %s", glGetString(GL_VERSION));
 
@@ -321,6 +326,10 @@ void graphics_init()
     shaderProjectionID = glGetUniformLocation(globalShader, "u_projection");
     shaderTextureAvailableID = glGetUniformLocation(globalShader, "u_texture_available");
 
+    mat4 projection = GLM_MAT4_IDENTITY_INIT;
+    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
+    memcpy(&graphics_projection, &projection, sizeof(mat4));
+
     LOGINFO("Shader IDs{ .projection=%d, .model=%d, .texture=%d, .textureAvailable=%d }", shaderProjectionID, shaderModelID, shaderTextureID, shaderTextureAvailableID);
 }
 
@@ -350,12 +359,12 @@ uint8_t graphics_should_terminate(void)
     return glfwWindowShouldClose(glfwwindow);
 }
 
-void graphics_projection_matrix(mat4 matrix)
+void graphics_projection_matrix(mat4* matrix)
 {
     float data[16];
     for (uint8_t y = 0; y < 4; y++)
         for (uint8_t x = 0; x < 4; x++)
-            data[y*4+x] = matrix[y][x];
+            data[y*4+x] = (*matrix)[y][x];
 
     glUniformMatrix4fv(shaderProjectionID, 1, 0, data);
 }
@@ -379,6 +388,11 @@ void graphics_texture_uniform(GLuint id)
 {
     glUniform1ui(shaderTextureAvailableID, 1);
     glUniform1i(shaderTextureID, id);
+}
+
+mat4* graphics_get_projection(void)
+{
+    return &graphics_projection;
 }
 
 #endif

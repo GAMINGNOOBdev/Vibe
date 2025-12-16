@@ -231,9 +231,7 @@ void settings_menu_render(void)
     glLoadIdentity();
     glOrtho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f);
     #else
-    mat4 projection = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, PSP_SCREEN_WIDTH, 0, PSP_SCREEN_HEIGHT, -0.01f, 10.0f, projection);
-    graphics_projection_matrix(projection);
+    graphics_projection_matrix(graphics_get_projection());
     #endif
 
     if (options.flags.show_fps)

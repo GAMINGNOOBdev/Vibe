@@ -84,7 +84,7 @@ void log_msg(loglevel_t lvl, const char* msg, const char* file, int line)
         {
             LOGINFO("Last message repeated 5 times, skipping repeats...");
             strcpy(mLastLogMessage, msg);
-            mLastLogMessageRepeats = 5;
+            mLastLogMessageRepeats++;
             return;
         }
         else

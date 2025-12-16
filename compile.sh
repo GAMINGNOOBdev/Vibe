@@ -1,17 +1,28 @@
 #!/bin/bash
 
-rm -r build
-mkdir build
-mkdir build/psp
-mkdir build/desktop
+mkdir -p build
+mkdir -p build/psp
+mkdir -p build/desktop
 
-cd build/psp
-PSPPREFIX=$(psp-config -d)/bin
-$PSPPREFIX/psp-cmake ../.. -D CMAKE_BUILD_TYPE=Debug
-make -j $(nproc)
+cd build
 
-cd ../desktop
-cmake ../.. -D CMAKE_BUILD_TYPE=Debug
-make -j $(nproc)
+if [ $1 = 'psp' ] ; then
+    cd psp
+    echo "=== Building psp ==="
 
-cd ../..
+    PSPPREFIX=$(psp-config -d)/bin
+    $PSPPREFIX/psp-cmake ../.. -D CMAKE_BUILD_TYPE=Debug
+    time make -j $(nproc)
+
+    echo "=== End of build ==="
+    cd ../..
+else
+    cd desktop
+    echo "=== Building desktop ==="
+
+    cmake ../.. -D CMAKE_BUILD_TYPE=Debug
+    time make
+
+    echo "=== End of build ==="
+    cd ../..
+fi

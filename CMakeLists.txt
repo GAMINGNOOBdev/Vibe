@@ -160,9 +160,7 @@ if(PSP)
     )
 
     create_pbp_file(TARGET ${PROJECT_NAME} TITLE "${CMAKE_PROJECT_NAME}"
-        Assets/LOGO.png
-        # BACKGROUND_PATH
-        # PREVIEW_PATH
+        ICON_PATH ${CMAKE_CURRENT_LIST_DIR}/Assets/LOGO.png
     )
 
 else()

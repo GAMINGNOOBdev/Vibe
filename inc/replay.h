@@ -15,6 +15,7 @@ typedef struct
 {
     replay_frame_t* frames;
     size_t buffer_size;
+    size_t cursor;
     size_t count;
 } replay_t;
 

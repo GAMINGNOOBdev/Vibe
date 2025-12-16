@@ -2,6 +2,7 @@
 #define __GAMING_H_ 1
 
 #include <texture.h>
+#include <replay.h>
 #include <sprite.h>
 #include <audio.h>
 
@@ -40,6 +41,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path);
 
 void gaming_init(void);
 void gaming_dispose(void);
+void gaming_play_replay(replay_t* replay, score_t* replay_score);
 void gaming_update(float delta);
 void gaming_render(void);
 

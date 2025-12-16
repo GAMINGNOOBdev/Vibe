@@ -82,10 +82,19 @@ void replay_record_inputs(replay_t* replay, float timestamp)
 
 void replay_playback(replay_t* replay, float timestamp)
 {
-    if (replay == NULL || timestamp < 0)
+    if (replay == NULL || replay->count == 0 || timestamp <= 0)
         return;
 
-    LOGINFO("WIP");
+    if (replay->cursor == replay->count) // end of replay
+        return;
+
+    replay_frame_t frame = replay->frames[replay->cursor];
+    if (timestamp >= frame.timestamp)
+    {
+        input_write(frame.key, frame.action);
+        replay->cursor++;
+        replay_playback(replay, timestamp); // handle all other inputs that may be valid
+    }
 }
 
 void replay_save(replay_t* replay, score_t* score, uint8_t save_playback_data, const char* filepath)
@@ -149,6 +158,11 @@ void replay_load(replay_t* replay, score_t* score, const char* filepath)
     }
 
     fread(&replay->count, sizeof(size_t), 1, file);
+    if (replay->count != 0)
+    {
+        replay->buffer_size = (size_t)(replay->count / REPLAY_BUFFER_SIZE + 1) * REPLAY_BUFFER_SIZE;
+        replay->frames = realloc(replay->frames, replay->buffer_size * sizeof(replay_frame_t));
+    }
     fread(replay->frames, sizeof(replay_frame_t), replay->count, file);
     LOGDEBUG("loaded replay data with %ld input frames", replay->count);
 
@@ -174,7 +188,7 @@ void replay_dispose(replay_t* replay)
 ///                    ///
 //////////////////////////
 
-replay_manager_return_result_t replay_manager_return_result;
+replay_manager_return_result_t replay_manager_return_result = {0,0,0};
 
 void replay_manager_file_iterator_callback(const char* _, const char* filename, void* userdata)
 {
@@ -194,6 +208,9 @@ void replay_manager_file_iterator_callback(const char* _, const char* filename, 
 
 replay_manager_return_result_t* replay_manager_search_for_map(uint64_t set, uint64_t map)
 {
+    for (size_t i = 0; i < replay_manager_return_result.count; i++)
+        replay_dispose(&replay_manager_return_result.replays[i]);
+
     memset(&replay_manager_return_result, 0, sizeof(replay_manager_return_result_t));
 
     if (!file_util_directory_exists("Replays"))
@@ -204,8 +221,6 @@ replay_manager_return_result_t* replay_manager_search_for_map(uint64_t set, uint
     struct {
         uint64_t map, set;
     } data = {map, set};
-
-    LOGDEBUG("TODO: --- implement ---");
 
     file_util_iterate_directory("Replays", FilterMaskFiles, replay_manager_file_iterator_callback, &data);
 

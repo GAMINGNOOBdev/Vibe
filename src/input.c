@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #endif
 #include <input.h>
+#include <options.h>
 #include <logging.h>
 #include <callback.h>
 #include <time_util.h>
@@ -63,12 +64,17 @@ void input_send_button(uint8_t action, int button)
 
 void input_read()
 {
-    if (input_locked)
-        return;
-
     #ifdef __PSP__
     mInputLastData = mInputData;
+    if (!input_locked)
+    {
+        sceCtrlReadBufferPositive(&mInputData,1);
+        return;
+    }
+    SceCtrlData data;
     sceCtrlReadBufferPositive(&mInputData,1);
+    data.Buttons &= ~(options.game_keybinds.m4l1 | options.game_keybinds.m4l2 | options.game_keybinds.m4l3 | options.game_keybinds.m4l4);
+    mInputData = data;
     #else
     last_pressed_key = -1;
     for (int i = 0; i < GLFW_KEY_LAST; i++)
@@ -79,13 +85,19 @@ void input_read()
     #endif
 }
 
-#ifndef __PSP__
 void input_write(int key, int value)
 {
+    #ifdef __PSP__
+    mInputLastData = mInputData;
+    if (value)
+        mInputData.Buttons &= key;
+    else
+        mInputData.Buttons &= ~key;
+    #else
     inputData[key].state = value;
     inputData[key].pressed_frame = time_total_frames();
+    #endif
 }
-#endif
 
 uint8_t analog_x()
 {
