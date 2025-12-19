@@ -1,3 +1,4 @@
+#include <maniahit_display.h>
 #include <results_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
@@ -64,8 +65,6 @@ score_t gaming_score;
 replay_t gaming_replay;
 replay_t* gaming_playback_replay = NULL;
 score_t* gaming_playback_replay_score = NULL;
-const float GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE = 0.25f;
-float gaming_judgement_visible_timer = 0;
 
 gaming_state_t gaming_state = GAMING_STATE_PAUSED;
 int gaming_pause_menu_selected_option = 0;
@@ -83,32 +82,6 @@ void gaming_audio_end_callback(void)
 {
     audio_set_music_stream(NULL);
     gaming_show_results_screen = 1;
-}
-
-void gaming_score_judgement_display_callback(scoring_judgement_type_t judgement)
-{
-    gaming_maniahit_texture = NULL;
-
-    if (judgement == JudgementMiss)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit0_texture;
-    else if (judgement == JudgementMeh)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit50_texture;
-    else if (judgement == JudgementOk)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit100_texture;
-    else if (judgement == JudgementGood)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit200_texture;
-    else if (judgement == JudgementGreat)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit300_texture;
-    else if (judgement == JudgementPerfect)
-        gaming_maniahit_texture = &gaming_drawinfo.maniahit300g_texture;
-
-    if (judgement != JudgementNone)
-    {
-        gaming_judgement_visible_timer = (float)time_total();
-        easing_reset_timer();
-        easing_set_duration(2.f);
-        easing_set_type(easeOutExpo);
-    }
 }
 
 void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
@@ -193,7 +166,7 @@ void switch_to_gaming(const char* beatmap_folder, const char* beatmap_path)
     score_calculator_clear();
     score_calculator_set_difficulty(gaming_beatmap.od);
     score_calculator_set_total_objects(gaming_beatmap.hit_count);
-    score_calculator_set_judgement_callback(gaming_score_judgement_display_callback);
+    score_calculator_set_judgement_callback(maniahit_display_judement);
     replay_clear(&gaming_replay);
 
     gaming_time = gaming_audio_stream.seconds;
@@ -210,21 +183,15 @@ void gaming_init(void)
 
     replay_initialize(&gaming_replay);
 
+    maniahit_display_init();
+
     texture_load(&gaming_drawinfo.judgementline_texture, "Skin/mania-stage-hint.png", GL_TRUE, GL_TRUE);
     texture_load(&gaming_drawinfo.lanehit_texture, "Skin/mania-lanehit.png", GL_TRUE, GL_TRUE);
     texture_load(&gaming_drawinfo.long_note_texture, "Skin/LNTail.png", GL_TRUE, GL_TRUE);
     texture_load(&gaming_drawinfo.note1_texture, "Skin/mania-note1.png", GL_TRUE, GL_TRUE);
     texture_load(&gaming_drawinfo.note2_texture, "Skin/mania-note2.png", GL_TRUE, GL_TRUE);
 
-    texture_load(&gaming_drawinfo.maniahit300g_texture, "Skin/mania-hit300g.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_drawinfo.maniahit300_texture, "Skin/mania-hit300.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_drawinfo.maniahit200_texture, "Skin/mania-hit200.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_drawinfo.maniahit100_texture, "Skin/mania-hit100.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_drawinfo.maniahit50_texture, "Skin/mania-hit50.png", GL_TRUE, GL_TRUE);
-    texture_load(&gaming_drawinfo.maniahit0_texture, "Skin/mania-hit0.png", GL_TRUE, GL_TRUE);
-
     sprite_create(&gaming_drawinfo.long_note, 0, 0, 30, 512, &gaming_drawinfo.long_note_texture);
-    sprite_create(&gaming_drawinfo.maniahit, (PSP_SCREEN_WIDTH-16)/2.f, PSP_SCREEN_HEIGHT - 48, 16, 16, &gaming_drawinfo.maniahit0_texture);
     sprite_create(&gaming_drawinfo.note, 0, 0, 30, 12.5f, &gaming_drawinfo.note1_texture);
 
     // gaming_soundinfo.drum_hitclap = audio_stream_load("Skin/drum-hitclap.wav");
@@ -252,21 +219,15 @@ void gaming_dispose(void)
 
     replay_dispose(&gaming_replay);
 
+    maniahit_display_dispose();
+
     texture_dispose(&gaming_drawinfo.judgementline_texture);
     texture_dispose(&gaming_drawinfo.long_note_texture);
     texture_dispose(&gaming_drawinfo.lanehit_texture);
     texture_dispose(&gaming_drawinfo.note1_texture);
     texture_dispose(&gaming_drawinfo.note2_texture);
 
-    texture_dispose(&gaming_drawinfo.maniahit300g_texture);
-    texture_dispose(&gaming_drawinfo.maniahit300_texture);
-    texture_dispose(&gaming_drawinfo.maniahit200_texture);
-    texture_dispose(&gaming_drawinfo.maniahit100_texture);
-    texture_dispose(&gaming_drawinfo.maniahit50_texture);
-    texture_dispose(&gaming_drawinfo.maniahit0_texture);
-
     sprite_dispose(&gaming_drawinfo.long_note);
-    sprite_dispose(&gaming_drawinfo.maniahit);
     sprite_dispose(&gaming_drawinfo.note);
 
     // audio_stream_dispose(&gaming_soundinfo.drum_hitclap);
@@ -292,6 +253,8 @@ void gaming_play_replay(replay_t* replay, score_t* replay_score)
 
 void gaming_update(float delta)
 {
+    maniahit_display_update(delta);
+
     if (gaming_beatmap_wait_timer > 0 && !gaming_audio_stream.playing)
         gaming_beatmap_wait_timer -= delta;
 
@@ -578,12 +541,7 @@ void gaming_render(void)
         sprite_draw(&gaming_drawinfo.note, texture);
     }
 
-    // draw hit info (300g, 300, 200, 100, 50, MISS)
-    if (gaming_maniahit_texture != NULL && (float)time_total() - gaming_judgement_visible_timer < GAMING_MAX_TIME_FOR_JUDGEMENT_VISIBLE)
-    {
-        gaming_drawinfo.maniahit.width = 16*easing_get_factor();
-        sprite_draw(&gaming_drawinfo.maniahit, gaming_maniahit_texture);
-    }
+    maniahit_display_render();
 
     // handle judgement line positioning
     gaming_drawinfo.note.x = 165;
@@ -630,6 +588,6 @@ void gaming_render(void)
         return;
     }
 
-    const char* debug_text = stringf("gaming_judgement_visible_timer: %2.2f", gaming_judgement_visible_timer);
+    const char* debug_text = stringf("gaming_scroll_speed_base: %2.2f\ngaming_beat_length: %2.2f", gaming_scroll_speed_base, gaming_beat_length);
     text_renderer_draw(debug_text, 5, 264, 8);
 }

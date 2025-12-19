@@ -104,6 +104,7 @@ set(project_sources
     src/file_util.c
     src/gfx.c
     src/logging.c
+    src/maniahit_display.c
     src/main_menu.c
     src/options.c
     src/scoring.c

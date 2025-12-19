@@ -1,3 +1,4 @@
+#include <maniahit_display.h>
 #include <results_screen.h>
 #include <text_renderer.h>
 #include <song_select.h>
@@ -5,6 +6,7 @@
 #include <strutil.h>
 #include <options.h>
 #include <texture.h>
+#include <scoring.h>
 #include <sprite.h>
 #include <gaming.h>
 #include <input.h>
@@ -143,24 +145,12 @@ void results_screen_render(void)
 
     text_renderer_draw(hitinfotextright, 210, 180, 16);
 
-    results_gaming_drawinfo.maniahit.x = 20;
-    results_gaming_drawinfo.maniahit.y = 182;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit300_texture);
-    results_gaming_drawinfo.maniahit.x = 20;
-    results_gaming_drawinfo.maniahit.y = 134;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit200_texture);
-    results_gaming_drawinfo.maniahit.x = 20;
-    results_gaming_drawinfo.maniahit.y = 86;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit50_texture);
-    results_gaming_drawinfo.maniahit.x = 180;
-    results_gaming_drawinfo.maniahit.y = 182;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit300g_texture);
-    results_gaming_drawinfo.maniahit.x = 180;
-    results_gaming_drawinfo.maniahit.y = 134;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit100_texture);
-    results_gaming_drawinfo.maniahit.x = 180;
-    results_gaming_drawinfo.maniahit.y = 86;
-    sprite_draw(&results_gaming_drawinfo.maniahit, &results_gaming_drawinfo.maniahit0_texture);
+    maniahit_display_at(20, 182, JudgementGreat);
+    maniahit_display_at(20, 134, JudgementGood);
+    maniahit_display_at(20, 86, JudgementMeh);
+    maniahit_display_at(180, 182, JudgementPerfect);
+    maniahit_display_at(180, 134, JudgementOk);
+    maniahit_display_at(180, 86, JudgementMiss);
 
     const char* scoreinfotext = stringf("%7.7i",
                                         results_score.total_score);

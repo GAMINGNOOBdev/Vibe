@@ -18,15 +18,7 @@ typedef struct
     texture_t note1_texture;
     texture_t note2_texture;
 
-    texture_t maniahit300g_texture;
-    texture_t maniahit300_texture;
-    texture_t maniahit200_texture;
-    texture_t maniahit100_texture;
-    texture_t maniahit50_texture;
-    texture_t maniahit0_texture;
-
     sprite_t long_note;
-    sprite_t maniahit;
     sprite_t note;
 } gaming_drawinfo_t;
 

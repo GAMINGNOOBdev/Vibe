@@ -72,7 +72,7 @@ void input_read()
         return;
     }
     SceCtrlData data;
-    sceCtrlReadBufferPositive(&mInputData,1);
+    sceCtrlReadBufferPositive(&data,1);
     data.Buttons &= ~(options.game_keybinds.m4l1 | options.game_keybinds.m4l2 | options.game_keybinds.m4l3 | options.game_keybinds.m4l4);
     mInputData = data;
     #else
