@@ -3,6 +3,7 @@
 #include <texture.h>
 #include <logging.h>
 #include <string.h>
+#include <gfx.h>
 #ifdef __PSP__
 #include <gu2gl.h>
 #else
@@ -34,6 +35,9 @@ void text_renderer_draw(const char* str, float x, float y, float pixelsize)
 
 void text_renderer_draw_color(const char* str, float x, float y, float pixelsize, uint32_t color)
 {
+    if (x >= PSP_SCREEN_WIDTH || y >= PSP_SCREEN_HEIGHT)
+        return;
+
     int len = strlen(str);
     memset(text_renderer_font_tilemap.tiles, 0, sizeof(tile_t)*text_renderer_font_tilemap.width*text_renderer_font_tilemap.height);
 

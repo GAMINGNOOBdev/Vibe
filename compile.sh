@@ -3,6 +3,7 @@
 mkdir -p build
 mkdir -p build/psp
 mkdir -p build/desktop
+cp sanitizer.supp build/desktop
 
 cd build
 

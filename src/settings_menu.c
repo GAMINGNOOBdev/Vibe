@@ -62,9 +62,9 @@ void settings_menu_init(void)
 
     settings_menu_initialized = 1;
 
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    #ifdef __PSP__
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
     glMatrixMode(GL_MODEL);

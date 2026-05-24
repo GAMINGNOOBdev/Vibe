@@ -101,10 +101,10 @@ void sprite_draw(sprite_t* sprite, texture_t* texture)
     if (sprite == NULL || sprite->mesh.indexCount == 0)
         return;
 
+    #ifdef __PSP__
     glMatrixMode(GL_MODEL);
     glLoadIdentity();
 
-    #ifdef __PSP__
     ScePspFVector3 translation = {sprite->x, sprite->y, sprite->layer};
     gluTranslate(&translation);
     gluRotateZ(sprite->rotation);

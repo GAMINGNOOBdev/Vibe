@@ -18,7 +18,7 @@
 #include <psprtc.h>
 #else
 #ifndef __APPLE__
-#include <GL/glew.h>
+#include <glad/glad.h>
 #else
 #include <OpenGL/gl.h>
 #endif

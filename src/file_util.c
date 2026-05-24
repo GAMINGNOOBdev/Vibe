@@ -40,7 +40,7 @@ void* file_util_file_contents(const char* filename)
     FILE* file = fopen(filename, "rb");
     if (file == NULL)
         return NULL;
-    
+
     fseek(file, 0, SEEK_END);
     size = ftell(file);
     rewind(file);
@@ -71,7 +71,7 @@ void fileUtilConcatPathVectors(stringvec_t* output, stringvec_t* input, const ch
 
 void file_util_iterate_directory(const char *path, int mask, file_util_iteration_callback_t callback, void* userdata)
 {
-#if _WIN32
+#ifdef _WIN32
     WIN32_FIND_DATAA fdFile;
     HANDLE hFind = NULL;
 
@@ -202,7 +202,7 @@ stringvec_t file_util_get_directory_contents(const char* path, int mask)
     stringvec_t result;
     stringvec_initialize(result);
 
-#if _WIN32
+#ifdef _WIN32
     WIN32_FIND_DATAA fdFile;
     HANDLE hFind = NULL;
 
@@ -403,7 +403,7 @@ const char* file_util_get_file_name(const char* str)
 
     if (lastPathSeperator == -1)
         return str;
-    
+
     return (const char*)&str[lastPathSeperator+1];
 }
 
@@ -412,6 +412,6 @@ const char* file_util_get_extension(const char* str)
     int lastDot = strlpos(str, '.');
     if (lastDot == -1)
         return str;
-    
+
     return (const char*)&str[lastDot];
 }

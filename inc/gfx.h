@@ -7,7 +7,8 @@
 #include <pspgu.h>
 #else
 #ifndef __APPLE__
-#include <GL/glew.h>
+#include <glad/glad.h>
+#include <GL/gl.h>
 #else
 #include <OpenGL/gl.h>
 #endif

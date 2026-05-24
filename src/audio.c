@@ -322,7 +322,7 @@ void audio_stream_seek_start(audio_stream_t* astream)
         wave_seek(astream->wav, 0, 0);
         LOGDEBUG("wav stream seeked to start");
     }
-    
+
     astream->processed_frames = 0;
     astream->seconds = 0;
 }
@@ -457,7 +457,7 @@ void audio_set_volume(float volume)
 {
     if (volume < 0)
         volume = 0;
-    
+
     if (volume > 1)
         volume = 1;
 

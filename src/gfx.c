@@ -5,7 +5,7 @@
 #include <gu2gl.h>
 #else
 #ifndef __APPLE__
-#include <GL/glew.h>
+#include <glad/glad.h>
 #else
 #include <OpenGL/gl.h>
 #endif
@@ -285,7 +285,6 @@ void graphics_init()
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwwindow = glfwCreateWindow(PSP_SCREEN_WIDTH*2, PSP_SCREEN_HEIGHT*2, "psp-game-desktop-client", NULL, NULL);
-    LOGDEBUG("GL version: %s", glGetString(GL_VERSION));
 
     if (glfwwindow == NULL)
     {
@@ -307,14 +306,15 @@ void graphics_init()
 
     #ifndef __APPLE__
     GLenum error;
-    if ((error = glewInit()) != GLEW_OK)
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        LOGERROR("Couldn't init glew smh: %s", glewGetErrorString(error));
+        LOGERROR("Couldn't init opengl");
         glfwTerminate();
         stop_running();
         return;
     }
     #endif
+    LOGDEBUG("GL version: %s", glGetString(GL_VERSION));
 
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -340,6 +340,7 @@ void graphics_init()
 
 void graphics_dispose()
 {
+    glDeleteProgram(globalShader);
     glfwDestroyWindow(glfwwindow);
     glfwTerminate();
 }

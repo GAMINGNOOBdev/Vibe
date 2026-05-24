@@ -59,9 +59,9 @@ void main_menu_init(void)
 
     menu_initialized = 1;
 
+    #ifdef __PSP__
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    #ifdef __PSP__
     glMatrixMode(GL_VIEW);
     glLoadIdentity();
     glMatrixMode(GL_MODEL);

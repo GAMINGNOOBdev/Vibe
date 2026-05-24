@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Vibe)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 string(TIMESTAMP NOW "%Y %m %d")
 string(REPLACE " " ";" DATE_LIST ${NOW})
 list(GET DATE_LIST 0 YEAR)
@@ -40,18 +42,56 @@ if(NOT PSP)
 
     find_package(OpenGL REQUIRED)
 
-    if(NOT UNIX)
-        link_directories(glew-windows-2.1.0/lib/Release/x64)
-        set(os_specific_glew_include glew-windows-2.1.0/include)
-    else()
-        set(os_specific_glew_include)
-    endif()
+    file(GLOB IMGUI_SOURCES
+        cimgui/cimgui.cpp
+        cimgui/cimgui_impl.cpp
+        cimgui/imgui/imgui.cpp
+        cimgui/imgui/imgui_draw.cpp
+        cimgui/imgui/imgui_demo.cpp
+        cimgui/imgui/imgui_widgets.cpp
+        cimgui/imgui/imgui_tables.cpp
+        cimgui/imgui/backends/imgui_impl_opengl3.cpp
+        cimgui/imgui/backends/imgui_impl_glfw.cpp
+    )
+
+    set(IMGUI_STATIC "no" CACHE STRING "Build as a static library")
+    set(IMGUI_FREETYPE "no" CACHE STRING "Build with freetype library")
+    set(IMGUI_LIBRARIES glfw)
+
+    #add library and link
+    if (IMGUI_STATIC)
+        add_library(cimgui STATIC ${IMGUI_SOURCES})
+    else (IMGUI_STATIC)
+        add_library(cimgui SHARED ${IMGUI_SOURCES})
+    endif (IMGUI_STATIC)
+
+    include_directories(cimgui/imgui/examples/libs/gl3w cimgui cimgui/imgui)
+    if(WIN32)
+        list(APPEND IMGUI_LIBRARIES opengl32 vulkan)
+    else(WIN32) # Unix
+        list(APPEND IMGUI_LIBRARIES GL vulkan)
+    endif(WIN32)
+
+    add_definitions("-DIMGUI_USER_CONFIG=\"cimgui/cimconfig.h\"")
+    target_compile_definitions(cimgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+    if (WIN32)
+        target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
+        list(APPEND IMGUI_LIBRARIES imm32)
+    else (WIN32)
+        target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
+    endif (WIN32)
+
+    target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+    set_target_properties(cimgui PROPERTIES PREFIX "")
+    target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
     set(os_specific_includes
-        ${os_specific_glew_include}
         ${OPENGL_INCLUDE_DIRS}
         openal-soft/include
+        lib/glad/include
         glfw/include
+        cimgui
     )
 
     add_subdirectory(openal-soft)
@@ -77,11 +117,12 @@ set(library_sources
     lib/stb_vorbis.c
 )
 
-set(linux_library_sources
+set(desktop_library_sources
     miniz/miniz.c
     miniz/miniz_zip.c
     miniz/miniz_tdef.c
     miniz/miniz_tinfl.c
+    lib/glad/src/glad.c
 )
 
 set(project_sources
@@ -132,8 +173,11 @@ add_custom_target(copy_skin
 set(C_STANDARD "99")
 
 if (UNIX)
-    set(CMAKE_C_FLAGS_DEBUG "-g -ggdb")
-    set(CMAKE_C_FLAGS_RELEASE "-g")
+    set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -O0")
+    set(CMAKE_C_FLAGS_RELEASE "-g -O2")
+
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
 endif()
 
 if(PSP)
@@ -166,15 +210,15 @@ if(PSP)
 
 else()
 
-    add_compile_definitions(NOMINMAX GLEW_STATIC)
-    add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${linux_library_sources})
+    add_compile_definitions(NOMINMAX)
+    add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${desktop_library_sources})
     add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
     if (UNIX)
         target_link_libraries(${PROJECT_NAME} PRIVATE
             ${OPENGL_LIBRARIES}
-            GLEW
             alsoft.common
+            cimgui
             OpenAL
             glfw
             m
@@ -182,8 +226,8 @@ else()
     else()
         target_link_libraries(${PROJECT_NAME} PRIVATE
             ${OPENGL_LIBRARIES}
-            glew32s
             alsoft.common
+            cimgui
             OpenAL
             glfw
         )
