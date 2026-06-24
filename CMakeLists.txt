@@ -67,9 +67,9 @@ if(NOT PSP)
 
   include_directories(cimgui/imgui/examples/libs/gl3w cimgui cimgui/imgui)
   if(WIN32)
-    list(APPEND IMGUI_LIBRARIES opengl32 vulkan)
+    list(APPEND IMGUI_LIBRARIES opengl32)
   else(WIN32) # Unix
-    list(APPEND IMGUI_LIBRARIES GL vulkan)
+    list(APPEND IMGUI_LIBRARIES GL)
   endif(WIN32)
 
   add_definitions("-DIMGUI_USER_CONFIG=\"cimgui/cimconfig.h\"")
