@@ -1,37 +1,38 @@
-#include "file_util.h"
-#ifdef __PSP__
-#include <pspdisplay.h>
-#include <pspkernel.h>
-#include <pspdebug.h>
-#include <pspctrl.h>
-#endif
-
-#include <results_screen.h>
-#include <text_renderer.h>
-#include <song_select.h>
-#include <main_menu.h>
-#include <time_util.h>
-#include <callback.h>
-#include <options.h>
-#include <logging.h>
-#include <gaming.h>
-#include <audio.h>
-#include <input.h>
-#include <gfx.h>
-#include <app.h>
-
-#ifdef __PSP__
-PSP_MODULE_INFO("VIBE", 0, 0, 0);
-PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
-#else
-#include <pctypes.h>
-#endif
-
 #define STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 #define MINIMP3_IMPLEMENTATION
 #include <minimp3.h>
 #include <minimp3_ex.h>
+
+#ifdef __PSP__
+#include <pspdisplay.h>
+#include <pspkernel.h>
+#include <pspdebug.h>
+#include <pspctrl.h>
+
+PSP_MODULE_INFO("VIBE", 0, 0, 0);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+#else
+#include "engine/pctypes.h"
+#endif
+
+
+#include "engine/text_renderer.h"
+#include "engine/file_util.h"
+#include "engine/time_util.h"
+#include "engine/callback.h"
+#include "engine/audio.h"
+#include "engine/input.h"
+#include "engine/gfx.h"
+#include "engine/app.h"
+
+#include "game/results_screen.h"
+#include "game/song_select.h"
+#include "game/main_menu.h"
+#include "game/options.h"
+#include "game/gaming.h"
+
+#include "logging.h"
 
 FILE* logFile;
 

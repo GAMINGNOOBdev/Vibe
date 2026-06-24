@@ -22,27 +22,27 @@ add_compile_definitions(__MONTH__=${MONTH})
 add_compile_definitions(__DAY__=${DAY})
 
 if(NOT PSP)
-    # glfw options
-    set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "GLFW lib only")
-    set( GLFW_BUILD_TESTS OFF CACHE BOOL "GLFW lib only" )
-    set( GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only" )
-    set( GLFW_INSTALL OFF CACHE BOOL "GLFW lib only" )
-    set( GLFW_LIBRARY_TYPE "SHARED" )
-    set( BUILD_SHARED_LIBS ON )
-    # OpenAL Options
-    set(ALSOFT_UTILS off)
-    set(ALSOFT_RTKIT off)
-    set(ALSOFT_INSTALL off)
-    set(ALSOFT_EXAMPLES off)
-    set(ALSOFT_INSTALL_UTILS off)
-    set(ALSOFT_INSTALL_CONFIG off)
-    set(ALSOFT_INSTALL_EXAMPLES off)
-    set(ALSOFT_INSTALL_HRTF_DATA off)
-    set(ALSOFT_INSTALL_AMBDEC_PRESETS off)
+  # glfw options
+  set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "GLFW lib only")
+  set( GLFW_BUILD_TESTS OFF CACHE BOOL "GLFW lib only" )
+  set( GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only" )
+  set( GLFW_INSTALL OFF CACHE BOOL "GLFW lib only" )
+  set( GLFW_LIBRARY_TYPE "SHARED" )
+  set( BUILD_SHARED_LIBS ON )
+  # OpenAL Options
+  set(ALSOFT_UTILS off)
+  set(ALSOFT_RTKIT off)
+  set(ALSOFT_INSTALL off)
+  set(ALSOFT_EXAMPLES off)
+  set(ALSOFT_INSTALL_UTILS off)
+  set(ALSOFT_INSTALL_CONFIG off)
+  set(ALSOFT_INSTALL_EXAMPLES off)
+  set(ALSOFT_INSTALL_HRTF_DATA off)
+  set(ALSOFT_INSTALL_AMBDEC_PRESETS off)
 
-    find_package(OpenGL REQUIRED)
+  find_package(OpenGL REQUIRED)
 
-    file(GLOB IMGUI_SOURCES
+  file(GLOB IMGUI_SOURCES
         cimgui/cimgui.cpp
         cimgui/cimgui_impl.cpp
         cimgui/imgui/imgui.cpp
@@ -54,39 +54,39 @@ if(NOT PSP)
         cimgui/imgui/backends/imgui_impl_glfw.cpp
     )
 
-    set(IMGUI_STATIC "no" CACHE STRING "Build as a static library")
-    set(IMGUI_FREETYPE "no" CACHE STRING "Build with freetype library")
-    set(IMGUI_LIBRARIES glfw)
+  set(IMGUI_STATIC "no" CACHE STRING "Build as a static library")
+  set(IMGUI_FREETYPE "no" CACHE STRING "Build with freetype library")
+  set(IMGUI_LIBRARIES glfw)
 
-    #add library and link
-    if (IMGUI_STATIC)
-        add_library(cimgui STATIC ${IMGUI_SOURCES})
-    else (IMGUI_STATIC)
-        add_library(cimgui SHARED ${IMGUI_SOURCES})
-    endif (IMGUI_STATIC)
+  #add library and link
+  if (IMGUI_STATIC)
+    add_library(cimgui STATIC ${IMGUI_SOURCES})
+  else (IMGUI_STATIC)
+    add_library(cimgui SHARED ${IMGUI_SOURCES})
+  endif (IMGUI_STATIC)
 
-    include_directories(cimgui/imgui/examples/libs/gl3w cimgui cimgui/imgui)
-    if(WIN32)
-        list(APPEND IMGUI_LIBRARIES opengl32 vulkan)
-    else(WIN32) # Unix
-        list(APPEND IMGUI_LIBRARIES GL vulkan)
-    endif(WIN32)
+  include_directories(cimgui/imgui/examples/libs/gl3w cimgui cimgui/imgui)
+  if(WIN32)
+    list(APPEND IMGUI_LIBRARIES opengl32 vulkan)
+  else(WIN32) # Unix
+    list(APPEND IMGUI_LIBRARIES GL vulkan)
+  endif(WIN32)
 
-    add_definitions("-DIMGUI_USER_CONFIG=\"cimgui/cimconfig.h\"")
-    target_compile_definitions(cimgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
-    if (WIN32)
-        target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
-        list(APPEND IMGUI_LIBRARIES imm32)
-    else (WIN32)
-        target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
-    endif (WIN32)
+  add_definitions("-DIMGUI_USER_CONFIG=\"cimgui/cimconfig.h\"")
+  target_compile_definitions(cimgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+  if (WIN32)
+    target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
+    list(APPEND IMGUI_LIBRARIES imm32)
+  else (WIN32)
+    target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
+  endif (WIN32)
 
-    target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
-    set_target_properties(cimgui PROPERTIES PREFIX "")
-    target_link_libraries(cimgui ${IMGUI_LIBRARIES})
+  target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+  target_include_directories(cimgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+  set_target_properties(cimgui PROPERTIES PREFIX "")
+  target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
-    set(os_specific_includes
+  set(os_specific_includes
         ${OPENGL_INCLUDE_DIRS}
         openal-soft/include
         lib/glad/include
@@ -94,11 +94,11 @@ if(NOT PSP)
         cimgui
     )
 
-    add_subdirectory(openal-soft)
-    add_subdirectory(glfw)
+  add_subdirectory(openal-soft)
+  add_subdirectory(glfw)
 
 else()
-    set(os_specific_includes)
+  set(os_specific_includes)
 endif()
 
 include_directories(
@@ -126,33 +126,35 @@ set(desktop_library_sources
 )
 
 set(project_sources
-    src/audio.c
-    src/beatmap.c
-    src/easing.c
-    src/gaming.c
-    src/input.c
-    src/main.c
-    src/mesh.c
-    src/replay_management_screen.c
-    src/replay.c
-    src/results_screen.c
-    src/settings_menu.c
-    src/song_select.c
-    src/strutil.c
-    src/texture.c
-    src/time_util.c
-    src/callback.c
-    src/file_util.c
-    src/gfx.c
+    src/engine/text_renderer.c
+    src/engine/time_util.c
+    src/engine/file_util.c
+    src/engine/callback.c
+    src/engine/strutil.c
+    src/engine/texture.c
+    src/engine/tilemap.c
+    src/engine/sprite.c
+    src/engine/easing.c
+    src/engine/audio.c
+    src/engine/input.c
+    src/engine/mesh.c
+    src/engine/gfx.c
+
+    src/game/replay_management_screen.c
+    src/game/maniahit_display.c
+    src/game/results_screen.c
+    src/game/settings_menu.c
+    src/game/song_select.c
+    src/game/main_menu.c
+    src/game/song_list.c
+    src/game/beatmap.c
+    src/game/options.c
+    src/game/scoring.c
+    src/game/gaming.c
+    src/game/replay.c
+
     src/logging.c
-    src/maniahit_display.c
-    src/main_menu.c
-    src/options.c
-    src/scoring.c
-    src/song_list.c
-    src/sprite.c
-    src/text_renderer.c
-    src/tilemap.c
+    src/main.c
 )
 
 add_compile_definitions(
@@ -173,20 +175,20 @@ add_custom_target(copy_skin
 set(C_STANDARD "99")
 
 if (UNIX)
-    set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -O0")
-    set(CMAKE_C_FLAGS_RELEASE "-g -O2")
+  set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -O0")
+  set(CMAKE_C_FLAGS_RELEASE "-g -O2")
 
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address)
 endif()
 
 if(PSP)
-    add_executable(${PROJECT_NAME} ${project_sources} ${library_sources})
-    add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
+  add_executable(${PROJECT_NAME} ${project_sources} ${library_sources})
+  add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
-    add_compile_definitions(__PSP__)
+  add_compile_definitions(__PSP__)
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE
+  target_link_libraries(${PROJECT_NAME} PRIVATE
         pspaudiocodec
         pspaudiolib
         pspgum_vfpu
@@ -204,18 +206,18 @@ if(PSP)
         m
     )
 
-    create_pbp_file(TARGET ${PROJECT_NAME} TITLE "${CMAKE_PROJECT_NAME}"
+  create_pbp_file(TARGET ${PROJECT_NAME} TITLE "${CMAKE_PROJECT_NAME}"
         ICON_PATH ${CMAKE_CURRENT_LIST_DIR}/Assets/LOGO.png
     )
 
 else()
 
-    add_compile_definitions(NOMINMAX)
-    add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${desktop_library_sources})
-    add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
+  add_compile_definitions(NOMINMAX)
+  add_executable(${PROJECT_NAME} ${project_sources} ${library_sources} ${desktop_library_sources})
+  add_dependencies(${PROJECT_NAME} copy_assets copy_skin)
 
-    if (UNIX)
-        target_link_libraries(${PROJECT_NAME} PRIVATE
+  if (UNIX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
             ${OPENGL_LIBRARIES}
             alsoft.common
             cimgui
@@ -223,14 +225,14 @@ else()
             glfw
             m
         )
-    else()
-        target_link_libraries(${PROJECT_NAME} PRIVATE
+  else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
             ${OPENGL_LIBRARIES}
             alsoft.common
             cimgui
             OpenAL
             glfw
         )
-    endif()
+  endif()
 
 endif()
